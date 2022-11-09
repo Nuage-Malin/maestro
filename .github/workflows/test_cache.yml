@@ -1,0 +1,40 @@
+name: Compile and execute unit tests
+
+on:
+  push:
+    branches:
+      - main
+    # - develop
+  pull_request:
+    branches:
+    # - main
+
+jobs:
+  create_file:
+    runs-on: ubuntu-20.04
+    steps:
+      #      - name: cache
+      #        uses: actions/cache@v3
+      #        id: cache
+      #        with:
+      #          path: ./
+      #          key: my_simple_key
+
+      - name: create the file
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: touch file
+
+  tests:
+    runs-on: ubuntu-20.04
+    needs: create_file
+    steps:
+      #      - name: cache
+      #        uses: actions/cache@v3
+      #        id: cache
+      #        with:
+      #          path: ./
+      #          key: my_simple_key
+
+      - name: list the file
+        if: steps.cache.outputs.cache-hit == 'true'
+        run: ls -la file

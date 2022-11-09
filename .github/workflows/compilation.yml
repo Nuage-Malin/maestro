@@ -1,0 +1,34 @@
+name: Check compilation
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
+          # secret containing a token allowing access to private repo (protobuf-interface submodule)
+
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v1.12
+        with:
+          cmake-version: '3.17.x'
+
+      - name: Meta build (generate Makefile)
+        run: |
+          mkdir -p build
+          cmake -S . -B build
+
+      - name: Build
+        run: make -C build

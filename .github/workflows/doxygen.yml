@@ -1,0 +1,58 @@
+name: Generate doxygen documentation
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  #  doxygen:
+  #    runs-on: ubuntu-20.04
+  #    steps:
+  #      - name: Checkout code
+  #        uses: actions/checkout@v3
+  #        with:
+  #          submodules: false
+  #
+  #      - name: Install Doxygen
+  #        run: sudo apt-get install doxygen -y
+  #        shell: bash
+  #
+  #      - name: Generate Doxygen Documentation
+  #        run: |
+  #          mkdir -p build
+  #          cmake -D doxygen=true -S . -B build
+  #          make -C build doxygen
+  #
+  doxygen_github_pages:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: false
+
+      - name: Install Doxygen
+        run: sudo apt-get install doxygen -y
+        shell: bash
+
+      - name: Generate Doxygen Documentation
+        run: |
+          mkdir -p build
+          cmake -D doxygen=true -S . -B build
+          make -C build doxygen
+
+      - name: Create .nojekyll (ensures pages with underscores work on gh pages)
+        run: touch docs/Doxygen/html/.nojekyll
+        shell: bash
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          github_token: ${{ inputs.REPO_PROTOBUF_INTERFACES_TOKEN }}
+          branch: gh-pages
+          folder: docs/Doxygen/html

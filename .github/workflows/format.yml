@@ -1,0 +1,155 @@
+name: Reformat code and cmake files, lint code
+
+on:
+  workflow_run:
+    workflows: [ "Check compilation" ]
+    branches: [ main, develop ]
+    types:
+      - completed
+
+jobs:
+  checkout_code:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: false
+
+      - name: cache
+        uses: actions/cache@v3
+        id: cache
+        with:
+          path: ./
+          key: cache_key_format
+
+  format:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        path:
+          - 'src'
+          - 'include'
+          - 'example'
+          - 'tests'
+
+    steps:
+      - name: cache
+        uses: actions/cache@v3
+        id: cache
+        with:
+          path: ./
+          key: cache_key_format
+
+      - name: Check if cache missed
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          echo "::error title=Cache miss::Could not retrieve cache from build functional tests job"
+
+      - name: Setup git
+        run: |
+          git config --global user.name "Github Actions"
+          git config --global user.mail "noreply@github.com"
+
+      - name: Run clang-format
+        uses: jidicula/clang-format-action@v4.6.2 # todo change with cmake module
+        with:
+          clang-format-version: '13'
+          check-path: ${{ matrix.path }}
+          # takes .clang-format file for formatting rules
+
+      - name: Git add
+        run: git add src/ include/
+
+      - name: Git commit
+        run: git commit -m "[Github Action] clang-format"
+
+      - name: Git push
+        run: git push
+
+
+  lint:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-20.04
+    container: jhasse/clang-tidy
+    steps:
+      - name: cache
+        uses: actions/cache@v3
+        id: cache
+        with:
+          path: ./
+          key: cache_key_format
+
+      - name: Check if cache missed
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          echo "::error title=Cache miss::Could not retrieve cache from build functional tests job"
+
+      #      - name: Get code
+      #        uses: actions/checkout@v3
+      #        with:
+      #          submodules: false
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v1.12
+        with:
+          cmake-version: '3.17.x'
+
+      - name: Use cmake
+        run: cmake --version
+
+      - name: Generate Makefile
+        run: |
+          mkdir -p build
+          cmake -S . -B build
+      - name: Run clang-tidy
+        run: make -C build clang-tidy
+
+  format-cmake:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-20.04
+    steps:
+      - name: cache
+        uses: actions/cache@v3
+        id: cache
+        with:
+          path: ./
+          key: cache_key_format
+
+      - name: Check if cache missed
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          echo "::error title=Cache miss::Could not retrieve cache from build functional tests job"
+
+      #      - name: Checkout code
+      #        uses: actions/checkout@v3
+      #        with:
+      #          submodules: false
+
+      - name: Setup git
+        run: |
+          git config --global user.name "Github Actions"
+          git config --global user.mail "noreply@github.com"
+
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v1.12
+        with:
+          cmake-version: '3.17.x'
+
+      - name: Generate Makefile
+        run: |
+          mkdir -p build
+          cmake -S . -B build
+
+      - name: Run cmake-format
+        run: make -C build cmake-format
+
+      - name: Git add
+        run: git add cmake/ CMakeLists.txt
+
+      - name: Git commit
+        run: git commit -m "[Github Action] cmake-format"
+
+      - name: Git push
+        run: git push

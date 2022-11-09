@@ -1,0 +1,30 @@
+name: Protect branches
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  protect:
+    runs-on: ubuntu-22.04
+    if: ${{ github.event.head_commit.committer.name != 'GitHub' && github.event.head_commit.committer.email != 'noreply@github.com' && github.event.head_commit.committer.username != 'web-flow' }}
+    steps:
+      # Setup
+      - name: Setup Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "noreply@github.com"
+
+      # Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # Run
+      - name: Reset commits
+        run: git reset --hard ${{ github.event.before }}
+
+      - name: Force update HEAD
+        run: "! git push --force"
