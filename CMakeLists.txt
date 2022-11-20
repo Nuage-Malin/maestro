@@ -20,7 +20,7 @@
 cmake_minimum_required(VERSION 3.5.1)
 
 set(PROJECT_NAME cmake-template)
-set(EXECUTABLE_NAME executable)
+set(EXECUTABLE_NAME maestro)
 
 project(${PROJECT_NAME} LANGUAGES C CXX)
 set(CMAKE_BUILD_TYPE DEBUG)

@@ -12,7 +12,7 @@ services:
             - mongo
         depends_on:
             - mongo
-        restart: always
+        restart: on-failure
 
     mongo:
         image: mongo:6
