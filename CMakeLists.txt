@@ -34,21 +34,22 @@ get_filename_component(INCL_DIR "${CMAKE_HOME_DIRECTORY}/include/" ABSOLUTE)
 get_filename_component(SRC_DIR "${CMAKE_HOME_DIRECTORY}/src/" ABSOLUTE)
 get_filename_component(DOCS_DIR "${CMAKE_HOME_DIRECTORY}/docs/" ABSOLUTE)
 
-set(SRCS ${SRC_DIR}/main.cpp)
+set(SRCS ${SRC_DIR}/main.cpp
+    ${SRC_DIR}/File/FileServer.cpp)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY})
 
-if(DEFINED gRPC)
+#if(DEFINED gRPC)
   include("cmake/gRPC_cpp.cmake")
-endif()
+#endif()
 
 add_executable(${EXECUTABLE_NAME} ${SRCS})
-target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCL_DIR})
+target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCL_DIR} ${SRC_DIR} ${my_protos_include_dir})
 
-if(DEFINED gRPC)
+#if(DEFINED gRPC)
   target_link_libraries(${EXECUTABLE_NAME} ${my_grpc_proto} ${_REFLECTION}
                         ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
-endif()
+#endif()
 
 # custom cmake modules
 include(${CMAKE_MODULES_DIR}/clang-format.cmake)
@@ -59,9 +60,9 @@ if(DEFINED functional_tests)
   include(${CMAKE_MODULES_DIR}/functional_tests.cmake)
 endif()
 
-if(DEFINED unit_tests)
-  include(${CMAKE_MODULES_DIR}/GoogleTest.cmake)
-endif()
+#if(DEFINED unit_tests)
+  include(${CMAKE_MODULES_DIR}/gTest.cmake)
+#endif()
 
 if(DEFINED doxygen)
   include(${CMAKE_MODULES_DIR}/doxygen.cmake)

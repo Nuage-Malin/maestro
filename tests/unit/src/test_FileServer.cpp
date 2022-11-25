@@ -1,14 +1,16 @@
 /**
-* @file test.cpp
-* @author Arthur Jourdan
-* @date of creation 11/11/22.
-* @brief Example test with google test
+ * @file test_FileServer.cpp
+ * @author Arthur Jourdan
+ * @date of creation 11/11/22.
+ * @brief TODO
  */
+
 #include <gtest/gtest.h>
 
 // Demonstrate some basic assertions.
-TEST(TestSuiteName, TestName)
+TEST(FileServer, FileUpload)
 {
+
     // Expect two strings not to be equal.
     EXPECT_STRNE("hello", "world");
     // Expect equality.
