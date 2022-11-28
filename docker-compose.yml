@@ -3,11 +3,12 @@ version: '3.9'
 services:
     maestro:
         build: .
+        container_name: maestro
         environment:
-            MAESTRO_PORT: 8080
+            MAESTRO_PORT: $MAESTRO_PORT
             MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@mongo:27017/maestro?authSource=admin
-        ports:
-            - 127.0.0.1:8080:8080
+        expose:
+            - $MAESTRO_PORT
         networks:
             - mongo
         depends_on:
@@ -20,8 +21,8 @@ services:
             MONGO_INITDB_DATABASE: maestro
             MONGO_INITDB_ROOT_USERNAME: maestro_admin
             MONGO_INITDB_ROOT_PASSWORD: maestro_admin_password
-        ports:
-            - 127.0.0.1:27017:27017
+        expose:
+            - 27017
         networks:
             - mongo
         volumes:
