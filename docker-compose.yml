@@ -5,10 +5,10 @@ services:
         build: .
         container_name: maestro
         environment:
-            MAESTRO_PORT: $MAESTRO_PORT
+            MAESTRO_PORT: 8080
             MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@mongo:27017/maestro?authSource=admin
         expose:
-            - $MAESTRO_PORT
+            - 8080
         networks:
             - mongo
         depends_on:
