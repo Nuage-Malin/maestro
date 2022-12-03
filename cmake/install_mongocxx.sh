@@ -1,5 +1,14 @@
 # Instructions found at https://mongocxx.org/mongocxx-v3/installation/linux/
 
+if [ ! $MONGOCXX_VERSION ]; then
+  MONGOCXX_VERSION="3.7.0"
+fi
+
+if [ ! $STORAGE_DIR ]; then
+  STORAGE_DIR="third_parties"
+fi
+
+
 # Install C driver
 sudo apt install libmongoc-dev
 sudo apt install libmongoc-doc
@@ -12,14 +21,12 @@ sudo apt install libstdc++-12-dev
 ## from https://github.com/mongodb/mongo-cxx-driver/releases
 ## then follow instructions from step 4 of https://mongocxx.org/mongocxx-v3/installation/linux/
 
-MONGOCXX_VERSION="3.7.0"
-
-if [ ! -f third_parties/mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz ]; then
+if [ ! -f $STORAGE_DIR/mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz ]; then
   curl -OL https://github.com/mongodb/mongo-cxx-driver/releases/download/r$MONGOCXX_VERSION/mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz
-  mv mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz third_parties/mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz
+  mv mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz $STORAGE_DIR/mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz
 fi
 
-cd third_parties
+cd $STORAGE_DIR/
 tar -xzf mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz
 cd mongo-cxx-driver-r$MONGOCXX_VERSION/
 
