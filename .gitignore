@@ -56,7 +56,6 @@ maestro
 ## Mongo DB
 bssl
 charclass_test
-cmake/mongodb.cmake
 compile_test
 dfa_test
 example
