@@ -7,6 +7,9 @@
 
 #include <cstdlib>
 
+#include <mongocxx/client.hpp>
+#include <mongocxx/instance.hpp>
+
 /**
  * @brief main function
  * @param ac Number of arguments
@@ -15,5 +18,13 @@
  */
 int main(__attribute__((unused)) const int ac, __attribute__((unused)) const char *av[])
 {
+    mongocxx::instance inst{}; // This should be done only once.
+    mongocxx::client conn{
+        mongocxx::uri{
+            "mongodb+srv://<username>:<password>@<cluster-url>/test?retryWrites=true&w=majority"
+        }
+    };
+    mongocxx::database db = conn["test"];
+
     return EXIT_SUCCESS;
 }

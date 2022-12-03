@@ -50,6 +50,7 @@ target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCL_DIR} ${SRC_DIR} ${my
   target_link_libraries(${EXECUTABLE_NAME} ${my_grpc_proto} ${_REFLECTION}
                         ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
 #endif()
+include(${CMAKE_MODULES_DIR}/mongodb.cmake)
 
 # custom cmake modules
 include(${CMAKE_MODULES_DIR}/clang-format.cmake)
