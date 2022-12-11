@@ -7,12 +7,12 @@
 
 #include <gtest/gtest.h>
 
+#include "FileClient.hpp"
+
 // Demonstrate some basic assertions.
 TEST(FileServer, FileUpload)
 {
+    FileClient client("0.0.0.0");
 
-    // Expect two strings not to be equal.
-    EXPECT_STRNE("hello", "world");
-    // Expect equality.
-    EXPECT_EQ(7 * 6, 42);
+    EXPECT_TRUE(client.fileUpload("filename", "filedirname", "1", "file content"));
 }
