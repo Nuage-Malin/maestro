@@ -28,4 +28,4 @@ RUN cmake -S . -B build
 RUN make -C build
 
 # Run
-CMD ./maestro
+CMD ./build/maestro

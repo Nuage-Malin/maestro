@@ -26,7 +26,5 @@ include_directories("${MONGO_INSTALL_DIR}/include/libbson-1.0")
 include_directories("${MONGO_INSTALL_DIR}/include/libmongoc-1.0")
 include_directories("${MONGO_INSTALL_DIR}/lib")
 
-message("LIBBSONCXX_LIBRARIES")
-message("${LIBBSONCXX_LIBRARIES}")
 target_link_libraries(${EXECUTABLE_NAME} ${LIBBSONCXX_LIBRARIES})
 target_link_libraries(${EXECUTABLE_NAME} ${LIBMONGOCXX_LIBRARIES})

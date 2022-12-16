@@ -64,9 +64,9 @@ if (DEFINED functional_tests)
     include(${CMAKE_MODULES_DIR}/functional_tests.cmake)
 endif ()
 
-#if(DEFINED unit_tests)
-include(${CMAKE_MODULES_DIR}/gTest.cmake)
-#endif()
+if (DEFINED unit_tests)
+    include(${CMAKE_MODULES_DIR}/gTest.cmake)
+endif ()
 
 if (DEFINED doxygen)
     include(${CMAKE_MODULES_DIR}/doxygen.cmake)

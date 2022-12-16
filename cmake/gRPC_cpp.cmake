@@ -1,12 +1,12 @@
 if (NOT DEFINED GRPC_CPP_ONCE)
     set(GRPC_CPP_ONCE true)
 
-    # TODO ensure that installation succeed and variables are set
-    set(GRPC_AS_SUBMODULE true)
     get_filename_component(GRPC_SUBMODULE_DIR "${THIRD_PARTIES_DIR}/grpc/" ABSOLUTE)
     if (NOT EXISTS ${GRPC_SUBMODULE_DIR})
         set(GRPC_CLONE_SUBMODULE true)
     endif ()
+    set(GRPC_FULL_INSTALL true)
+
     include("${CMAKE_MODULES_DIR}/install_gRPC.cmake")
 
     # Proto file

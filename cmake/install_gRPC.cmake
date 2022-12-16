@@ -27,10 +27,16 @@ endif ()
 
 find_package(Threads REQUIRED)
 
+if (DEFINED GRPC_CLONE_SUBMODULE)
+    set(ENV{GRPC_CLONE_SUBMODULE} true)
+    execute_process(COMMAND "${CMAKE_MODULES_DIR}/install_gRPC.sh")
+endif ()
+if (DEFINED GRPC_FULL_INSTALL)
+    set(ENV{GRPC_FULL_INSTALL} true)
+    execute_process(COMMAND "${CMAKE_MODULES_DIR}/install_gRPC.sh")
+endif ()
+
 if (DEFINED GRPC_AS_SUBMODULE)
-    if (DEFINED GRPC_CLONE_SUBMODULE)
-        execute_process(COMMAND "${CMAKE_MODULES_DIR}/install_gRPC.sh")
-    endif ()
 
     # One way to build a projects that uses gRPC is to just include the entire
     # gRPC project tree via "add_subdirectory". This approach is very simple to
@@ -99,7 +105,11 @@ else ()
     # Find Protobuf installation Looks for protobuf-config.cmake file installed by
     # Protobuf's cmake installation.
     set(protobuf_MODULE_COMPATIBLE TRUE)
-    find_package(Protobuf CONFIG REQUIRED)
+    find_package(Protobuf CONFIG REQUIRED
+                 PATHS
+                 /root/.local/lib/cmake/protobuf/
+                 $ENV{HOME}/.local/lib/cmake/protobuf/)
+
     message(STATUS "Using protobuf ${Protobuf_VERSION}")
 
     set(_PROTOBUF_LIBPROTOBUF protobuf::libprotobuf)
@@ -110,9 +120,17 @@ else ()
         set(_PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
     endif ()
 
+    find_package(absl CONFIG REQUIRED
+                 PATHS
+                 /root/.local/lib/cmake/absl/
+                 $ENV{HOME}/.local/lib/cmake/absl/)
+
     # Find gRPC installation Looks for gRPCConfig.cmake file installed by gRPC's
     # cmake installation.
-    find_package(gRPC CONFIG REQUIRED)
+    find_package(gRPC CONFIG REQUIRED
+                 PATHS
+                 /root/.local/lib/cmake/grpc/
+                 $ENV{HOME}/.local/lib/cmake/grpc/)
     message(STATUS "Using gRPC ${gRPC_VERSION}")
 
     set(_GRPC_GRPCPP gRPC::grpc++)
