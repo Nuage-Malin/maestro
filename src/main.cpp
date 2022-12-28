@@ -14,24 +14,37 @@
 // #include <grpcpp/server.h>
 
 #include "File/FileServer.hpp"
+#include <exception>
 
-void RunServer(const std::string &db_path)
+static const std::string dbName{"Files"};
+static const std::string collName{"Uploaded"};
+
+void RunServer()
 {
-    // db instanciationn // todo put somewhere else
+    // mongo db instanciationn // todo put somewhere else
     mongocxx::instance inst{}; // This should be done only once.
     mongocxx::client conn{
         mongocxx::uri{"mongodb://maestro_admin:maestro_admin_password@mongo:27017/maestro?authSource=admin"}};
-    mongocxx::database db = conn["Files"];
-    mongocxx::collection coll = db["Uploaded"];
-    FileServer service(coll);
-    //
-    std::string server_address("0.0.0.0:50051");
+    if (!conn)
+        throw std::runtime_error("Could not access mongo database");
+    mongocxx::database db = conn[dbName];
+    if (!db)
+        throw std::runtime_error("Could not access database '" + dbName + "'");
+    mongocxx::collection coll = db[collName];
+    if (!db)
+        throw std::runtime_error("Could not access collection '" + collName + "'");
 
+    // Backend
+    FileServer service(db);
+
+    // gRPC
+    std::string serverAddress("127.0.0.1:50051");
     grpc::ServerBuilder builder;
-    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+
+    builder.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());
     builder.RegisterService(&service);
     std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
-    std::cout << "Server listening on " << server_address << std::endl;
+    std::cout << "Server listening on " << serverAddress << std::endl;
     server->Wait();
 }
 
@@ -43,6 +56,6 @@ void RunServer(const std::string &db_path)
  */
 int main(__attribute__((unused)) const int ac, __attribute__((unused)) const char *av[])
 {
-
+    RunServer();
     return EXIT_SUCCESS;
 }

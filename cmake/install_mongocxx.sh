@@ -12,23 +12,23 @@ fi
 ## Install C driver
 if [ `command -v sudo` ]; then
 #  sudo apt-get update
-  sudo apt-get install libssl-dev libsasl2-dev
-  sudo apt-get install libmongoc-dev
-  sudo apt-get install libmongoc-doc
-# sudo apt-get install libstdc++-10-dev
-  sudo apt-get install libstdc++-12-dev
-  sudo apt-get install libmongoc-1.0-0
-  sudo apt-get install libbson-1.0-0
+  sudo apt-get install -y libssl-dev libsasl2-dev
+  sudo apt-get install -y libmongoc-dev
+  sudo apt-get install -y libmongoc-doc
+# sudo apt-get install -y libstdc++-10-dev
+  sudo apt-get install -y libstdc++-12-dev
+  sudo apt-get install -y libmongoc-1.0-0
+  sudo apt-get install -y libbson-1.0-0
 
 #else
 #  apt-get update
-  apt-get install libssl-dev libsasl2-dev
-  apt-get install libmongoc-dev
-  apt-get install libmongoc-doc
-# apt-get install libstdc++-10-dev
-  apt-get install libstdc++-12-dev
-  apt-get install libmongoc-1.0-0
-  apt-get install libbson-1.0-0
+  apt-get install -y libssl-dev libsasl2-dev
+  apt-get install -y libmongoc-dev
+  apt-get install -y libmongoc-doc
+# apt-get install -y libstdc++-10-dev
+  apt-get install -y libstdc++-12-dev
+  apt-get install -y libmongoc-1.0-0
+  apt-get install -y libbson-1.0-0
 fi
 
 

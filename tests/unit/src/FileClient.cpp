@@ -15,6 +15,8 @@ FileClient::FileClient(const std::string &ServerIP)
     : _stub(UsersBack_Maestro::UsersBack_Maestro_Service::NewStub(
         grpc::CreateChannel(ServerIP, grpc::InsecureChannelCredentials())))
 {
+    if (!_stub)
+        throw std::runtime_error("Could not create gRPC stub");
 }
 
 bool FileClient::fileUpload(
@@ -38,9 +40,11 @@ bool FileClient::fileUpload(
     //    delete my_file;     // Causes sesgfault idk why
     //    delete my_metadata; // Causes sesgfault idk why
     if (my_status.ok()) {
-        std::cout << "Sent request to " /*<< TODO insert server IP*/ << std::endl;
+        std::cout << "Sent upload request to server" << std::endl;
         return true;
     }
-    std::cerr << "Could not send to " /*<< todo insert server IP*/ << std::endl;
+    std::cerr << "Could not send upload request to server" << std::endl;
+    std::cerr << "Error code : " << my_status.error_code() << ", error detail : " << my_status.error_details()
+              << ", error message : " << my_status.error_message() << std::endl;
     return false;
 }

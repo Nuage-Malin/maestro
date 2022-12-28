@@ -23,9 +23,14 @@ COPY include /app/include
 COPY src /app/src
 COPY third_parties /app/third_parties
 
+# Remove cache from local builds
+RUN find /app/ -type f -name "CMakeCache.txt" -delete
+
 # Build
 RUN cmake -S . -B build
 RUN make -C build
 
 # Run
 CMD ./build/maestro
+
+## todo stage "unit_tests"

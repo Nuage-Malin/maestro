@@ -22,7 +22,7 @@ class FileClient {
 
     bool fileUpload(
         const std::string &name, const std::string &dirname, const std::string &userID, const std::string &content);
-    bool askFileDownload();
+    bool askFileDownload() const;
     bool fileDownload();
     bool getFilesIndex();
 
