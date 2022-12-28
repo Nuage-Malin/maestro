@@ -1,7 +1,7 @@
 .vscode
 .idea
 
-CMakeCache.txt
+**/CMakeCache.txt
 .git/
 Dockerfile
 docs/
