@@ -38,7 +38,7 @@ void RunServer()
     FileServer service(db);
 
     // gRPC
-    std::string serverAddress("127.0.0.1:50051");
+    std::string serverAddress(std::string("127.0.0.1:") + std::getenv("MAESTRO_PORT"));
     grpc::ServerBuilder builder;
 
     builder.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());
