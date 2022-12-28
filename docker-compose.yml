@@ -20,8 +20,8 @@ services:
             MONGO_INITDB_DATABASE: maestro
             MONGO_INITDB_ROOT_USERNAME: maestro_admin
             MONGO_INITDB_ROOT_PASSWORD: maestro_admin_password
-        ports:
-            - 127.0.0.1:27017:27017
+        expose:
+            - 27017
         networks:
             - mongo
         volumes:
