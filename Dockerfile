@@ -2,16 +2,17 @@ FROM ubuntu:22.04
 
 # Requirements
 RUN apt-get update && apt-get install -y \
-    cmake   \
-    g++     \
-    git     \
-    libssl-dev  \
-    libsasl2-dev  \
-    libmongoc-dev \
-    libmongoc-doc \
-    libstdc++-12-dev  \
-    libmongoc-1.0-0 \
-    libbson-1.0-0 \
+    curl                \
+    cmake               \
+    g++                 \
+    git                 \
+    libssl-dev          \
+    libsasl2-dev        \
+    libmongoc-dev       \
+    libmongoc-doc       \
+    libstdc++-12-dev    \
+    libmongoc-1.0-0     \
+    libbson-1.0-0       \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

@@ -1,1 +1,10 @@
+.vscode
+.idea
+
 CMakeCache.txt
+.git/
+Dockerfile
+docs/
+functional_tests
+unit_tests
+maestro
