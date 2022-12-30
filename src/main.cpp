@@ -23,8 +23,7 @@ void RunServer()
 {
     // mongo db instanciationn // todo put somewhere else
     mongocxx::instance inst{}; // This should be done only once.
-    mongocxx::client conn{
-        mongocxx::uri{"mongodb://maestro_admin:maestro_admin_password@mongo:27017/maestro?authSource=admin"}};
+    mongocxx::client conn{mongocxx::uri{std::getenv("MAESTRO_MONGO_URL")}};
     if (!conn)
         throw std::runtime_error("Could not access mongo database");
     mongocxx::database db = conn[dbName];
@@ -38,7 +37,7 @@ void RunServer()
     FileServer service(db);
 
     // gRPC
-    std::string serverAddress(std::string("127.0.0.1:") + std::getenv("MAESTRO_PORT"));
+    std::string serverAddress(std::getenv("MAESTRO_ADDRESS"));
     grpc::ServerBuilder builder;
 
     builder.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());

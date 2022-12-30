@@ -5,13 +5,15 @@
  * @brief TODO
  */
 
+#include <cstdlib>
 #include <gtest/gtest.h>
 
 #include "FileClient.hpp"
 
 FileClient &getCommonFileClient()
 {
-    static FileClient client("127.0.0.1:50051");
+    static FileClient client(
+        std::string(std::getenv("MAESTRO_TESTS_HOST")) + ":" + std::string(std::getenv("MAESTRO_TESTS_PORT")));
 
     client.fileUpload("filename", "filedirname", "1", "file content");
     return client;
