@@ -5,7 +5,7 @@
  * @brief TODO
  */
 
-#include <cstdlib>
+#include <exception>
 
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
@@ -13,17 +13,20 @@
 #include <grpcpp/server_builder.h>
 // #include <grpcpp/server.h>
 
+#include "utils.hpp"
 #include "File/FileServer.hpp"
-#include <exception>
 
-static const std::string dbName{"Files"};
-static const std::string collName{"Uploaded"};
+static const string dbName{"Files"};
+static const string collName{"Uploaded"};
 
 void RunServer()
 {
     // mongo db instanciationn // todo put somewhere else
     mongocxx::instance inst{}; // This should be done only once.
-    mongocxx::client conn{mongocxx::uri{std::getenv("MAESTRO_MONGO_URL")}};
+    const char *mongoUrl = getenv("MAESTRO_MONGO_URL");
+    if (!mongoUrl)
+        throw std::invalid_argument("MAESTRO_MONGO_URL environment variable not found");
+    mongocxx::client conn{mongocxx::uri{mongoUrl}};
     if (!conn)
         throw std::runtime_error("Could not access mongo database");
     mongocxx::database db = conn[dbName];
@@ -37,7 +40,8 @@ void RunServer()
     FileServer service(db);
 
     // gRPC
-    std::string serverAddress(std::getenv("MAESTRO_ADDRESS"));
+    const char *address = getenv("MAESTRO_ADDRESS");
+    const string serverAddress(address);
     grpc::ServerBuilder builder;
 
     builder.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());
@@ -55,6 +59,17 @@ void RunServer()
  */
 int main(__attribute__((unused)) const int ac, __attribute__((unused)) const char *av[])
 {
-    RunServer();
+    try {
+        RunServer();
+    } catch (const std::invalid_argument &e) {
+        std::cerr << "Invalid argument: " << e.what() << std::endl;
+        return EXIT_FAILURE;
+    } catch (const std::runtime_error &e) {
+        std::cerr << "Runtime error: " << e.what() << std::endl;
+        return EXIT_FAILURE;
+    } catch (const std::exception &e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }

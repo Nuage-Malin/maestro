@@ -5,8 +5,8 @@
  * @brief TODO
  */
 
-#ifndef CMAKE_TEMPLATE_FILESERVER_HPP
-#define CMAKE_TEMPLATE_FILESERVER_HPP
+#ifndef MAESTRO_FILESERVER_HPP
+#define MAESTRO_FILESERVER_HPP
 
 #include "File.grpc.pb.h"
 #include "UsersBack_Maestro/UsersBack_Maestro.grpc.pb.h"
@@ -56,4 +56,4 @@ class FileServer : public UsersBack_Maestro::UsersBack_Maestro_Service::Service 
     void setFileBucket();
 };
 
-#endif // CMAKE_TEMPLATE_FILESERVER_HPP
+#endif

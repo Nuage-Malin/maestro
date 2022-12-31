@@ -30,12 +30,14 @@ if [ $OS_DISTRIB = "ubuntu" ]; then
             pkg-config
     fi
 elif [ $OS_DISTRIB = "fedora" ]; then
-    if [ `command -v sudo` ]; then
-        sudo dnf install    \
-            libtool
-    else
-        dnf install \
-            libtool
+    if [ ! `dnf list installed | grep libtool` ]; then
+        if [ `command -v sudo` ]; then
+            sudo dnf install    \
+                libtool
+        else
+            dnf install \
+                libtool
+        fi
     fi
 else
     echo "Unknown OS distribution $OS_DISTRIB"
