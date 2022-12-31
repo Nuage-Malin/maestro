@@ -19,25 +19,47 @@ if [ ! $INSTALL_DIR ]; then
 fi
 
 ## Install C driver
+if [ ! $OS_DISTRIB ]; then
+    . /etc/os-release
+    OS_DISTRIB=$ID
+fi
 if [ `command -v sudo` ]; then
-#  sudo apt-get update
-  sudo apt-get install -y libssl-dev libsasl2-dev
-  sudo apt-get install -y libmongoc-dev
-  sudo apt-get install -y libmongoc-doc
-# sudo apt-get install -y libstdc++-10-dev
-  sudo apt-get install -y libstdc++-12-dev
-  sudo apt-get install -y libmongoc-1.0-0
-  sudo apt-get install -y libbson-1.0-0
-
-#else
-#  apt-get update
-  apt-get install -y libssl-dev libsasl2-dev
-  apt-get install -y libmongoc-dev
-  apt-get install -y libmongoc-doc
-# apt-get install -y libstdc++-10-dev
-  apt-get install -y libstdc++-12-dev
-  apt-get install -y libmongoc-1.0-0
-  apt-get install -y libbson-1.0-0
+    if [ $OS_DISTRIB = "ubuntu" ]; then
+        #  sudo apt-get update
+        sudo apt-get install -y     \
+            libssl-dev libsasl2-dev \
+            libmongoc-dev           \
+            libmongoc-doc           \
+            libstdc++-12-dev        \
+            libmongoc-1.0-0
+        # sudo apt-get install libbson-1.0-0
+        # sudo apt-get install libstdc++-10-dev
+    elif [ $OS_DISTRIB = "fedora" ]; then
+        sudo dnf install    \
+            mongo-c-driver  \
+            libmongocrypt-devel
+    else
+        echo "Unknown OS distribution $OS_DISTRIB"
+    fi
+else
+    if [ $OS_DISTRIB = "ubuntu" ]; then
+        #  apt-get update
+        apt-get install -y  \
+            libssl-dev libsasl2-dev \
+            libmongoc-dev           \
+            libmongoc-doc           \
+            libstdc++-12-dev        \
+            libmongoc-1.0-0
+        # apt-get install libbson-1.0-0
+        # apt-get install libstdc++-10-dev
+    elif [ $OS_DISTRIB = "fedora" ]; then
+        dnf install    \
+            mongo-c-driver          \
+            mongo-c-driver-devel    \
+            libmongocrypt-devel
+    else
+        echo "Unknown OS distribution $OS_DISTRIB"
+    fi
 fi
 
 
@@ -51,18 +73,21 @@ if [ ! -f $INSTALL_DIR/mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz ]; then
   check_exit_failure "Fail to download mongo-cxx-driver"
   mv mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz $INSTALL_DIR/mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz
   check_exit_failure "Fail to move mongo-cxx-driver"
+  echo "Downloaded mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz"
 fi
 
 cd $INSTALL_DIR/
 if [ ! -d mongo-cxx-driver-r$MONGOCXX_VERSION ]; then
   tar -xzf mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz
   check_exit_failure "Fail to extract mongo-cxx-driver"
+  echo "Extracted mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz"
 fi
 cd mongo-cxx-driver-r$MONGOCXX_VERSION/
 
 ## note that polyfill steps have been skipped
 
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/mongo
+echo "Building mongo-cxx-driver-r$MONGOCXX_VERSION"
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/mongo -DCMAKE_INSTALL_RPATH=/opt/mongo
 check_exit_failure "Fail to cmake mongo-cxx-driver"
 if [ `command -v sudo` ]; then
   sudo make -C build install
