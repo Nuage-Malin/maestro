@@ -22,29 +22,29 @@ FileClient::FileClient(const std::string &ServerIP)
 bool FileClient::fileUpload(
     const std::string &name, const std::string &dirname, const std::string &userID, const std::string &content)
 {
-    grpc::ClientContext my_context;
-    UsersBack_Maestro::FileUploadRequest my_request;
-    UsersBack_Maestro::FileUploadStatus my_response;
-    grpc::Status my_status;
-    auto *my_file{new File::NewFile()};
-    auto *my_metadata{new File::FileApproxMetadata()};
+    grpc::ClientContext context;
+    UsersBack_Maestro::FileUploadRequest request;
+    UsersBack_Maestro::FileUploadStatus response;
+    grpc::Status status;
+    auto *file{new File::NewFile()};
+    auto *metadata{new File::FileApproxMetadata()};
 
-    my_metadata->set_name(name);
-    my_metadata->set_dirname(dirname);
-    my_metadata->set_userid(userID);
-    my_file->set_allocated_metadata(my_metadata);
-    my_file->set_content(content);
-    my_request.set_allocated_file(my_file);
+    metadata->set_name(name);
+    metadata->set_dirname(dirname);
+    metadata->set_userid(userID);
+    file->set_allocated_metadata(metadata);
+    file->set_content(content);
+    request.set_allocated_file(file);
 
-    my_status = _stub->fileUpload(&my_context, my_request, &my_response);
-    //    delete my_file;     // Causes sesgfault idk why
-    //    delete my_metadata; // Causes sesgfault idk why
-    if (my_status.ok()) {
+    status = _stub->fileUpload(&context, request, &response);
+    //    delete file;     // Causes sesgfault idk why
+    //    delete metadata; // Causes sesgfault idk why
+    if (status.ok()) {
         std::cout << "Sent upload request to server" << std::endl;
         return true;
     }
     std::cerr << "Could not send upload request to server" << std::endl;
-    std::cerr << "Error code : " << my_status.error_code() << ", error detail : " << my_status.error_details()
-              << ", error message : " << my_status.error_message() << std::endl;
+    std::cerr << "Error code : " << status.error_code() << ", error detail : " << status.error_details()
+              << ", error message : " << status.error_message() << std::endl;
     return false;
 }

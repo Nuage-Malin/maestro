@@ -22,21 +22,21 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
 ::grpc::Status FileServer::fileUpload(::grpc::ServerContext *context,
     const ::UsersBack_Maestro::FileUploadRequest *request, ::UsersBack_Maestro::FileUploadStatus *response)
 {
-    std::cout << "hello server" << std::endl;
-    auto metadata = request->file().GetMetadata();
+    auto metadata = request->file().metadata();
     auto content = request->file().content();
-    auto builder = bsoncxx::builder::stream::document{};
+    // auto builder = bsoncxx::builder::stream::document{};
 
     //    builder << "content" << bsoncxx::builder::stream::open_array /*is that needed for a bytes protobuf type ?? */
     //            << request->file().content() << bsoncxx::builder::stream::close_array;
     //    bsoncxx::document::value doc_value = builder.extract();
     //    _fileCollection.insert_one(doc_value.view()); // TODO gridFS
 
-    std::istringstream tmp{content};
-    std::istream fileStream{tmp.rdbuf()};
-    bsoncxx::stdx::string_view my_filename{request->GetMetadata().descriptor->file()->name()};
+    std::istream fileStream{std::istringstream(content).rdbuf()};
+    bsoncxx::stdx::string_view filename{metadata.name()};
 
-    mongocxx::result::gridfs::upload my_result{_fileBucket.upload_from_stream(my_filename, &fileStream)};
+    std::cout << "Uploading file" << std::endl;
+    const auto result = this->_fileBucket.upload_from_stream(filename, &fileStream);
+    std::cout << "Uploaded file ID: " << result.id().get_utf8().value.to_string() << std::endl;
     return ::grpc::Status::OK;
 }
 ::grpc::Status FileServer::askFileDownload(::grpc::ServerContext *context,
