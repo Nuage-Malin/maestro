@@ -33,6 +33,7 @@ if (DEFINED GRPC_CLONE_SUBMODULE)
 endif ()
 if (DEFINED GRPC_FULL_INSTALL)
     set(ENV{GRPC_FULL_INSTALL} true)
+    set(ENV{GRPC_RECOMPILE} true)
     execute_process(COMMAND "${CMAKE_MODULES_DIR}/install_gRPC.sh")
 endif ()
 

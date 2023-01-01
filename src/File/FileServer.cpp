@@ -22,9 +22,13 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
 ::grpc::Status FileServer::fileUpload(::grpc::ServerContext *context,
     const ::UsersBack_Maestro::FileUploadRequest *request, ::UsersBack_Maestro::FileUploadStatus *response)
 {
-    auto metadata = request->file().metadata();
+    std::cout << "hello server" << std::endl;
+    auto metadata = request->file().GetMetadata();
+    std::cout << "1" << std::endl;
     auto content = request->file().content();
-    // auto builder = bsoncxx::builder::stream::document{};
+    std::cout << "2" << std::endl;
+    auto builder = bsoncxx::builder::stream::document{};
+    std::cout << "3" << std::endl;
 
     //    builder << "content" << bsoncxx::builder::stream::open_array /*is that needed for a bytes protobuf type ?? */
     //            << request->file().content() << bsoncxx::builder::stream::close_array;
@@ -32,13 +36,24 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     //    _fileCollection.insert_one(doc_value.view()); // TODO gridFS
 
     std::istream fileStream{std::istringstream(content).rdbuf()};
-    bsoncxx::stdx::string_view filename{metadata.name()};
-
-    std::cout << "Uploading file" << std::endl;
-    const auto result = this->_fileBucket.upload_from_stream(filename, &fileStream);
-    std::cout << "Uploaded file ID: " << result.id().get_utf8().value.to_string() << std::endl;
+    std::cout << "5" << std::endl;
+    bsoncxx::stdx::string_view my_filename{request->GetMetadata().descriptor->file()->name()};
+    std::cout << "6" << std::endl;
+    if (!_fileBucket)
+        std::cout << "7" << std::endl;
+    mongocxx::result::gridfs::upload my_result = mongocxx::result::gridfs::upload(bsoncxx::types::bson_value::view());
+    try {
+        _fileBucket.upload_from_stream(my_filename, &fileStream);
+        my_result = _fileBucket.upload_from_stream(my_filename, &fileStream);
+    } catch (...) {
+        std::cout << "error lakjsdlfjsdl;j" << std::endl;
+    }
+    std::cout << "8" << std::endl;
+    std::cout << " my_result.id().get_string().value" << my_result.id().get_string().value << std::endl;
+    std::cout << "sucess youhou" << std::endl;
     return ::grpc::Status::OK;
 }
+
 ::grpc::Status FileServer::askFileDownload(::grpc::ServerContext *context,
     const ::UsersBack_Maestro::AskFileDownloadRequest *request, ::UsersBack_Maestro::AskFileDownloadStatus *response)
 {
