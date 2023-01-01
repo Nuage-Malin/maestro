@@ -33,9 +33,8 @@ void RunServer()
     if (!db)
         throw std::runtime_error("Could not access database '" + dbName + "'");
     mongocxx::collection coll = db[collName];
-    if (!db)
+    if (!coll)
         throw std::runtime_error("Could not access collection '" + collName + "'");
-
     // Backend
     FileServer service(db);
 

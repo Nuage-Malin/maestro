@@ -14,6 +14,8 @@
 #include <bsoncxx/document/value.hpp>
 #include <mongocxx/gridfs/bucket.hpp>
 
+#include <mongocxx/exception/query_exception.hpp>
+
 FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(file_database)
 {
     this->setFileBucket();
@@ -22,35 +24,20 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
 ::grpc::Status FileServer::fileUpload(::grpc::ServerContext *context,
     const ::UsersBack_Maestro::FileUploadRequest *request, ::UsersBack_Maestro::FileUploadStatus *response)
 {
-    std::cout << "hello server" << std::endl;
-    auto metadata = request->file().GetMetadata();
-    std::cout << "1" << std::endl;
+    auto metadata = request->file().metadata();
     auto content = request->file().content();
-    std::cout << "2" << std::endl;
-    auto builder = bsoncxx::builder::stream::document{};
-    std::cout << "3" << std::endl;
-
-    //    builder << "content" << bsoncxx::builder::stream::open_array /*is that needed for a bytes protobuf type ?? */
-    //            << request->file().content() << bsoncxx::builder::stream::close_array;
-    //    bsoncxx::document::value doc_value = builder.extract();
-    //    _fileCollection.insert_one(doc_value.view()); // TODO gridFS
-
     std::istream fileStream{std::istringstream(content).rdbuf()};
-    std::cout << "5" << std::endl;
-    bsoncxx::stdx::string_view my_filename{request->GetMetadata().descriptor->file()->name()};
-    std::cout << "6" << std::endl;
-    if (!_fileBucket)
-        std::cout << "7" << std::endl;
-    mongocxx::result::gridfs::upload my_result = mongocxx::result::gridfs::upload(bsoncxx::types::bson_value::view());
+    bsoncxx::stdx::string_view my_filename{metadata.name()};
+
     try {
         _fileBucket.upload_from_stream(my_filename, &fileStream);
-        my_result = _fileBucket.upload_from_stream(my_filename, &fileStream);
+    } catch (const mongocxx::query_exception &e) {
+        std::cerr << "mongocxx::query_exception: " << e.what() << std::endl;
+        return ::grpc::Status::CANCELLED;
     } catch (...) {
-        std::cout << "error lakjsdlfjsdl;j" << std::endl;
+        std::cerr << "Upload of file '" << my_filename << "' could not be registered in database" << std::endl;
+        return ::grpc::Status::CANCELLED;
     }
-    std::cout << "8" << std::endl;
-    std::cout << " my_result.id().get_string().value" << my_result.id().get_string().value << std::endl;
-    std::cout << "sucess youhou" << std::endl;
     return ::grpc::Status::OK;
 }
 
