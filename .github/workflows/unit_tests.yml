@@ -38,5 +38,17 @@ jobs:
       - name: Build
         run: make -C build unit_tests
 
+      - name: Run MongoDB
+        run: docker run -d -p 27017:27017 -e MONGO_INITDB_DATABASE=maestro -e MONGO_INITDB_ROOT_USERNAME=maestro_admin -e MONGO_INITDB_ROOT_PASSWORD=maestro_admin_password mongo:6
+
+      - name: Run maestro
+        run: ./build/maestro &
+        env:
+          MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@localhost:27017/maestro?authSource=admin
+          MAESTRO_ADDRESS: "[::]:8080"
+
       - name: Run unit tests
         run: ./build/unit_tests
+        env:
+          MAESTRO_TESTS_HOST: localhost
+          MAESTRO_TESTS_PORT: 8080
