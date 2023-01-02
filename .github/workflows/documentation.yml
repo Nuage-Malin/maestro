@@ -1,0 +1,71 @@
+name: Generate documentation
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+jobs:
+   doxygen:
+     runs-on: ubuntu-22.04
+     steps:
+      - name: Install Doxygen
+        run: apt-get install -y doxygen
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
+          # secret containing a token allowing access to private repo (protobuf-interface submodule)
+
+      - name: Cache project
+        uses: actions/cache@v3
+        id: cache
+        with:
+          path: |
+            build
+            /opt/mongo
+            third_parties
+          key: ${{ runner.os }}-documentation-build
+
+      - name: Generate Makefile
+        run: |
+          mkdir -p build
+          cmake -D doxygen=true -S . -B build
+
+      - name: Generate Doxygen Documentation
+        run: make -C build doxygen
+
+  # doxygen_github_pages:
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
+  #       with:
+  #         submodules: false
+
+  #     - name: Install Doxygen
+  #       run: sudo apt-get install doxygen -y
+  #       shell: bash
+
+  #     - name: Generate Doxygen Documentation
+  #       run: |
+  #         mkdir -p build
+  #         cmake -D doxygen=true -S . -B build
+  #         make -C build doxygen
+
+  #     - name: Create .nojekyll (ensures pages with underscores work on gh pages)
+  #       run: touch docs/Doxygen/html/.nojekyll
+  #       shell: bash
+
+  #     - name: Deploy to GitHub Pages
+  #       uses: JamesIves/github-pages-deploy-action@3.7.1
+  #       with:
+  #         github_token: ${{ inputs.REPO_PROTOBUF_INTERFACES_TOKEN }}
+  #         branch: gh-pages
+  #         folder: docs/Doxygen/html
