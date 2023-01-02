@@ -57,7 +57,7 @@ void RunServer()
  * @param av Argument vector
  * @return EXIT_SUCCESS if success, EXIT_FAILURE otherwise
  */
-int main(__attribute__((unused)) const int ac, __attribute__((unused)) const char *av[])
+int main(UNUSED const int ac, UNUSED const char *av[])
 {
     try {
         RunServer();

@@ -22,12 +22,14 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
 ::grpc::Status FileServer::fileUpload(::grpc::ServerContext *context,
     const ::UsersBack_Maestro::FileUploadRequest *request, ::UsersBack_Maestro::FileUploadStatus *response)
 {
-    auto metadata = request->file().metadata();
-    auto content = request->file().content();
+    const File::FileApproxMetadata &metadata{request->file().metadata()};
+    const string &content{request->file().content()};
     // auto builder = bsoncxx::builder::stream::document{};
 
-    //    builder << "content" << bsoncxx::builder::stream::open_array /*is that needed for a bytes protobuf type ?? */
-    //            << request->file().content() << bsoncxx::builder::stream::close_array;
+    //    builder << "content" << bsoncxx::builder::stream::open_array /*is that
+    //    needed for a bytes protobuf type ?? */
+    //            << request->file().content() <<
+    //            bsoncxx::builder::stream::close_array;
     //    bsoncxx::document::value doc_value = builder.extract();
     //    _fileCollection.insert_one(doc_value.view()); // TODO gridFS
 
@@ -36,40 +38,42 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
 
     std::cout << "Uploading file" << std::endl;
     const auto result = this->_fileBucket.upload_from_stream(filename, &fileStream);
-    std::cout << "Uploaded file ID: " << result.id().get_utf8().value.to_string() << std::endl;
+    std::cout << "Uploaded file ID: " << result.id().get_string().value.to_string() << std::endl;
     return ::grpc::Status::OK;
 }
 ::grpc::Status FileServer::askFileDownload(::grpc::ServerContext *context,
     const ::UsersBack_Maestro::AskFileDownloadRequest *request, ::UsersBack_Maestro::AskFileDownloadStatus *response)
 {
-    std::string my_filename{request->GetMetadata().descriptor->file()->name()};
+    const string &fileId{request->fileid()};
 
-    bsoncxx::document::value my_filter =
-        bsoncxx::builder::basic::make_document(bsoncxx::builder::basic::kvp("filename", my_filename));
-    mongocxx::options::find my_options;
+    const bsoncxx::document::value filter = bsoncxx::builder::basic::make_document(
+        bsoncxx::builder::basic::kvp("_id", bsoncxx::oid{bsoncxx::stdx::string_view{fileId}}));
+    const mongocxx::options::find options;
+    mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
 
-    mongocxx::cursor my_cursor = _fileBucket.find(bsoncxx::document::view_or_value(my_filter), my_options);
-    if (my_cursor.begin() == my_cursor.end())
+    if (cursor.begin() == cursor.end())
         return grpc::Status::CANCELLED;
-    auto *my_waiting_time(new google::protobuf::Duration());
-    my_waiting_time->set_seconds(FileServer::DEFAULT_WAITING_TIME);
-    response->set_allocated_waitingtime(my_waiting_time);
+
+    auto *waiting_time = new google::protobuf::Duration();
+    waiting_time->set_seconds(FileServer::DEFAULT_WAITING_TIME);
+    response->set_allocated_waitingtime(waiting_time);
+
     return grpc::Status::OK;
 }
 
-::grpc::Status FileServer::fileDownload(
-    ::grpc::ServerContext *context, const ::UsersBack_Maestro::FileDownloadRequest *request, ::File::File *response)
+::grpc::Status FileServer::fileDownload(::grpc::ServerContext *context,
+    const ::UsersBack_Maestro::FileDownloadRequest *request, ::File::File *response)
 {
-    std::string my_filename{request->GetMetadata().descriptor->file()->name()};
+    const string &fileId{request->fileid()};
 
-    bsoncxx::document::value my_filter =
-        bsoncxx::builder::basic::make_document(bsoncxx::builder::basic::kvp("filename", my_filename));
-    mongocxx::options::find my_options;
+    const bsoncxx::document::value filter = bsoncxx::builder::basic::make_document(
+        bsoncxx::builder::basic::kvp("_id", bsoncxx::oid{bsoncxx::stdx::string_view{fileId}}));
+    const mongocxx::options::find options;
+    mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
 
-    mongocxx::cursor my_cursor = _fileBucket.find(bsoncxx::document::view_or_value(my_filter), my_options);
-    if (my_cursor.begin() == my_cursor.end()) // todo check for exceptions
+    if (cursor.begin() == cursor.end()) // todo check for exceptions
         return grpc::Status::CANCELLED;
-    for (auto i : my_cursor) {
+    for (auto i : cursor) {
         for (auto j : i) {
             std::cout << "j.get_string().value" << std::endl;
             std::cout << j.get_string().value << std::endl;
@@ -79,21 +83,21 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     }
 
     //    response->set_content(); // TODO
-    auto *my_metadata(new File::FileMetadata());
-    auto *my_approxMetadata(new File::FileApproxMetadata());
-    //    my_approxMetadata->set_name();
-    //    my_approxMetadata->set_userid();
-    //    my_approxMetadata->set_dirname();
-    my_metadata->set_allocated_approxmetadata(my_approxMetadata);
-    auto *my_creationTime(new google::protobuf::Timestamp());
-    //    my_creationTime->set_seconds();
-    my_metadata->set_allocated_creation(my_creationTime);
-    auto *my_lastEditTime(new google::protobuf::Timestamp());
-    //    my_lastEditTime->set_seconds();
-    my_metadata->set_allocated_lastedit(my_lastEditTime);
-    //    my_metadata->set_lasteditorid("");
-    //    my_metadata->set_fileid("");
-    response->set_allocated_metadata(my_metadata); // todo
+    auto *metadata(new File::FileMetadata());
+    auto *approxMetadata(new File::FileApproxMetadata());
+    //    approxMetadata->set_name();
+    //    approxMetadata->set_userid();
+    //    approxMetadata->set_dirname();
+    metadata->set_allocated_approxmetadata(approxMetadata);
+    auto *creationTime(new google::protobuf::Timestamp());
+    //    creationTime->set_seconds();
+    metadata->set_allocated_creation(creationTime);
+    auto *lastEditTime(new google::protobuf::Timestamp());
+    //    lastEditTime->set_seconds();
+    metadata->set_allocated_lastedit(lastEditTime);
+    //    metadata->set_lasteditorid("");
+    //    metadata->set_fileid("");
+    response->set_allocated_metadata(metadata); // todo
     return grpc::Status::OK;
 }
 
@@ -107,7 +111,7 @@ void FileServer::setFileBucket()
 {
     if (!_fileDatabase)
         throw std::logic_error("Cannot get bucket because don't have database");
-    mongocxx::options::gridfs::bucket my_bucketOptions;
-    my_bucketOptions.bucket_name("_fileBucketName");
-    _fileBucket = _fileDatabase.gridfs_bucket(my_bucketOptions);
+    mongocxx::options::gridfs::bucket bucketOptions;
+    bucketOptions.bucket_name("_fileBucketName");
+    this->_fileBucket = this->_fileDatabase.gridfs_bucket(bucketOptions);
 }
