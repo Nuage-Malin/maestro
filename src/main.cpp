@@ -19,6 +19,13 @@
 static const string dbName{"Files"};
 static const string collName{"Uploaded"};
 
+/**
+ * @brief Run the server
+ * @throw std::invalid_argument if MAESTRO_MONGO_URL environment variable not found
+ * @throw std::runtime_error if could not access mongo database
+ * @throw std::runtime_error if could not access database or collection
+ * @return void
+ */
 void RunServer()
 {
     // mongo db instanciationn // todo put somewhere else
