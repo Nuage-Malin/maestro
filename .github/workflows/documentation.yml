@@ -15,7 +15,7 @@ jobs:
      runs-on: ubuntu-22.04
      steps:
       - name: Install Doxygen
-        run: apt-get install -y doxygen
+        run: sudo apt-get install -y doxygen
 
       - name: Checkout code
         uses: actions/checkout@v3
