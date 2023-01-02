@@ -5,13 +5,14 @@ on:
     branches:
       - main
       - develop
+      - github-actions/unit-tests
   pull_request:
     branches:
       - main
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -20,12 +21,16 @@ jobs:
           token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
           # secret containing a token allowing access to private repo (protobuf-interface submodule)
 
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v1.12
+      - name: Cache build
+        uses: actions/cache@v3
         with:
-          cmake-version: '3.17.x'
+          path: |
+            build
+            /opt/mongo
+            third_parties
+          key: ${{ runner.os }}-unit_tests-build
 
-      - name: Meta build (generate Makefile)
+      - name: Generate Makefile
         run: |
           mkdir -p build
           cmake -D unit_tests=true -S . -B build
@@ -33,29 +38,5 @@ jobs:
       - name: Build
         run: make -C build unit_tests
 
-      - name: cache
-        uses: actions/cache@v3
-        id: cache
-        with:
-          path: ./
-          key: cache_key_unit_tests_build
-
-  tests:
-    runs-on: ubuntu-20.04
-    needs: build
-    steps:
-      - name: cache
-        uses: actions/cache@v3
-        id: cache
-        with:
-          path: ./
-          key: cache_key_unit_tests_build
-
-      - name: Check if cache missed
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          echo "::error title=Cache miss::Could not retrieve cache from build unit tests job"
-
       - name: Run unit tests
-        run: cd build && ctest
-      #    run: ./unit_tests
+        run: ./build/unit_tests
