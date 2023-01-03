@@ -24,7 +24,9 @@ jobs:
         run: docker run --rm -d --name maestro-documentation maestro-documentation
 
       - name: Copy HTML documentation
-        run: docker cp maestro-documentation:/usr/share/nginx/html /tmp/maestro-documentation/html
+        run: |
+          mkdir -p /tmp/maestro-documentation/html
+          docker cp maestro-documentation:/usr/share/nginx/html /tmp/maestro-documentation/html
 
       - name: Stop temporary container
         run: docker stop maestro-documentation
