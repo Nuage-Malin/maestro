@@ -21,10 +21,13 @@ jobs:
         run: docker build -f Dockerfile.documentation -t maestro-documentation .
 
       - name: Run temporary container
-        run: docker run --rm --name maestro-documentation maestro-documentation
+        run: docker run --rm -d --name maestro-documentation maestro-documentation
 
       - name: Copy HTML documentation
         run: docker cp maestro-documentation:/usr/share/nginx/html /tmp/maestro-documentation/html
+
+      - name: Stop temporary container
+        run: docker stop maestro-documentation
 
       - uses: actions/upload-artifact@v3
         with:
