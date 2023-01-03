@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - develop
+      - github-actions/documentation
   pull_request:
     branches:
       - main
@@ -13,33 +14,22 @@ jobs:
    doxygen:
      runs-on: ubuntu-22.04
      steps:
-      - name: Install Doxygen
-        run: sudo apt-get install -y doxygen
-
-      - name: Cache project
-        uses: actions/cache@v3
-        id: cache
-        with:
-          path: |
-            build
-            /opt/mongo
-            third_parties
-          key: ${{ runner.os }}-documentation-build
-
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Build documentation
+        run: docker build -f Dockerfile.documentation -t maestro-documentation .
+
+      - name: Run temporary container
+        run: docker run --rm --name maestro-documentation maestro-documentation
+
+      - name: Copy HTML documentation
+        run: docker cp maestro-documentation:/usr/share/nginx/html /tmp/maestro-documentation/html
+
+      - uses: actions/upload-artifact@v3
         with:
-          submodules: recursive
-          token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
-          # secret containing a token allowing access to private repo (protobuf-interface submodule)
-
-      - name: Generate Makefile
-        run: |
-          mkdir -p build
-          cmake -D doxygen=true -S . -B build
-
-      - name: Generate Doxygen Documentation
-        run: make -C build doxygen
+          name: doxygen-html
+          path: /tmp/maestro-documentation/html
 
   # doxygen_github_pages:
   #   runs-on: ubuntu-20.04
