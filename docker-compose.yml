@@ -29,6 +29,13 @@ services:
             - mongo:/data/db
         restart: always
 
+    documentation:
+        build:
+            context: .
+            dockerfile: Dockerfile.documentation
+        ports:
+            - 50051:80
+
 networks:
     mongo: null
     users-back:maestro:

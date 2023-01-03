@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:22.04 AS builder
 
 # Requirements
 RUN apt-get update && apt-get install -y \
@@ -13,22 +13,24 @@ RUN apt-get update && apt-get install -y \
     libstdc++-12-dev    \
     libmongoc-1.0-0     \
     libbson-1.0-0       \
+    doxygen             \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy sources
-COPY third_parties /app/third_parties
 COPY cmake /app/cmake
 COPY CMakeLists.txt /app
 COPY include /app/include
 COPY src /app/src
+COPY docs /app/docs
 
 # Build
-RUN cmake -S . -B build
-RUN make -C build
+RUN cmake -D doxygen=true -S . -B build
+RUN make -C build doxygen
+
 
 # Run
-CMD ./build/maestro
+FROM nginx:1.21
 
-# todo stage "unit_tests"
+COPY --from=builder /app/docs/Doxygen/html /usr/share/nginx/html

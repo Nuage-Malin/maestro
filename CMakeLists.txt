@@ -40,20 +40,23 @@ set(SRCS ${SRC_DIR}/main.cpp
 
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY})
 
-# gRPC
-include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
-#
+# Effectuer les règles gRPC et MongoDB seulement quand doxygen n'est pas activé
+if (NOT DEFINED doxygen)
+    # gRPC
+    include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
 
-add_executable(${EXECUTABLE_NAME} ${SRCS})
-target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCL_DIR} ${SRC_DIR} ${my_protos_include_dir})
 
-# gRPC
-target_link_libraries(${EXECUTABLE_NAME} ${my_grpc_proto} ${_REFLECTION}
-                      ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
-#
-# MongoDB
-include(${CMAKE_MODULES_DIR}/mongodb.cmake)
-#
+    add_executable(${EXECUTABLE_NAME} ${SRCS})
+    target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCL_DIR} ${SRC_DIR} ${my_protos_include_dir})
+
+    # gRPC
+    target_link_libraries(${EXECUTABLE_NAME} ${my_grpc_proto} ${_REFLECTION}
+                        ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
+
+    # MongoDB
+    include(${CMAKE_MODULES_DIR}/mongodb.cmake)
+
+endif ()
 
 # custom cmake modules
 include(${CMAKE_MODULES_DIR}/clang-format.cmake)
