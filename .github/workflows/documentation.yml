@@ -30,7 +30,8 @@ jobs:
       - name: Stop temporary container
         run: docker stop maestro-documentation
 
-      - uses: actions/upload-artifact@v3
+      - name: Upload documentation
+        uses: actions/upload-artifact@v3
         with:
           name: doxygen-html
           path: /tmp/maestro-documentation/html
