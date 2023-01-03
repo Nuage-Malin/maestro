@@ -8,9 +8,9 @@ if(DOXYGEN_FOUND)
 
   set(DOXYGEN_DIR ${DOCS_DIR}/Doxygen)
   # Set Doxygen input and output files.
-  set(DOXYGEN_INPUT_DIR ${INCL_DIR})
+  set(DOXYGEN_INPUT_DIR ${SRC_DIR})
   set(DOXYGEN_OUTPUT_DIR ${DOXYGEN_DIR})
-  set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/xml/index.xml)
+  set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/html/index.html)
   set(DOXYFILE_IN ${DOXYGEN_DIR}/Doxyfile.in)
   set(DOXYFILE_OUT ${DOXYGEN_DIR}/Doxyfile)
 
@@ -31,4 +31,6 @@ if(DOXYGEN_FOUND)
 
   # Create CMake Target for generating doc.
   add_custom_target(doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
+else()
+  message(FATAL_ERROR "Doxygen not found")
 endif()

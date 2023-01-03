@@ -1,17 +1,12 @@
 # Repo specific
 TODO
-Doxyfile
-
-# Documentation
-docs/Doxygen/html
-docs/Doxygen/man
 
 # Compilation
 build
 cmake-build-debug
 Testing
 ## Executables
-executable 
+executable
 functional_tests
 unit_tests
 
@@ -51,3 +46,57 @@ unit_tests
 *.exe
 *.out
 *.app
+maestro
+
+## Mongo DB
+bssl
+charclass_test
+compile_test
+dfa_test
+example
+example64
+exhaustive1_test
+exhaustive2_test
+exhaustive3_test
+exhaustive_test
+filtered_re2_test
+grpc_cpp_plugin
+grpc_csharp_plugin
+grpc_node_plugin
+grpc_objective_c_plugin
+grpc_php_plugin
+grpc_python_plugin
+grpc_ruby_plugin
+mimics_pcre_test
+minigzip
+minigzip64
+parse_test
+possible_match_test
+protoc
+protoc-3.21.6.0
+random_test
+re2_arg_test
+re2_test
+regexp_benchmark
+regexp_test
+required_prefix_test
+search_test
+set_test
+simplify_test
+string_generator_test
+third_parties/mongo-cxx-driver-r3.7.0.tar.gz
+third_parties/mongo-cxx-driver-r3.7.0/
+parse_test
+possible_match_test
+protoc
+protoc-3.21.6.0
+random_test
+re2_arg_test
+re2_test
+regexp_benchmark
+regexp_test
+required_prefix_test
+search_test
+set_test
+simplify_test
+string_generator_test

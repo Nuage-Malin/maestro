@@ -1,3 +1,6 @@
 [submodule "third_parties/protobuf-interfaces"]
 	path = third_parties/protobuf-interfaces
 	url = git@github.com:Nuage-Malin/protobuf-interfaces.git
+[submodule "third_parties/grpc"]
+	path = third_parties/grpc
+	url = git@github.com:grpc/grpc.git
