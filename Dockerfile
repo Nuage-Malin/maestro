@@ -24,6 +24,8 @@ COPY CMakeLists.txt /app
 COPY include /app/include
 COPY src /app/src
 
+RUN find /app/ -type f -name "CMakeCache.txt" -delete
+
 # Build
 RUN cmake -S . -B build
 RUN make -C build
@@ -31,4 +33,4 @@ RUN make -C build
 # Run
 CMD ./build/maestro
 
-## todo stage "unit_tests"
+# todo stage "unit_tests"

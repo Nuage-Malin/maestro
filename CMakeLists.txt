@@ -64,7 +64,7 @@ if (DEFINED functional_tests)
     include(${CMAKE_MODULES_DIR}/functional_tests.cmake)
 endif ()
 
-if (DEFINED unit_tests)
+if (DEFINED unit_tests) ## todo build only unit_tests, not maestro ? for docker compose unit_tests
     include(${CMAKE_MODULES_DIR}/gTest.cmake)
 endif ()
 

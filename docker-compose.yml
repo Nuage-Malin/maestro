@@ -6,10 +6,11 @@ services:
         environment:
             MAESTRO_ADDRESS: "[::]:8080"
             MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@mongo:27017/maestro?authSource=admin
-        ports:
-            - 127.0.0.1:8080:8080
+        expose:
+            - 8080
         networks:
             - mongo
+            - users-back:maestro
         depends_on:
             - mongo
         restart: on-failure
@@ -30,6 +31,8 @@ services:
 
 networks:
     mongo: null
+    users-back:maestro:
+        external: true
 
 volumes:
     mongo: null

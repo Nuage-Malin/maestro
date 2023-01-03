@@ -16,9 +16,16 @@
 #include "utils.hpp"
 #include "File/FileServer.hpp"
 
-static const string dbName{"Files"};
+static const string dbName{"maestro"};
 static const string collName{"Uploaded"};
 
+/**
+ * @brief Run the server
+ * @throw std::invalid_argument if MAESTRO_MONGO_URL environment variable not found
+ * @throw std::runtime_error if could not access mongo database
+ * @throw std::runtime_error if could not access database or collection
+ * @return void
+ */
 void RunServer()
 {
     // mongo db instanciationn // todo put somewhere else
@@ -33,9 +40,8 @@ void RunServer()
     if (!db)
         throw std::runtime_error("Could not access database '" + dbName + "'");
     mongocxx::collection coll = db[collName];
-    if (!db)
+    if (!coll)
         throw std::runtime_error("Could not access collection '" + collName + "'");
-
     // Backend
     FileServer service(db);
 
@@ -57,7 +63,7 @@ void RunServer()
  * @param av Argument vector
  * @return EXIT_SUCCESS if success, EXIT_FAILURE otherwise
  */
-int main(__attribute__((unused)) const int ac, __attribute__((unused)) const char *av[])
+int main(UNUSED const int ac, UNUSED const char *av[])
 {
     try {
         RunServer();

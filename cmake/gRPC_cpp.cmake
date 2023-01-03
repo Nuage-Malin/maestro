@@ -11,31 +11,36 @@ if (NOT DEFINED GRPC_CPP_ONCE)
 
     # Proto file
     get_filename_component(my_protos_path
-                           "${THIRD_PARTIES_DIR}/protobuf-interfaces/" ABSOLUTE)
+    "${THIRD_PARTIES_DIR}/protobuf-interfaces/" ABSOLUTE)
     if (NOT EXISTS ${my_protos_path})
         message(FATAL_ERROR "Could not find ${my_protos_path}, exiting")
     endif ()
 
+    get_filename_component(my_protos_path_src
+                           "${my_protos_path}/src/" ABSOLUTE)
+    if (NOT EXISTS ${my_protos_path_src})
+        message(FATAL_ERROR "Could not find ${my_protos_path_src}, exiting")
+    endif ()
+
     get_filename_component(my_generated_path "${my_protos_path}/generated/"
                            ABSOLUTE)
-
     if (NOT EXISTS ${my_generated_path})
         make_directory(${my_generated_path})
     endif ()
 
     # Protobuf inpout file
-    set(my_protos "${my_protos_path}/File.proto"
-        "${my_protos_path}/UsersBack_Maestro/UsersBack_Maestro.proto")
+    set(my_protos "${my_protos_path_src}/common/File.proto"
+        "${my_protos_path_src}/UsersBack_Maestro/UsersBack_Maestro.proto")
 
 
     # Generated sources
-    set(my_protos_srcs "${my_generated_path}/File.pb.cc"
+    set(my_protos_srcs "${my_generated_path}/common/File.pb.cc"
         "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.pb.cc")
-    set(my_protos_hdrs "${my_generated_path}/File.pb.h"
+    set(my_protos_hdrs "${my_generated_path}/common/File.pb.h"
         "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.pb.h")
-    set(my_grpc_srcs "${my_generated_path}/File.grpc.pb.cc"
+    set(my_grpc_srcs "${my_generated_path}/common/File.grpc.pb.cc"
         "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.grpc.pb.cc")
-    set(my_grpc_hdrs "${my_generated_path}/File.grpc.pb.h"
+    set(my_grpc_hdrs "${my_generated_path}/common/File.grpc.pb.h"
         "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.grpc.pb.h")
 
     set(my_protos_include_dir ${my_generated_path}/)
@@ -44,7 +49,7 @@ if (NOT DEFINED GRPC_CPP_ONCE)
             OUTPUT ${my_protos_srcs} ${my_protos_hdrs} ${my_grpc_srcs} ${my_grpc_hdrs}
             COMMAND
             ${_PROTOBUF_PROTOC} ARGS --grpc_out ${my_generated_path} --cpp_out
-            ${my_generated_path} -I ${my_protos_path} -I /usr/include
+            ${my_generated_path} -I ${my_protos_path_src} -I /usr/include
             --plugin=protoc-gen-grpc=${_GRPC_CPP_PLUGIN_EXECUTABLE} ${my_protos}
             DEPENDS ${my_protos})
 

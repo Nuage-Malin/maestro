@@ -2,6 +2,7 @@
 # EPITECH PROJECT, 2022 gTest.cmake File description: Install googletest,
 # build and run test suite
 #
+# todo rename as unit_tests
 
 set(CMAKE_CXX_STANDARD 20)
 # set(CMAKE_CXX_STANDARD_REQUIRED True) set(CMAKE_CXX_COMPILER g++)
