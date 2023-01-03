@@ -18,7 +18,7 @@
 
 FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(file_database)
 {
-    this->setFileBucket();
+    this->_setFileBucket();
 }
 
 ::grpc::Status FileServer::fileUpload(::grpc::ServerContext *context,
@@ -27,20 +27,17 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     const auto metadata = request->file().metadata();
     const auto content = request->file().content();
     std::istream fileStream{std::istringstream(content).rdbuf()};
-    bsoncxx::stdx::string_view my_filename{metadata.name()};
+    bsoncxx::stdx::string_view filename{metadata.name()};
 
     try {
-        _fileBucket.upload_from_stream(my_filename, &fileStream);
+        this->_fileBucket.upload_from_stream(filename, &fileStream);
     } catch (const mongocxx::query_exception &e) {
         std::cerr << "mongocxx::query_exception: " << e.what() << std::endl;
         return ::grpc::Status::CANCELLED;
     } catch (...) {
-        std::cerr << "Upload of file '" << my_filename << "' could not be registered in database" << std::endl;
+        std::cerr << "Upload of file '" << filename << "' could not be registered in database" << std::endl;
         return ::grpc::Status::CANCELLED;
     }
-//    std::cout << "Uploading file" << std::endl; // todo log
-    const auto result = this->_fileBucket.upload_from_stream(filename, &fileStream);
-//    std::cout << "Uploaded file ID: " << result.id().get_string().value.to_string() << std::endl; // todo log
     return ::grpc::Status::OK;
 }
 
@@ -64,8 +61,8 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     return grpc::Status::OK;
 }
 
-::grpc::Status FileServer::fileDownload(::grpc::ServerContext *context,
-    const ::UsersBack_Maestro::FileDownloadRequest *request, ::File::File *response)
+::grpc::Status FileServer::fileDownload(
+    ::grpc::ServerContext *context, const ::UsersBack_Maestro::FileDownloadRequest *request, ::File::File *response)
 {
     const string &fileId{request->fileid()};
 
@@ -110,7 +107,7 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     return Service::getFilesIndex(context, request, response);
 }
 
-void FileServer::setFileBucket()
+void FileServer::_setFileBucket()
 {
     if (!_fileDatabase)
         throw std::logic_error("Cannot get bucket because don't have database");

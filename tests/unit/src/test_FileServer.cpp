@@ -19,7 +19,6 @@ FileClient &getCommonFileClient()
         throw std::invalid_argument("MAESTRO_TESTS_HOST or MAESTRO_TESTS_PORT not found");
     static FileClient client(host + std::string(":") + port);
 
-    // client.fileUpload("filename", "filedirname", "1", "file content");
     return client;
 }
 
@@ -29,9 +28,7 @@ TEST(FileServer, fileUpload)
     // TODO create automated and only one way to start server simply for every test or at the beginning of tests
     FileClient &client = getCommonFileClient();
 
-    std::cout << "BEFORE fileUpload" << std::endl;
     EXPECT_TRUE(client.fileUpload("filename", "filedirname", "1", "file content"));
-    std::cout << "AFTER fileUpload" << std::endl;
 }
 
 TEST(FileServer, askFileDownload)

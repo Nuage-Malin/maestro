@@ -16,7 +16,7 @@
 #include "utils.hpp"
 #include "File/FileServer.hpp"
 
-static const string dbName{"Files"};
+static const string dbName{"maestro"};
 static const string collName{"Uploaded"};
 
 /**

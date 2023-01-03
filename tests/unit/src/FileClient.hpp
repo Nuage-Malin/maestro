@@ -8,8 +8,8 @@
 #ifndef TEST_TESTING_FILECLIENT_HPP
 #define TEST_TESTING_FILECLIENT_HPP
 
-#include "File.grpc.pb.h"
-#include "File.pb.h"
+#include "common/File.grpc.pb.h"
+#include "common/File.pb.h"
 #include "UsersBack_Maestro/UsersBack_Maestro.pb.h"
 #include "UsersBack_Maestro/UsersBack_Maestro.grpc.pb.h"
 
