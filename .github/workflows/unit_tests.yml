@@ -14,13 +14,6 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
-          # secret containing a token allowing access to private repo (protobuf-interface submodule)
-
       - name: Cache build
         uses: actions/cache@v3
         with:
@@ -30,10 +23,15 @@ jobs:
             third_parties
           key: ${{ runner.os }}-unit_tests-build
 
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
+          # secret containing a token allowing access to private repo (protobuf-interface submodule)
+
       - name: Generate Makefile
-        run: |
-          mkdir -p build
-          cmake -D unit_tests=true -S . -B build
+        run: cmake -D unit_tests=true -S . -B build
 
       - name: Build
         run: make -C build unit_tests
@@ -44,8 +42,8 @@ jobs:
       - name: Run maestro
         run: ./build/maestro &
         env:
-          MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@localhost:27017/maestro?authSource=admin
           MAESTRO_ADDRESS: "[::]:8080"
+          MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@localhost:27017/maestro?authSource=admin
 
       - name: Run unit tests
         run: ./build/unit_tests
