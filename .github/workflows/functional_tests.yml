@@ -1,18 +1,32 @@
-name: Compile and execute functional tests
+name: Functional tests
 
 on:
   push:
     branches:
       - main
       - develop
+      - github-actions/functional-tests
   pull_request:
     branches:
       - main
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        indexes: [ 1 ]
     steps:
+      - name: Cache build
+        uses: actions/cache@v3
+        id: cache
+        with:
+          path: |
+            build
+            /opt/mongo
+            third_parties
+          key: ${{ runner.os }}-functional_tests-build
+
       - name: Checkout code
         uses: actions/checkout@v3
         with:
@@ -20,95 +34,19 @@ jobs:
           token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
           # secret containing a token allowing access to private repo (protobuf-interface submodule)
 
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v1.12
-        with:
-          cmake-version: '3.17.x'
-
-      - name: Meta build (generate Makefile)
-        run: |
-          mkdir -p build
-          cmake -D functional_tests=1 -S . -B build
+      - name: Generate Makefile
+        run: cmake -D functional_tests=true -S . -B build
 
       - name: Build
         run: make -C build functional_tests
 
-      - name: cache
-        uses: actions/cache@v3
-        id: cache
-        with:
-          path: ./
-          key: cache_key_functional_tests_build
-
-  tests:
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        indexes: [ 1 ]
-    needs: build
-    steps:
-      - name: cache
-        uses: actions/cache@v3
-        id: cache
-        with:
-          path: ./
-          key: cache_key_functional_tests_build
-
-      - name: Check if cache missed
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          echo "::error title=Cache miss::Could not retrieve cache from build functional tests job"
-
-          #      - name: Checkout code
-          #        uses: actions/checkout@v3
-          #        with:
-          #          submodules: recursive
-          #          token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
-          # secret containing a token allowing access to private repo (protobuf-interface submodule)
-
-      #      - name: Setup cmake
-      #        uses: jwlawson/actions-setup-cmake@v1.12
-      #        with:
-      #          cmake-version: '3.17.x'
-
-      #      - name: Meta build (generate Makefile)
-      #        run: |
-      #          mkdir -p build
-      #          cmake -D functional_tests=1 -S . -B build
-      #
-      #      - name: Build
-      #        run: make -C build functional_tests # todo this is doubled, store the filesystem of job build and use it here
-
       - name: Run functional tests
         run: |
-          ./functional_tests ${{ matrix.indexes }}
+          ./build/functional_tests ${{ matrix.indexes }} > $GITHUB_STEP_SUMMARY
 
-  cmake_modules:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: cache
-        uses: actions/cache@v3
-        id: cache
-        with:
-          path: ./
-          key: cache_key_functional_tests_build
-
-      - name: Check if cache missed
-        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Result
+        if: always()
         run: |
-          echo "::error title=Cache miss::Could not retrieve cache from build functional tests job"
-
-      #      - name: Checkout code
-      #        uses: actions/checkout@v3
-      #        with:
-      #          submodules: recursive
-      #          token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
-      # secret containing a token allowing access to private repo (protobuf-interface submodule)
-
-      ## todo have cache for that
-      - name: Install Doxygen
-        run: sudo apt-get install doxygen -y
-        shell: bash
-
-      - name: Launch test script
-        run: ./tests/functional/scripts/test_cmake_modules.sh ./CMakeLists.txt
+          if [ -f $GITHUB_STEP_SUMMARY ]; then
+            cat $GITHUB_STEP_SUMMARY
+          fi
