@@ -54,7 +54,10 @@ jobs:
         run: |
           ps -p `cat /tmp/maestro_pid` > /dev/null
           ./build/unit_tests > $GITHUB_STEP_SUMMARY
-          cat $GITHUB_STEP_SUMMARY
         env:
           MAESTRO_TESTS_HOST: localhost
           MAESTRO_TESTS_PORT: 8080
+
+      - name: Result
+        if: always()
+        run: cat $GITHUB_STEP_SUMMARY
