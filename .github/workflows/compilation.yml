@@ -15,7 +15,11 @@ jobs:
     steps:
       # Checkout code
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
+          # secret containing a token allowing access to private repo (protobuf-interface submodule)
 
       # Run
       - name: Build
