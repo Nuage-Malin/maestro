@@ -6,6 +6,10 @@ RUN apt-get update && apt-get install -y \
     cmake               \
     g++                 \
     git                 \
+    build-essential     \
+    autoconf            \
+    libtool             \
+    pkg-config          \
     libssl-dev          \
     libsasl2-dev        \
     libmongoc-dev       \
@@ -31,4 +35,4 @@ RUN make -C build
 # Run
 CMD ./build/maestro
 
-## todo stage "unit_tests"
+# todo stage "unit_tests"

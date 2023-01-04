@@ -75,16 +75,17 @@ if [ "$GRPC_CLONE_SUBMODULE" == "true" ]; then
     git submodule update --init --recursive # todo put that after going into the gRPC folder
 fi
 
-## compile gRPC
-cd grpc
-mkdir -p cmake/build
-pushd cmake/build
-cmake ../..
-make -j 10
+if [ "$GRPC_CLONE_SUBMODULE" == "true" ] || [ "$GRPC_RECOMPILE" == "true"  ]; then
+  ## compile gRPC
+  cd grpc
+  mkdir -p cmake/build
+  pushd cmake/build
+  cmake ../..
+  make -j 10
+fi
 
 if [ "$GRPC_FULL_INSTALL" == "true" ]; then
-    echo "hello full install"
-    mkdir -p $INSTALL_DIR
+  mkdir -p $INSTALL_DIR
 
     ## install gRPC from source
     cmake -DgRPC_INSTALL=ON \

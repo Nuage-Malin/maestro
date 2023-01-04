@@ -1,10 +1,25 @@
+# IDE
 .vscode
 .idea
 
-**/CMakeCache.txt
+# Git
 .git/
+.gitignore
+.gitkeep
+
+# Docker
 Dockerfile
-docs/
+docker-compose.y*ml
+.dockerignore
+
+# Documentation
+## Doxygen
+docs/Doxygen/html
+docs/Doxygen/man
+docs/Doxygen/Doxyfile
+
+# Others
+**/CMakeCache.txt
 functional_tests
 unit_tests
 maestro

@@ -10,5 +10,6 @@ typedef std::size_t size_t;
 #define toInteger(str) std::stoi(str)
 #define toSize_t(str)  std::stoul(str)
 #define getenv(env)    std::getenv(env);
+#define UNUSED         __attribute__((unused))
 
 #endif

@@ -1,10 +1,5 @@
 # Repo specific
 TODO
-Doxyfile
-
-# Documentation
-docs/Doxygen/html
-docs/Doxygen/man
 
 # Compilation
 build
