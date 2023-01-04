@@ -46,6 +46,9 @@ jobs:
         run: |
           ./build/maestro &
           echo $! > /tmp/maestro_pid
+          while ! nc -z localhost 8080; do
+            sleep 1
+          done
         env:
           MAESTRO_ADDRESS: "[::]:8080"
           MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@localhost:27017/maestro?authSource=admin
