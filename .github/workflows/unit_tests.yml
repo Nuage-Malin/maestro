@@ -46,10 +46,9 @@ jobs:
           MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@localhost:27017/maestro?authSource=admin
 
       - name: Run unit tests
-        run: ./build/unit_tests > /tmp/unit_tests.log
+        run: |
+          ./build/unit_tests > $GITHUB_STEP_SUMMARY
+          cat $GITHUB_STEP_SUMMARY
         env:
           MAESTRO_TESTS_HOST: localhost
           MAESTRO_TESTS_PORT: 8080
-
-      - name: Result
-        run: echo "::notice::$(cat /tmp/unit_tests.log)"
