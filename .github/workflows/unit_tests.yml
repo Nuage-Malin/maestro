@@ -41,16 +41,31 @@ jobs:
 
       - name: Run MongoDB & maestro & unit tests
         run: |
-          docker run -d -p 27017:27017 -e MONGO_INITDB_DATABASE=maestro -e MONGO_INITDB_ROOT_USERNAME=maestro_admin -e MONGO_INITDB_ROOT_PASSWORD=maestro_admin_password mongo:6
+          docker run -d -p 27017:27017 -e MONGO_INITDB_DATABASE=maestro -e MONGO_INITDB_ROOT_USERNAME=maestro_admin -e MONGO_INITDB_ROOT_PASSWORD=maestro_admin_password --name maestro-mongo mongo:6
           ./build/maestro &
-          echo $! > /tmp/maestro_pid
+          export MAESTRO_PID=$!
+          sleep 3
+          echo "Waiting MongoDB to be ready..."
+          until $(curl --output /dev/null --silent --fail http://localhost:27017); do
+            if [ "$( docker container inspect -f '{{.State.Status}}' maestro-mongo )" == "running" ]; then
+              echo "::error::MongoDB exited unexpectedly"
+              exit 1
+            fi
+            printf '.'
+            sleep 1
+          done
+          echo "MongoDB is ready"
+          echo "Waiting maestro to be ready..."
           while ! nc -z localhost 8080; do
-            if ! ps -p `cat /tmp/maestro_pid` > /dev/null; then
+            if ! ps -p $MAESTRO_PID > /dev/null; then
               echo "::error file=./build/maestro::Maestro exited unexpectedly"
               exit 1
             fi
+            printf '.'
             sleep 1
           done
+          echo "Maestro is ready"
+          echo "Run unit tests"
           ./build/unit_tests > $GITHUB_STEP_SUMMARY
         env:
           MAESTRO_ADDRESS: "[::]:8080"
