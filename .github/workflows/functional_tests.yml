@@ -13,19 +13,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        indexes: [ 1 ]
     steps:
       - name: Cache build
         uses: actions/cache@v3
-        id: cache
         with:
           path: |
-            build
             /opt/mongo
-            third_parties
-          key: ${{ runner.os }}-functional_tests-build
+            ./
+          key: ${{ runner.os }}-functional_tests
 
       - name: Checkout code
         uses: actions/checkout@v3
@@ -40,13 +35,30 @@ jobs:
       - name: Build
         run: make -C build functional_tests
 
+  tests:
+    runs-on: ubuntu-22.04
+    needs: build
+    strategy:
+      matrix:
+        indexes: [ 1 ]
+    steps:
+      - name: Cache build
+        uses: actions/cache/restore@v3
+        id: cache
+        with:
+          path: build/functional_tests
+          key: ${{ runner.os }}-functional_tests
+
+      - name: Check cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          echo "::error title=Cache miss::Could not retrieve cache from build functional tests job for index ${{ matrix.indexes }}"
+          exit 1
+
       - name: Run functional tests
         run: |
-          ./build/functional_tests ${{ matrix.indexes }} > $GITHUB_STEP_SUMMARY
+          ./build/functional_tests ${{ matrix.indexes }} >> $GITHUB_STEP_SUMMARY
 
       - name: Result
         if: always()
-        run: |
-          if [ -f $GITHUB_STEP_SUMMARY ]; then
-            cat $GITHUB_STEP_SUMMARY
-          fi
+        run: cat $GITHUB_STEP_SUMMARY
