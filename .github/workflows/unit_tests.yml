@@ -39,15 +39,6 @@ jobs:
       - name: Build project
         run: make -C build
 
-      - name: DEBUG Save cache build
-        uses: actions/cache/save@v3
-        with:
-          path: |
-            build
-            /opt/mongo
-            third_parties
-          key: ${{ runner.os }}-unit_tests-build
-
       - name: Run MongoDB & maestro & unit tests
         run: |
           docker run -d -p 27017:27017 -e MONGO_INITDB_DATABASE=maestro -e MONGO_INITDB_ROOT_USERNAME=maestro_admin -e MONGO_INITDB_ROOT_PASSWORD=maestro_admin_password --name maestro-mongo mongo:6
