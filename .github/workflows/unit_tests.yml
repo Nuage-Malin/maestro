@@ -47,6 +47,10 @@ jobs:
           ./build/maestro &
           echo $! > /tmp/maestro_pid
           while ! nc -z localhost 8080; do
+            if ! ps -p `/tmp/maestro_pid` > /dev/null; then
+              echo "::error file=./build/maestro::Maestro exited unexpectedly"
+              exit 1
+            fi
             sleep 1
           done
         env:
