@@ -33,20 +33,26 @@ jobs:
       - name: Generate Makefile
         run: cmake -D unit_tests=true -S . -B build
 
-      - name: Build
+      - name: Build tests
         run: make -C build unit_tests
+
+      - name: Build project
+        run: make -C build
 
       - name: Run MongoDB
         run: docker run -d -p 27017:27017 -e MONGO_INITDB_DATABASE=maestro -e MONGO_INITDB_ROOT_USERNAME=maestro_admin -e MONGO_INITDB_ROOT_PASSWORD=maestro_admin_password mongo:6
 
       - name: Run maestro
-        run: ./build/maestro &
+        run: |
+          ./build/maestro &
+          echo $! > /tmp/maestro_pid
         env:
           MAESTRO_ADDRESS: "[::]:8080"
           MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@localhost:27017/maestro?authSource=admin
 
       - name: Run unit tests
         run: |
+          ps -p `cat /tmp/maestro_pid` > /dev/null
           ./build/unit_tests > $GITHUB_STEP_SUMMARY
           cat $GITHUB_STEP_SUMMARY
         env:
