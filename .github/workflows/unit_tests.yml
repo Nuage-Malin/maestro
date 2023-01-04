@@ -39,11 +39,9 @@ jobs:
       - name: Build project
         run: make -C build
 
-      - name: Run MongoDB
-        run: docker run -d -p 27017:27017 -e MONGO_INITDB_DATABASE=maestro -e MONGO_INITDB_ROOT_USERNAME=maestro_admin -e MONGO_INITDB_ROOT_PASSWORD=maestro_admin_password mongo:6
-
-      - name: Run maestro & unit tests
+      - name: Run MongoDB & maestro & unit tests
         run: |
+          docker run -d -p 27017:27017 -e MONGO_INITDB_DATABASE=maestro -e MONGO_INITDB_ROOT_USERNAME=maestro_admin -e MONGO_INITDB_ROOT_PASSWORD=maestro_admin_password mongo:6
           ./build/maestro &
           echo $! > /tmp/maestro_pid
           while ! nc -z localhost 8080; do
