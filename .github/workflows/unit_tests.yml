@@ -42,7 +42,7 @@ jobs:
       - name: Run MongoDB
         run: docker run -d -p 27017:27017 -e MONGO_INITDB_DATABASE=maestro -e MONGO_INITDB_ROOT_USERNAME=maestro_admin -e MONGO_INITDB_ROOT_PASSWORD=maestro_admin_password mongo:6
 
-      - name: Run maestro
+      - name: Run maestro & unit tests
         run: |
           ./build/maestro &
           echo $! > /tmp/maestro_pid
@@ -53,15 +53,10 @@ jobs:
             fi
             sleep 1
           done
+          ./build/unit_tests > $GITHUB_STEP_SUMMARY
         env:
           MAESTRO_ADDRESS: "[::]:8080"
           MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@localhost:27017/maestro?authSource=admin
-
-      - name: Run unit tests
-        run: |
-          ps -p `cat /tmp/maestro_pid` > /dev/null
-          ./build/unit_tests > $GITHUB_STEP_SUMMARY
-        env:
           MAESTRO_TESTS_HOST: localhost
           MAESTRO_TESTS_PORT: 8080
 
