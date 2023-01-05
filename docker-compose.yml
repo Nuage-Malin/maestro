@@ -7,7 +7,7 @@ services:
         environment:
             MAESTRO_ADDRESS: "[::]:8080"
             MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@mongo:27017/maestro?authSource=admin
-            FILE_WAITING_TIME: 86400 # 24 hours (seconds * minutes * hours)
+            DOWNLOAD_WAITING_TIME: 86400 # 24 hours (seconds * minutes * hours)
         expose:
             - 8080
         networks:
