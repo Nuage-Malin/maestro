@@ -71,7 +71,11 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     }
 
     auto *waiting_time = new google::protobuf::Duration();
-    waiting_time->set_seconds(FileServer::DEFAULT_WAITING_TIME);
+    const char *envWaitingTime = getenv("FILE_WAITING_TIME");
+
+    if (!envWaitingTime)
+        throw std::invalid_argument("FILE_WAITING_TIME environment variable not found");
+    waiting_time->set_seconds(atoi(envWaitingTime));
     response->set_allocated_waitingtime(waiting_time);
 
     return grpc::Status::OK;
