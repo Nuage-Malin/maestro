@@ -28,9 +28,14 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     const auto content = request->file().content();
     std::istream fileStream{std::istringstream(content).rdbuf()};
     bsoncxx::stdx::string_view filename{metadata.name()};
+    mongocxx::v_noabi::options::gridfs::upload options;
 
     try {
-        this->_fileBucket.upload_from_stream(filename, &fileStream);
+        options.metadata(
+            bsoncxx::builder::basic::make_document(bsoncxx::builder::basic::kvp("userId", metadata.userid()),
+                bsoncxx::builder::basic::kvp("dirName", metadata.dirname())));
+
+        this->_fileBucket.upload_from_stream(filename, &fileStream, options);
     } catch (const mongocxx::query_exception &e) {
         std::cerr << "[FileServer::fileUpload] mongocxx::query_exception: " << e.what() << std::endl;
         return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
