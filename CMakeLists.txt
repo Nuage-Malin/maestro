@@ -40,7 +40,6 @@ set(SRCS ${SRC_DIR}/main.cpp
     ${SRC_DIR}/messages/TemplateMessage/TemplateMessage.cpp
     ${SRC_DIR}/messages/File/FileApproxMetadata/FileApproxMetadata.cpp
     ${SRC_DIR}/messages/File/FileMetadata/FileMetadata.cpp
-    ${SRC_DIR}/messages/File/FilesIndex/FilesIndex.cpp
     ${SRC_DIR}/File/FileServer.cpp)
 
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY})

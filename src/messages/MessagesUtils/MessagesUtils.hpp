@@ -27,14 +27,3 @@ bsoncxx::oid toObjectId(const string &id);
  * @return google::protobuf::Timestamp
  */
 google::protobuf::Timestamp convertTimestamp(const bsoncxx::v_noabi::types::b_timestamp &mongoTimestamp);
-
-template <typename TTarget, typename TList> inline std::vector<TTarget> convertListIntoVector(const TList &list)
-{
-    const vector = std::vector(list.begin(), list.end());
-    const result = std::vector<TTarget>(list.size());
-
-    std::transform(vector.begin(), vector.end(), result.begin(), [](const auto &item) {
-        return TTarget(item);
-    });
-    return result;
-}
