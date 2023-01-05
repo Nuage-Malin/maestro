@@ -52,8 +52,6 @@ class FileServer : public UsersBack_Maestro::UsersBack_Maestro_Service::Service 
 
     const string _fileBucketName{"fileBucket"};
 
-    static const int DEFAULT_WAITING_TIME = 60 /* seconds */ * 60 /* minutes */ * 24 /* hours */;
-
   private:
     void _setFileBucket();
 };

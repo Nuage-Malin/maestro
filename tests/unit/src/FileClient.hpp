@@ -17,12 +17,12 @@
 
 class FileClient {
   public:
-    explicit FileClient(const std::string &ServerIP);
+    explicit FileClient(const std::string &serverIP);
     ~FileClient() = default;
 
-    bool fileUpload(
-        const std::string &name, const std::string &dirname, const std::string &userID, const std::string &content);
-    bool askFileDownload() const;
+    bool fileUpload(const std::string &name, const std::string &dirname, const std::string &userID,
+        const std::string &content) const;
+    bool askFileDownload(const std::string &fileId) const;
     bool fileDownload();
     bool getFilesIndex();
 
