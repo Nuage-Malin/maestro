@@ -3,9 +3,7 @@ name: Functional tests
 on:
   workflow_run:
     workflows: [ "Check compilation" ]
-    branches:
-      - main
-      - develop
+    branches: [ main, develop ]
     types:
       - completed
 
