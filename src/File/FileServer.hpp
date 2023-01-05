@@ -27,22 +27,49 @@ class FileServer : public UsersBack_Maestro::UsersBack_Maestro_Service::Service 
     ~FileServer() override = default;
 
     /**
-     * @brief Put a file in the cloud
-     * @param context TODO
-     * @param request TODO
-     * @param response TODO
-     * @return TODO
+     * @brief Upload a file to the database
+     *
+     * @param context
+     * @param request
+     * @param response
+     * @return ::grpc::Status
      */
     ::grpc::Status fileUpload(::grpc::ServerContext *context, const ::UsersBack_Maestro::FileUploadRequest *request,
         ::UsersBack_Maestro::FileUploadStatus *response) override;
 
+    /**
+     * @brief Ask to download a file to download it later
+     *
+     * @param context
+     * @param request
+     * @param response
+     * @return ::grpc::Status
+     *
+     * @throw std::invalid_argument if the environment variable DOWNLOAD_WAITING_TIME isn't found
+     */
     ::grpc::Status askFileDownload(::grpc::ServerContext *context,
         const ::UsersBack_Maestro::AskFileDownloadRequest *request,
         ::UsersBack_Maestro::AskFileDownloadStatus *response) override;
 
+    /**
+     * @brief Download an asked and available file
+     *
+     * @param context
+     * @param request
+     * @param response
+     * @return ::grpc::Status
+     */
     ::grpc::Status fileDownload(::grpc::ServerContext *context, const ::UsersBack_Maestro::FileDownloadRequest *request,
         ::File::File *response) override;
 
+    /**
+     * @brief Get user files list
+     *
+     * @param context
+     * @param request
+     * @param response
+     * @return ::grpc::Status
+     */
     ::grpc::Status getFilesIndex(::grpc::ServerContext *context,
         const ::UsersBack_Maestro::GetFilesIndexRequest *request, ::File::FilesIndex *response) override;
 

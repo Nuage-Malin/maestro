@@ -1,3 +1,11 @@
+/**
+ * @file utils.hpp
+ * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
+ * @date 04/01/2023
+ * @copyright Nuage Malin
+ * @brief Utils commands
+ */
+
 #ifndef MAESTRO_UTILS_HPP
 #define MAESTRO_UTILS_HPP
 
