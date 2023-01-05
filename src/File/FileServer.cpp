@@ -32,11 +32,15 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     try {
         this->_fileBucket.upload_from_stream(filename, &fileStream);
     } catch (const mongocxx::query_exception &e) {
-        std::cerr << "mongocxx::query_exception: " << e.what() << std::endl;
-        return ::grpc::Status::CANCELLED;
+        std::cerr << "[FileServer::fileUpload] mongocxx::query_exception: " << e.what() << std::endl;
+        return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
+    } catch (const std::exception &e) {
+        std::cerr << "[FileServer::fileUpload] std::exception: " << e.what() << std::endl;
+        return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error", e.what());
     } catch (...) {
-        std::cerr << "Upload of file '" << filename << "' could not be registered in database" << std::endl;
-        return ::grpc::Status::CANCELLED;
+        std::cerr << "[FileServer::fileUpload] Upload of file '" << filename << "' could not be registered in database"
+                  << std::endl;
+        return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error");
     }
     return ::grpc::Status::OK;
 }
@@ -44,15 +48,27 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
 ::grpc::Status FileServer::askFileDownload(::grpc::ServerContext *context,
     const ::UsersBack_Maestro::AskFileDownloadRequest *request, ::UsersBack_Maestro::AskFileDownloadStatus *response)
 {
-    const string &fileId{request->fileid()};
+    const string &fileId = request->fileid();
 
-    const bsoncxx::document::value filter = bsoncxx::builder::basic::make_document(
-        bsoncxx::builder::basic::kvp("_id", bsoncxx::oid{bsoncxx::stdx::string_view{fileId}}));
-    const mongocxx::options::find options;
-    mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
+    try {
+        const bsoncxx::document::value filter = bsoncxx::builder::basic::make_document(
+            bsoncxx::builder::basic::kvp("_id", bsoncxx::oid{bsoncxx::stdx::string_view{fileId}}));
+        const mongocxx::options::find options;
+        mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
 
-    if (cursor.begin() == cursor.end())
-        return grpc::Status::CANCELLED;
+        if (cursor.begin() == cursor.end())
+            return grpc::Status(grpc::StatusCode::NOT_FOUND, "File not found");
+
+    } catch (const mongocxx::query_exception &e) {
+        std::cerr << "[FileServer::askFileDownload] mongocxx::query_exception: " << e.what() << std::endl;
+        return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
+    } catch (const std::exception &e) {
+        std::cerr << "[FileServer::askFileDownload] std::exception: " << e.what() << std::endl;
+        return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error", e.what());
+    } catch (...) {
+        std::cerr << "[FileServer::askFileDownload] Error" << std::endl;
+        return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error");
+    }
 
     auto *waiting_time = new google::protobuf::Duration();
     waiting_time->set_seconds(FileServer::DEFAULT_WAITING_TIME);
