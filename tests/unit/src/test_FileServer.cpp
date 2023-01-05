@@ -33,14 +33,14 @@ TEST(FileServer, fileUpload)
     // TODO create automated and only one way to start server simply for every test or at the beginning of tests
     FileClient &client = getCommonFileClient();
 
-    EXPECT_TRUE(client.fileUpload("filename", "filedirname", "1", "file content"));
+    EXPECT_TRUE(client.fileUpload("filename", "/file/dirname/", "63b478c92303588732090c31", "file content"));
 }
 
 TEST(FileServer, askFileDownload)
 {
     FileClient &client = getCommonFileClient();
 
-    EXPECT_TRUE(client.askFileDownload("63b478c92303588732090c31")); // This ID should be dynamic
+    EXPECT_TRUE(client.askFileDownload("63b73f1e4891d5d2160ac241")); // This ID should be dynamic
 }
 
 TEST(FileServer, fileDownload)

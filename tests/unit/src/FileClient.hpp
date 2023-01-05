@@ -24,7 +24,7 @@ class FileClient {
         const std::string &content) const;
     bool askFileDownload(const std::string &fileId) const;
     bool fileDownload();
-    bool getFilesIndex();
+    bool getFilesIndex(const std::string &userId, const std::string &dirpath);
 
   private:
     std::unique_ptr<UsersBack_Maestro::UsersBack_Maestro_Service::Stub> _stub;
