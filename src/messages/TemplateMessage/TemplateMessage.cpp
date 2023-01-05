@@ -7,24 +7,17 @@
  */
 
 #include <bsoncxx/oid.hpp>
+
+#include "common/File.grpc.pb.h"
+
 #include "TemplateMessage.hpp"
 
-template <typename T> TemplateMessage<T>::TemplateMessage(const T &message)
-{
-    this->_validation();
-}
-
-template <typename T> TemplateMessage<T>::TemplateMessage(const bsoncxx::v_noabi::document::view &view)
-{
-    this->_validation();
-}
-
-template <typename T> T &TemplateMessage<T>::toProtobuf() const
+template <typename T> T *TemplateMessage<T>::toProtobuf() const
 {
     T *message = new T();
 
     this->toProtobuf(*message);
-    return *message;
+    return message;
 }
 
 template <typename T> bool TemplateMessage<T>::_isValidFilename(const string &filename) const
@@ -36,3 +29,6 @@ template <typename T> bool TemplateMessage<T>::_isValidDirectory(const string &d
 {
     return directory[0] == '/' && directory[directory.size() - 1] == '/' && directory.find("//") == string::npos;
 }
+
+template class TemplateMessage<File::FileApproxMetadata>;
+template class TemplateMessage<File::FileMetadata>;

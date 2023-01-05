@@ -10,26 +10,33 @@
 #include "FileMetadata.hpp"
 
 FileMetadata::FileMetadata(const File::FileMetadata &message)
-    : TemplateMessage(message), approxMetadata(message.approxmetadata()), fileId(message.fileid()),
-      lastEditorId(message.lasteditorid()), creation(message.creation()), lastEdit(message.lastedit())
+    : approxMetadata(message.approxmetadata()), fileId(message.fileid()), lastEditorId(message.lasteditorid()),
+      creation(message.creation()), lastEdit(message.lastedit())
 {
+    this->_validation();
 }
 
 FileMetadata::FileMetadata(const bsoncxx::v_noabi::document::view &view)
-    : TemplateMessage(view), approxMetadata(view), fileId(view["_id"].get_string().value.to_string()),
+    : approxMetadata(view), fileId(view["_id"].get_string().value.to_string()),
       lastEditorId(view["metadata.lastEditorId"].get_string().value.to_string()),
       creation(convertTimestamp(view["metadata.creation"].get_timestamp())),
       lastEdit(convertTimestamp(view["metadata.lastEdit"].get_timestamp()))
 {
+    this->_validation();
 }
 
 void FileMetadata::toProtobuf(File::FileMetadata &message) const
 {
-    message.set_allocated_approxmetadata(&this->approxMetadata.toProtobuf());
+    message.set_allocated_approxmetadata(this->approxMetadata.toProtobuf());
     message.set_fileid(this->fileId);
     message.set_lasteditorid(this->lastEditorId);
     message.set_allocated_creation(new google::protobuf::Timestamp(this->creation));
     message.set_allocated_lastedit(new google::protobuf::Timestamp(this->lastEdit));
+}
+
+File::FileMetadata *FileMetadata::toProtobuf() const
+{
+    return TemplateMessage<File::FileMetadata>::toProtobuf();
 }
 
 FileMetadata &FileMetadata::operator=(const File::FileMetadata &message)

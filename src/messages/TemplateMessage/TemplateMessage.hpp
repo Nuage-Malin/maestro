@@ -20,19 +20,6 @@ template <typename T> class TemplateMessage {
 
   public:
     /**
-     * @brief Constructor from a protobuf message
-     *
-     * @param message
-     */
-    TemplateMessage(const T &message);
-    /**
-     * @brief Constructor from a MongoDB document
-     *
-     * @param view
-     */
-    TemplateMessage(const bsoncxx::v_noabi::document::view &view);
-
-    /**
      * @brief Convert the class into a protobuf message
      *
      * @param message
@@ -46,7 +33,7 @@ template <typename T> class TemplateMessage {
      *
      * @return T&
      */
-    T &toProtobuf() const;
+    virtual T *toProtobuf() const;
 
     virtual TemplateMessage<T> &operator=(const T &message) = 0;
 

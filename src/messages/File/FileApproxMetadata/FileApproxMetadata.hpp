@@ -19,7 +19,7 @@ class FileApproxMetadata : public TemplateMessage<File::FileApproxMetadata> {
     FileApproxMetadata(const bsoncxx::v_noabi::document::view &view);
 
     void toProtobuf(File::FileApproxMetadata &message) const override;
-    virtual File::FileApproxMetadata toProtobuf() const;
+    File::FileApproxMetadata *toProtobuf() const override;
 
     // Protobuf fields
     string name;
