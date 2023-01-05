@@ -22,6 +22,11 @@ FileClient &getCommonFileClient()
     return client;
 }
 
+TEST(FileServer, getFilesIndex)
+{
+    //    download the file uploaded in last test
+}
+
 TEST(FileServer, fileUpload)
 {
     // TODO start server
@@ -33,15 +38,12 @@ TEST(FileServer, fileUpload)
 
 TEST(FileServer, askFileDownload)
 {
-    //    ask if possible to download the file uploaded in last test
+    FileClient &client = getCommonFileClient();
+
+    EXPECT_TRUE(client.askFileDownload("63b478c92303588732090c31")); // This ID should be dynamic
 }
 
 TEST(FileServer, fileDownload)
 {
     //    download the file uploaded in previous test
-}
-
-TEST(FileServer, getFilesIndex)
-{
-    //    download the file uploaded in last test
 }
