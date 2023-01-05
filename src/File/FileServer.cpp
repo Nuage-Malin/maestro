@@ -134,9 +134,9 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
 
 void FileServer::_setFileBucket()
 {
-    if (!_fileDatabase)
+    if (!this->_fileDatabase)
         throw std::logic_error("Cannot get bucket because don't have database");
     mongocxx::options::gridfs::bucket bucketOptions;
-    bucketOptions.bucket_name("_fileBucketName");
+    bucketOptions.bucket_name(this->_fileBucketName);
     this->_fileBucket = this->_fileDatabase.gridfs_bucket(bucketOptions);
 }
