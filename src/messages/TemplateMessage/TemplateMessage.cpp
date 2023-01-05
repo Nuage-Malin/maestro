@@ -19,6 +19,14 @@ template <typename T> TemplateMessage<T>::TemplateMessage(const bsoncxx::v_noabi
     this->_validation();
 }
 
+template <typename T> T &TemplateMessage<T>::toProtobuf() const
+{
+    T *message = new T();
+
+    this->toProtobuf(*message);
+    return *message;
+}
+
 template <typename T> bool TemplateMessage<T>::_isValidFilename(const string &filename) const
 {
     return !filename.empty() && filename.find_first_not_of("/\t\r\n ") != string::npos;

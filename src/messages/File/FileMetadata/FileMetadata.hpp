@@ -16,7 +16,7 @@ class FileMetadata : public TemplateMessage<File::FileMetadata> {
     FileMetadata(const File::FileMetadata &message);
     FileMetadata(const bsoncxx::v_noabi::document::view &view);
 
-    File::FileMetadata toProtobuf() const override;
+    void toProtobuf(File::FileMetadata &message) const;
 
     // Protobuf fields
     FileApproxMetadata approxMetadata;

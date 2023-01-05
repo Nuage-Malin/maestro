@@ -6,6 +6,7 @@
  * @brief FileApproxMetadata class implementation
  */
 
+#include "messages/MessagesUtils/MessagesUtils.hpp"
 #include "FileApproxMetadata.hpp"
 
 FileApproxMetadata::FileApproxMetadata(const File::FileApproxMetadata &message)
@@ -14,19 +15,17 @@ FileApproxMetadata::FileApproxMetadata(const File::FileApproxMetadata &message)
 }
 
 FileApproxMetadata::FileApproxMetadata(const bsoncxx::v_noabi::document::view &view)
-    : TemplateMessage(view), name(view["name"].get_string().value.to_string()),
-      dirPath(view["dirPath"].get_string().value.to_string()), userId(view["userId"].get_string().value.to_string())
+    : TemplateMessage(view), name(view["filename"].get_string().value.to_string()),
+      dirPath(view["metadata.dirPath"].get_string().value.to_string()),
+      userId(view["metadata.userId"].get_string().value.to_string())
 {
 }
 
-File::FileApproxMetadata FileApproxMetadata::toProtobuf() const
+void FileApproxMetadata::toProtobuf(File::FileApproxMetadata &message) const
 {
-    File::FileApproxMetadata fileApproxMetadata;
-
-    fileApproxMetadata.set_name(this->name);
-    fileApproxMetadata.set_dirpath(this->dirPath);
-    fileApproxMetadata.set_userid(this->userId);
-    return fileApproxMetadata;
+    message.set_name(this->name);
+    message.set_dirpath(this->dirPath);
+    message.set_userid(this->userId);
 }
 
 FileApproxMetadata &FileApproxMetadata::operator=(const File::FileApproxMetadata &message)
@@ -46,7 +45,7 @@ void FileApproxMetadata::_validation() const
     if (!this->_isValidDirectory(this->dirPath))
         throw std::invalid_argument("[FileApproxMetadata] Invalid dirPath: " + this->dirPath);
     try {
-        this->toObjectId(this->userId);
+        toObjectId(this->userId);
     } catch (...) {
         throw std::invalid_argument("[FileApproxMetadata] Invalid userId: " + this->userId);
     }

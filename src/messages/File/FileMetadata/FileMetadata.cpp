@@ -16,25 +16,20 @@ FileMetadata::FileMetadata(const File::FileMetadata &message)
 }
 
 FileMetadata::FileMetadata(const bsoncxx::v_noabi::document::view &view)
-    : TemplateMessage(view), approxMetadata(view["approxMetadata"].get_document().value),
-      fileId(view["fileId"].get_string().value.to_string()),
-      lastEditorId(view["lastEditorId"].get_string().value.to_string()),
-      creation(convertTimestamp(view["creation"].get_timestamp())),
-      lastEdit(convertTimestamp(view["lastEdit"].get_timestamp()))
+    : TemplateMessage(view), approxMetadata(view), fileId(view["_id"].get_string().value.to_string()),
+      lastEditorId(view["metadata.lastEditorId"].get_string().value.to_string()),
+      creation(convertTimestamp(view["metadata.creation"].get_timestamp())),
+      lastEdit(convertTimestamp(view["metadata.lastEdit"].get_timestamp()))
 {
 }
 
-File::FileMetadata FileMetadata::toProtobuf() const
+void FileMetadata::toProtobuf(File::FileMetadata &message) const
 {
-    File::FileMetadata message;
-
-    message.set_allocated_approxmetadata(new File::FileApproxMetadata(this->approxMetadata.toProtobuf()));
+    message.set_allocated_approxmetadata(&this->approxMetadata.toProtobuf());
     message.set_fileid(this->fileId);
     message.set_lasteditorid(this->lastEditorId);
     message.set_allocated_creation(new google::protobuf::Timestamp(this->creation));
     message.set_allocated_lastedit(new google::protobuf::Timestamp(this->lastEdit));
-
-    return message;
 }
 
 FileMetadata &FileMetadata::operator=(const File::FileMetadata &message)
