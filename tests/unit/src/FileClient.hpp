@@ -20,11 +20,11 @@ class FileClient {
     explicit FileClient(const std::string &serverIP);
     ~FileClient() = default;
 
-    bool fileUpload(const std::string &name, const std::string &dirname, const std::string &userID,
-        const std::string &content) const;
-    bool askFileDownload(const std::string &fileId) const;
+    bool fileUpload(UsersBack_Maestro::FileUploadStatus &response, const std::string &name, const std::string &dirname,
+        const std::string &userID, const std::string &content) const;
+    bool askFileDownload(UsersBack_Maestro::AskFileDownloadStatus &response, const std::string &fileId) const;
     bool fileDownload();
-    bool getFilesIndex(const std::string &userId, const std::string &dirpath);
+    bool getFilesIndex(File::FilesIndex &response, const std::string &userId, const std::string &dirpath) const;
 
   private:
     std::unique_ptr<UsersBack_Maestro::UsersBack_Maestro_Service::Stub> _stub;

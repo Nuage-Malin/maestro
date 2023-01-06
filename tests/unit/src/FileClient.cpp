@@ -19,12 +19,11 @@ FileClient::FileClient(const std::string &ServerIP)
         throw std::runtime_error("Could not create gRPC stub");
 }
 
-bool FileClient::fileUpload(
-    const std::string &name, const std::string &dirpath, const std::string &userID, const std::string &content) const
+bool FileClient::fileUpload(UsersBack_Maestro::FileUploadStatus &response, const std::string &name,
+    const std::string &dirpath, const std::string &userID, const std::string &content) const
 {
     grpc::ClientContext context;
     UsersBack_Maestro::FileUploadRequest request;
-    UsersBack_Maestro::FileUploadStatus response;
     grpc::Status status;
     auto *file{new File::NewFile()};
     auto *metadata{new File::FileApproxMetadata()};
@@ -47,11 +46,10 @@ bool FileClient::fileUpload(
     return true;
 }
 
-bool FileClient::askFileDownload(const std::string &fileId) const
+bool FileClient::askFileDownload(UsersBack_Maestro::AskFileDownloadStatus &response, const std::string &fileId) const
 {
     grpc::ClientContext context;
     UsersBack_Maestro::AskFileDownloadRequest request;
-    UsersBack_Maestro::AskFileDownloadStatus response;
     grpc::Status status;
 
     request.set_fileid(fileId);
@@ -68,11 +66,10 @@ bool FileClient::askFileDownload(const std::string &fileId) const
     return true;
 }
 
-bool FileClient::getFilesIndex(const std::string &userId, const std::string &dirpath)
+bool FileClient::getFilesIndex(File::FilesIndex &response, const std::string &userId, const std::string &dirpath) const
 {
     grpc::ClientContext context;
     UsersBack_Maestro::GetFilesIndexRequest request;
-    File::FilesIndex response;
     grpc::Status status;
 
     request.set_userid(userId);
@@ -86,15 +83,5 @@ bool FileClient::getFilesIndex(const std::string &userId, const std::string &dir
         return false;
     }
     std::cout << "Got files index from server" << std::endl;
-    for (const auto &file : response.index()) {
-        std::cout << "============================" << std::endl;
-        std::cout << "File id: " << file.fileid() << std::endl;
-        std::cout << "File dirpath: " << file.approxmetadata().dirpath() << std::endl;
-        std::cout << "File name: " << file.approxmetadata().name() << std::endl;
-        std::cout << "File user id: " << file.approxmetadata().userid() << std::endl;
-        std::cout << "File lastEditor: " << file.lasteditorid() << std::endl;
-        std::cout << "File creation: " << file.creation().seconds() << std::endl;
-        std::cout << "File lastEdit: " << file.lastedit().seconds() << std::endl;
-    }
     return true;
 }
