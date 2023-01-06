@@ -11,7 +11,7 @@
 
 #include "common/File.grpc.pb.h"
 
-#include "messages/TemplateMessage/TemplateMessage.hpp"
+#include "messages/TemplateMessage.hpp"
 
 class FileApproxMetadata : public TemplateMessage<File::FileApproxMetadata> {
   public:

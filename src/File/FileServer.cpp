@@ -37,7 +37,10 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
             bsoncxx::builder::basic::kvp("lastEdit", bsoncxx::types::b_date(std::chrono::high_resolution_clock::now())),
             bsoncxx::builder::basic::kvp("lastEditorId", metadata.userId)));
 
-        this->_fileBucket.upload_from_stream(bsoncxx::stdx::string_view{metadata.name}, &fileStream, options);
+        const auto &result =
+            this->_fileBucket.upload_from_stream(bsoncxx::stdx::string_view{metadata.name}, &fileStream, options);
+
+        response->set_fileid(result.id().get_oid().value.to_string());
     } catch (const mongocxx::query_exception &e) {
         std::cerr << "[FileServer::fileUpload] mongocxx::query_exception: " << e.what() << std::endl;
         return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
@@ -131,6 +134,15 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     grpc::ServerContext *context, const UsersBack_Maestro::GetFilesIndexRequest *request, File::FilesIndex *response)
 {
     try {
+        const string &userId{request->userid()};
+        const string &dirPath{request->dirpath()};
+
+        // Validate request
+        toObjectId(userId);
+        if (!isValidDirectory(dirPath))
+            throw std::invalid_argument("Invalid directory path: " + dirPath);
+
+        // Get files index
         const bsoncxx::document::value filter =
             bsoncxx::builder::basic::make_document(bsoncxx::builder::basic::kvp("metadata.userId", request->userid()),
                 bsoncxx::builder::basic::kvp("metadata.dirPath", request->dirpath()));
@@ -143,6 +155,9 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     } catch (const mongocxx::query_exception &e) {
         std::cerr << "[FileServer::getFilesIndex] mongocxx::query_exception: " << e.what() << std::endl;
         return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
+    } catch (const mongocxx::exception &e) {
+        std::cerr << "[FileServer::getFilesIndex] mongocxx::exception: " << e.what() << std::endl;
+        return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error", e.what());
     } catch (const std::exception &e) {
         std::cerr << "[FileServer::getFilesIndex] std::exception: " << e.what() << std::endl;
         return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error", e.what());

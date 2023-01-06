@@ -17,11 +17,12 @@ bsoncxx::oid toObjectId(const string &id)
     }
 }
 
-google::protobuf::Timestamp convertTimestamp(const bsoncxx::v_noabi::types::b_timestamp &mongoTimestamp)
+bool isValidFilename(const string &filename)
 {
-    google::protobuf::Timestamp protobufTimestamp;
+    return !filename.empty() && filename.find_first_not_of("/\t\r\n ") != string::npos;
+}
 
-    protobufTimestamp.set_seconds(mongoTimestamp.timestamp);
-    protobufTimestamp.set_nanos(mongoTimestamp.increment * 1000);
-    return protobufTimestamp;
+bool isValidDirectory(const string &directory)
+{
+    return directory[0] == '/' && directory[directory.size() - 1] == '/' && directory.find("//") == string::npos;
 }

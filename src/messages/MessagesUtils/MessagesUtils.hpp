@@ -21,9 +21,18 @@
 bsoncxx::oid toObjectId(const string &id);
 
 /**
- * @brief Convert a bsoncxx::v_noabi::types::b_timestamp to a google::protobuf::Timestamp
+ * @brief Check if the filename is valid
  *
- * @param mongoTimestamp
- * @return google::protobuf::Timestamp
+ * @param filename
+ * @return true
+ * @return false
  */
-google::protobuf::Timestamp convertTimestamp(const bsoncxx::v_noabi::types::b_timestamp &mongoTimestamp);
+NODISCARD bool isValidFilename(const string &filename);
+/**
+ * @brief Check if the directory is valid
+ *
+ * @param directory
+ * @return true
+ * @return false
+ */
+NODISCARD bool isValidDirectory(const string &directory);

@@ -19,5 +19,6 @@ typedef std::size_t size_t;
 #define toSize_t(str)  std::stoul(str)
 #define getenv(env)    std::getenv(env)
 #define UNUSED         __attribute__((unused))
+#define NODISCARD      [[nodiscard]]
 
 #endif

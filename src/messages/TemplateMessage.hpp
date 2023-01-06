@@ -33,7 +33,13 @@ template <typename T> class TemplateMessage {
      *
      * @return T&
      */
-    virtual T *toProtobuf() const;
+    NODISCARD virtual T *toProtobuf() const
+    {
+        T *message = new T();
+
+        this->toProtobuf(*message);
+        return message;
+    }
 
     virtual TemplateMessage<T> &operator=(const T &message) = 0;
 
@@ -42,22 +48,6 @@ template <typename T> class TemplateMessage {
      * @brief Validate the message
      */
     virtual void _validation() const = 0;
-    /**
-     * @brief Check if the filename is valid
-     *
-     * @param filename
-     * @return true
-     * @return false
-     */
-    bool _isValidFilename(const string &filename) const;
-    /**
-     * @brief Check if the directory is valid
-     *
-     * @param directory
-     * @return true
-     * @return false
-     */
-    bool _isValidDirectory(const string &directory) const;
 };
 
 #endif

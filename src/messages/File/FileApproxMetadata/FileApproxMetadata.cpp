@@ -17,8 +17,8 @@ FileApproxMetadata::FileApproxMetadata(const File::FileApproxMetadata &message)
 
 FileApproxMetadata::FileApproxMetadata(const bsoncxx::v_noabi::document::view &view)
     : name(view["filename"].get_string().value.to_string()),
-      dirPath(view["metadata.dirPath"].get_string().value.to_string()),
-      userId(view["metadata.userId"].get_string().value.to_string())
+      dirPath(view["metadata"]["dirPath"].get_string().value.to_string()),
+      userId(view["metadata"]["userId"].get_string().value.to_string())
 {
     this->_validation();
 }
@@ -47,9 +47,9 @@ FileApproxMetadata &FileApproxMetadata::operator=(const File::FileApproxMetadata
 
 void FileApproxMetadata::_validation() const
 {
-    if (!this->_isValidFilename(this->name))
+    if (!isValidFilename(this->name))
         throw std::invalid_argument("[FileApproxMetadata] Invalid name: " + this->name);
-    if (!this->_isValidDirectory(this->dirPath))
+    if (!isValidDirectory(this->dirPath))
         throw std::invalid_argument("[FileApproxMetadata] Invalid dirPath: " + this->dirPath);
     try {
         toObjectId(this->userId);

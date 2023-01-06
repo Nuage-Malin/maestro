@@ -6,6 +6,8 @@
  * @brief FileMetadata class implementation
  */
 
+#include <google/protobuf/util/time_util.h>
+
 #include "messages/MessagesUtils/MessagesUtils.hpp"
 #include "FileMetadata.hpp"
 
@@ -17,10 +19,12 @@ FileMetadata::FileMetadata(const File::FileMetadata &message)
 }
 
 FileMetadata::FileMetadata(const bsoncxx::v_noabi::document::view &view)
-    : approxMetadata(view), fileId(view["_id"].get_string().value.to_string()),
-      lastEditorId(view["metadata.lastEditorId"].get_string().value.to_string()),
-      creation(convertTimestamp(view["metadata.creation"].get_timestamp())),
-      lastEdit(convertTimestamp(view["metadata.lastEdit"].get_timestamp()))
+    : approxMetadata(FileApproxMetadata(view)), fileId(view["_id"].get_oid().value.to_string()),
+      lastEditorId(view["metadata"]["lastEditorId"].get_string().value.to_string()),
+      creation(google::protobuf::util::TimeUtil::MillisecondsToTimestamp(
+          view["metadata"]["creation"].get_date().to_int64())),
+      lastEdit(
+          google::protobuf::util::TimeUtil::MillisecondsToTimestamp(view["metadata"]["lastEdit"].get_date().to_int64()))
 {
     this->_validation();
 }
