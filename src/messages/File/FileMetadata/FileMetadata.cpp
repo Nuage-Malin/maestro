@@ -28,6 +28,17 @@ FileMetadata::FileMetadata(const bsoncxx::v_noabi::document::view &view)
 {
     this->_validation();
 }
+FileMetadata::FileMetadata(const bsoncxx::v_noabi::document::view &view, const bool isDownloadable)
+    : approxMetadata(FileApproxMetadata(view)), fileId(view["_id"].get_oid().value.to_string()),
+      lastEditorId(view["metadata"]["lastEditorId"].get_string().value.to_string()),
+      creation(google::protobuf::util::TimeUtil::MillisecondsToTimestamp(
+          view["metadata"]["creation"].get_date().to_int64())),
+      lastEdit(google::protobuf::util::TimeUtil::MillisecondsToTimestamp(
+          view["metadata"]["lastEdit"].get_date().to_int64())),
+      isDownloadable(isDownloadable)
+{
+    this->_validation();
+}
 
 void FileMetadata::toProtobuf(File::FileMetadata &message) const
 {
@@ -36,6 +47,7 @@ void FileMetadata::toProtobuf(File::FileMetadata &message) const
     message.set_lasteditorid(this->lastEditorId);
     message.set_allocated_creation(new google::protobuf::Timestamp(this->creation));
     message.set_allocated_lastedit(new google::protobuf::Timestamp(this->lastEdit));
+    message.set_isdownloadable(this->isDownloadable);
 }
 
 File::FileMetadata *FileMetadata::toProtobuf() const
@@ -50,6 +62,7 @@ FileMetadata &FileMetadata::operator=(const File::FileMetadata &message)
     this->lastEditorId = message.lasteditorid();
     this->creation = message.creation();
     this->lastEdit = message.lastedit();
+    this->isDownloadable = message.isdownloadable();
 
     this->_validation();
     return *this;

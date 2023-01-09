@@ -153,7 +153,8 @@ int FileServer::isDownloadable(string fileId)
     auto timeToWait(isDownloadable(request->fileid()));
 
     if (timeToWait != 0) {
-        return grpc::Status(grpc::StatusCode::NOT_FOUND, "File not available",
+        return grpc::Status(grpc::StatusCode::NOT_FOUND,
+            "File not available",
             "The file was either never requested , is not available yet or is no longer available");
     }
 
@@ -197,7 +198,8 @@ int FileServer::isDownloadable(string fileId)
         mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
 
         for (auto i : cursor) {
-            FileMetadata(i).toProtobuf(*response->add_index());
+            FileMetadata(i, !isDownloadable(string(i["_id"].get_oid().value.to_string())))
+                .toProtobuf(*response->add_index());
         }
     } catch (const mongocxx::query_exception &e) {
         std::cerr << "[FileServer::getFilesIndex] mongocxx::query_exception: " << e.what() << std::endl;
