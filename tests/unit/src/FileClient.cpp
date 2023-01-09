@@ -93,7 +93,6 @@ bool FileClient::getFilesIndex(File::FilesIndex &response, const std::string &us
 
     request.set_userid(userId);
     request.set_dirpath(dirpath);
-
     status = this->_stub->getFilesIndex(&context, request, &response);
     if (!status.ok()) {
         std::cerr << "Could not get files index from server" << std::endl;

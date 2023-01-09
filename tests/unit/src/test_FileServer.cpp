@@ -78,6 +78,7 @@ TEST(FileServer, getFilesIndex)
     EXPECT_TRUE(lastFileUploaded);
 }
 
+static int waitingTime(0);
 /**
  * @brief Ask if possible to download the file uploaded in previous test
  */
@@ -88,6 +89,21 @@ TEST(FileServer, askFileDownload)
 
     EXPECT_TRUE(client.askFileDownload(response, fileId_toDownload));
     EXPECT_GT(response.waitingtime().seconds(), 0);
+    waitingTime = response.waitingtime().seconds();
+}
+
+/**
+ * @brief Ask (for the second time) if possible to download a file, the waiting time should have decreased
+ */
+TEST(FileServer, askFileDownload_sameFile)
+{
+    FileClient &client = getCommonFileClient();
+    UsersBack_Maestro::AskFileDownloadStatus response;
+
+    sleep(2);
+    EXPECT_TRUE(client.askFileDownload(response, fileId_toDownload));
+    EXPECT_GT(response.waitingtime().seconds(), 0);
+    EXPECT_GT(waitingTime, response.waitingtime().seconds());
 }
 
 /**

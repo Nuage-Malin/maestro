@@ -76,6 +76,12 @@ class FileServer : public UsersBack_Maestro::UsersBack_Maestro_Service::Service 
   private:
     mongocxx::database _fileDatabase;
     mongocxx::gridfs::bucket _fileBucket;
+    std::unordered_map<string,
+        std::tuple<google::protobuf::Duration, std::chrono::time_point<std::chrono::high_resolution_clock>>>
+        _availabilityCountdown;
+    std::unordered_map<string,
+        std::tuple<google::protobuf::Duration, std::chrono::time_point<std::chrono::high_resolution_clock>>>
+        _downloadCountdown;
 
     const string _fileBucketName{"fileBucket"};
     static const int DEFAULT_WAITING_TIME = 60 /* seconds */;

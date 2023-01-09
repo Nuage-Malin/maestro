@@ -25,6 +25,8 @@ set(EXECUTABLE_NAME maestro)
 project(${PROJECT_NAME} LANGUAGES CXX)
 set(CMAKE_BUILD_TYPE DEBUG)
 set(CMAKE_CXX_STANDARD 20)
+set(CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 get_filename_component(THIRD_PARTIES_DIR
                        "${CMAKE_HOME_DIRECTORY}/third_parties/" ABSOLUTE)
@@ -50,11 +52,12 @@ if (NOT DEFINED doxygen)
 
 
     add_executable(${EXECUTABLE_NAME} ${SRCS})
+    set_property(TARGET ${EXECUTABLE_NAME} PROPERTY CXX_STANDARD 20)
     target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCL_DIR} ${SRC_DIR} ${my_protos_include_dir})
 
     # gRPC
     target_link_libraries(${EXECUTABLE_NAME} ${my_grpc_proto} ${_REFLECTION}
-                        ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
+                          ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
 
     # MongoDB
     include(${CMAKE_MODULES_DIR}/mongodb.cmake)
