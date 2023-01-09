@@ -46,7 +46,6 @@ TEST(FileServer, fileUpload)
 
     EXPECT_TRUE(
         client.fileUpload(response, fileName_uploaded, fileDirpath_uploaded, DUMMY_USER_ID, fileContent_uploaded));
-    //    EXPECT_FALSE(response.fileid().empty());
 }
 
 /**
@@ -87,6 +86,7 @@ TEST(FileServer, askFileDownload)
     FileClient &client = getCommonFileClient();
     UsersBack_Maestro::AskFileDownloadStatus response;
 
+    setenv("DOWNLOAD_WAITING_TIME", "100", true);
     EXPECT_TRUE(client.askFileDownload(response, fileId_toDownload));
     EXPECT_GT(response.waitingtime().seconds(), 0);
     waitingTime = response.waitingtime().seconds();
@@ -100,7 +100,7 @@ TEST(FileServer, askFileDownload_sameFile)
     FileClient &client = getCommonFileClient();
     UsersBack_Maestro::AskFileDownloadStatus response;
 
-    sleep(2);
+    sleep(1);
     EXPECT_TRUE(client.askFileDownload(response, fileId_toDownload));
     EXPECT_GT(response.waitingtime().seconds(), 0);
     EXPECT_GT(waitingTime, response.waitingtime().seconds());
@@ -114,6 +114,33 @@ TEST(FileServer, fileDownload)
     FileClient &client = getCommonFileClient();
     File::File response;
 
-    EXPECT_TRUE(client.fileDownload(response, fileId_toDownload));
-    EXPECT_EQ(response.content(), fileContent_uploaded);
+    EXPECT_FALSE(client.fileDownload(response, fileId_toDownload));
+    //    EXPECT_EQ(response.content(), fileContent_uploaded);
+}
+
+/**
+ * @brief Upload a file and set the waiting time so that it is now available for download
+ */
+TEST(FileServer, fileDownloadAvailable)
+{
+    FileClient &client = getCommonFileClient();
+    UsersBack_Maestro::FileUploadStatus responseUpload;
+    File::FilesIndex responseIndex;
+    UsersBack_Maestro::AskFileDownloadStatus responseAsk;
+    File::File responseDownload;
+    const std::string my_fileName_uploaded("some_filename");
+    const std::string my_fileDirpath_uploaded("/file/my_dirpath/");
+    const std::string my_fileContent_uploaded("the file content is such as this one");
+    std::string my_fileId_toDownload;
+
+    setenv("DOWNLOAD_WAITING_TIME", "100", true); // does not work cause maestro is another program
+    EXPECT_TRUE(client.fileUpload(
+        responseUpload, my_fileName_uploaded, my_fileDirpath_uploaded, DUMMY_USER_ID, my_fileContent_uploaded));
+    EXPECT_TRUE(client.getFilesIndex(responseIndex, DUMMY_USER_ID, my_fileDirpath_uploaded));
+    for (const auto &file : responseIndex.index()) {
+        my_fileId_toDownload = file.fileid(); // set file id for further tests on download
+    }
+    EXPECT_TRUE(client.askFileDownload(responseAsk, my_fileId_toDownload));
+    EXPECT_TRUE(client.fileDownload(responseDownload, my_fileId_toDownload));
+    EXPECT_EQ(responseDownload.content(), my_fileContent_uploaded);
 }

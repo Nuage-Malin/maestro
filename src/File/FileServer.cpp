@@ -57,62 +57,89 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     }
     return ::grpc::Status::OK;
 }
-using namespace std::chrono_literals;
-::grpc::Status FileServer::askFileDownload(::grpc::ServerContext *context,
-    const ::UsersBack_Maestro::AskFileDownloadRequest *request, ::UsersBack_Maestro::AskFileDownloadStatus *response)
+
+/**
+ * @brief Know if a file is downloadable in a certain time, available for download or none
+ * @return Duration, in seconds, in which the file will be available
+ *          if 0, the file is available,
+ *          if negative (-1), the file has not been asked for download
+ */
+int FileServer::isDownloadable(string fileId)
 {
     try {
-        auto fileAvailabilityCountdown(_availabilityCountdown.at(request->fileid()));
+        auto fileAvailabilityCountdown(_availabilityCountdown.at(fileId));
         auto [waitingTime, start] = fileAvailabilityCountdown;
-        std::cout << "start.time_since_epoch().count() + std::chrono::seconds(waitingTime.seconds()).count() "
-                  << start.time_since_epoch().count() + std::chrono::seconds(waitingTime.seconds()).count()
-                  << std::endl;
-
-        auto *availabilityCountdown = new google::protobuf::Duration();
         auto timeToWait(std::chrono::duration_cast<std::chrono::seconds>(start.time_since_epoch()
             - std::chrono::high_resolution_clock::now().time_since_epoch()
             + std::chrono::seconds(waitingTime.seconds()))
                             .count());
         if (timeToWait < 0) {
-            _downloadCountdown.insert(_availabilityCountdown.extract(request->fileid()));
-            availabilityCountdown->set_seconds(0);
-        } else {
-            availabilityCountdown->set_seconds(timeToWait);
+            _downloadCountdown.insert(_availabilityCountdown.extract(fileId));
+            return 0;
         }
-        response->set_allocated_waitingtime(availabilityCountdown);
-        return grpc::Status::OK;
+        return timeToWait;
     } catch (const std::out_of_range &e) {
         // could not find the file id in _availabilityCountdown,
         // which means that the file has not been asked for download
+        try {
+            auto fileDownloadCountdown(_downloadCountdown.at(fileId));
+            auto [downloadTime, start] = fileDownloadCountdown;
+            auto timeAvailable(std::chrono::duration_cast<std::chrono::seconds>(start.time_since_epoch()
+                - std::chrono::high_resolution_clock::now().time_since_epoch()
+                + std::chrono::seconds(downloadTime.seconds()))
+                                   .count());
+            if (timeAvailable < 0) {
+                _downloadCountdown.erase(fileId);
+                return -1;
+            }
+            return 0;
+        } catch (const std::out_of_range &e) {
+            // could not find the file id in _downloadCountdown,
+            // which means that the file has not been asked for download
+            return -1;
+        }
+        return -1;
     }
-    try {
-        const bsoncxx::document::value filter =
-            bsoncxx::builder::basic::make_document(bsoncxx::builder::basic::kvp("_id", toObjectId(request->fileid())));
-        const mongocxx::options::find options;
-        mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
+}
 
-        if (cursor.begin() == cursor.end())
-            return grpc::Status(grpc::StatusCode::NOT_FOUND, "File not found");
+::grpc::Status FileServer::askFileDownload(::grpc::ServerContext *context,
+    const ::UsersBack_Maestro::AskFileDownloadRequest *request, ::UsersBack_Maestro::AskFileDownloadStatus *response)
+{
+    auto timeToWait(isDownloadable(request->fileid()));
+    auto *availabilityCountdown = new google::protobuf::Duration();
 
-        auto *availabilityCountdown = new google::protobuf::Duration();
-        const char *envWaitingTime = getenv("DOWNLOAD_WAITING_TIME");
-
-        if (!envWaitingTime)
-            availabilityCountdown->set_seconds(DEFAULT_WAITING_TIME);
-        else
-            availabilityCountdown->set_seconds(toInteger(envWaitingTime));
+    if (timeToWait >= 0) {
+        availabilityCountdown->set_seconds(timeToWait);
         response->set_allocated_waitingtime(availabilityCountdown);
-        _availabilityCountdown.emplace(
-            request->fileid(), std::make_tuple(*availabilityCountdown, std::chrono::high_resolution_clock::now()));
-    } catch (const mongocxx::query_exception &e) {
-        std::cerr << "[FileServer::askFileDownload] mongocxx::query_exception: " << e.what() << std::endl;
-        return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
-    } catch (const std::exception &e) {
-        std::cerr << "[FileServer::askFileDownload] std::exception: " << e.what() << std::endl;
-        return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error", e.what());
-    } catch (...) {
-        std::cerr << "[FileServer::askFileDownload] Error" << std::endl;
-        return grpc::Status(grpc::StatusCode::INTERNAL, "Unknown error");
+    } else {
+        try {
+            const bsoncxx::document::value filter = bsoncxx::builder::basic::make_document(
+                bsoncxx::builder::basic::kvp("_id", toObjectId(request->fileid())));
+            const mongocxx::options::find options;
+            mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
+
+            if (cursor.begin() == cursor.end())
+                return grpc::Status(grpc::StatusCode::NOT_FOUND, "File not found");
+
+            const char *envWaitingTime = getenv("DOWNLOAD_WAITING_TIME");
+
+            if (!envWaitingTime)
+                availabilityCountdown->set_seconds(DEFAULT_WAITING_TIME);
+            else
+                availabilityCountdown->set_seconds(toInteger(envWaitingTime));
+            response->set_allocated_waitingtime(availabilityCountdown);
+            _availabilityCountdown.emplace(
+                request->fileid(), std::make_tuple(*availabilityCountdown, std::chrono::high_resolution_clock::now()));
+        } catch (const mongocxx::query_exception &e) {
+            std::cerr << "[FileServer::askFileDownload] mongocxx::query_exception: " << e.what() << std::endl;
+            return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
+        } catch (const std::exception &e) {
+            std::cerr << "[FileServer::askFileDownload] std::exception: " << e.what() << std::endl;
+            return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error", e.what());
+        } catch (...) {
+            std::cerr << "[FileServer::askFileDownload] Error" << std::endl;
+            return grpc::Status(grpc::StatusCode::INTERNAL, "Unknown error");
+        }
     }
 
     return grpc::Status::OK;
@@ -122,6 +149,12 @@ using namespace std::chrono_literals;
     ::grpc::ServerContext *context, const ::UsersBack_Maestro::FileDownloadRequest *request, ::File::File *response)
 {
     const string &fileId{request->fileid()};
+
+    auto timeToWait(isDownloadable(request->fileid()));
+
+    if (timeToWait != 0) {
+        return grpc::Status::CANCELLED;
+    }
 
     const bsoncxx::document::value filter = bsoncxx::builder::basic::make_document(
         bsoncxx::builder::basic::kvp("_id", bsoncxx::oid{bsoncxx::stdx::string_view{fileId}}));
