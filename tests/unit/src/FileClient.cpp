@@ -66,6 +66,25 @@ bool FileClient::askFileDownload(UsersBack_Maestro::AskFileDownloadStatus &respo
     return true;
 }
 
+bool FileClient::fileDownload(File::File &response, const std::string &fileId)
+{
+    grpc::ClientContext context;
+    UsersBack_Maestro::FileDownloadRequest request;
+    grpc::Status status;
+
+    request.set_fileid(fileId);
+
+    status = this->_stub->fileDownload(&context, request, &response);
+    if (!status.ok()) {
+        std::cerr << "Could not download from server" << std::endl;
+        std::cerr << "Error code : " << status.error_code() << ", error message : " << status.error_message()
+                  << ", error detail : " << status.error_details() << std::endl;
+        return false;
+    }
+    std::cout << "Downloaded file with id '" << fileId << "'" << std::endl;
+    return true;
+}
+
 bool FileClient::getFilesIndex(File::FilesIndex &response, const std::string &userId, const std::string &dirpath) const
 {
     grpc::ClientContext context;

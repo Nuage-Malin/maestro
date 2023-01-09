@@ -10,36 +10,57 @@
 
 #include "FileClient.hpp"
 
+/**
+ * @brief Get a client to interact with a gRPC stub
+ * @return The client
+ */
 FileClient &getCommonFileClient()
 {
-    const char *host = std::getenv("MAESTRO_TESTS_HOST");
-    const char *port = std::getenv("MAESTRO_TESTS_PORT");
+    const std::string envStrHost("MAESTRO_TESTS_HOST");
+    const std::string envStrPort("MAESTRO_TESTS_PORT");
+    const char *host = std::getenv(envStrHost.c_str());
+    const char *port = std::getenv(envStrPort.c_str());
 
     if (!host || !port)
-        throw std::invalid_argument("MAESTRO_TESTS_HOST or MAESTRO_TESTS_PORT not found");
+        throw std::invalid_argument(((!host) ? envStrHost : envStrPort) + " not found");
     static FileClient client(host + std::string(":") + port);
 
     return client;
 }
 
-const std::string DUMMY_USER_ID = "63b478c92303588732090c31";
+static const std::string DUMMY_USER_ID = "63b478c92303588732090c31";
 
+static const std::string fileContent_uploaded = "file content";
+static const std::string fileDirpath_uploaded = "/file/dirname/";
+static const std::string fileName_uploaded = "filename";
+
+static std::string fileId_toDownload; // get id from index, to ask download and download
+
+/**
+ * @brief Upload a file
+ */
 TEST(FileServer, fileUpload)
 {
     FileClient &client = getCommonFileClient();
     UsersBack_Maestro::FileUploadStatus response;
 
-    EXPECT_TRUE(client.fileUpload(response, "filename", "/file/dirname/", DUMMY_USER_ID, "file content"));
-    EXPECT_FALSE(response.fileid().empty());
+    EXPECT_TRUE(
+        client.fileUpload(response, fileName_uploaded, fileDirpath_uploaded, DUMMY_USER_ID, fileContent_uploaded));
+    //    EXPECT_FALSE(response.fileid().empty());
 }
 
+/**
+ * @brief Get the index containing all stored files
+ */
 TEST(FileServer, getFilesIndex)
 {
     FileClient &client = getCommonFileClient();
     File::FilesIndex response;
+    bool lastFileUploaded(false);
 
-    EXPECT_TRUE(client.getFilesIndex(response, DUMMY_USER_ID, "/file/dirname/"));
+    EXPECT_TRUE(client.getFilesIndex(response, DUMMY_USER_ID, fileDirpath_uploaded));
     EXPECT_GT(response.index_size(), 0);
+    std::cout << "File index:" << std::endl;
     for (const auto &file : response.index()) {
         std::cout << "============================" << std::endl;
         std::cout << "File id: " << file.fileid() << std::endl;
@@ -49,22 +70,34 @@ TEST(FileServer, getFilesIndex)
         std::cout << "File lastEditor: " << file.lasteditorid() << std::endl;
         std::cout << "File creation: " << file.creation().seconds() << std::endl;
         std::cout << "File lastEdit: " << file.lastedit().seconds() << std::endl;
+        fileId_toDownload = file.fileid(); // set file id for further tests on download
+        if (file.approxmetadata().dirpath() == fileDirpath_uploaded && file.approxmetadata().name() == fileName_uploaded
+            && file.approxmetadata().userid() == DUMMY_USER_ID)
+            lastFileUploaded = true;
     }
+    EXPECT_TRUE(lastFileUploaded);
 }
 
+/**
+ * @brief Ask if possible to download the file uploaded in previous test
+ */
 TEST(FileServer, askFileDownload)
 {
     FileClient &client = getCommonFileClient();
-    File::FilesIndex filesResponse;
     UsersBack_Maestro::AskFileDownloadStatus response;
 
-    EXPECT_TRUE(client.getFilesIndex(filesResponse, DUMMY_USER_ID, "/file/dirname/"));
-    EXPECT_GT(filesResponse.index_size(), 0);
-    EXPECT_TRUE(client.askFileDownload(response, filesResponse.index().at(0).fileid()));
+    EXPECT_TRUE(client.askFileDownload(response, fileId_toDownload));
     EXPECT_GT(response.waitingtime().seconds(), 0);
 }
 
+/**
+ * @brief Download the file uploaded in previous test
+ */
 TEST(FileServer, fileDownload)
 {
-    //    download the file uploaded in previous test
+    FileClient &client = getCommonFileClient();
+    File::File response;
+
+    EXPECT_TRUE(client.fileDownload(response, fileId_toDownload));
+    EXPECT_EQ(response.content(), fileContent_uploaded);
 }

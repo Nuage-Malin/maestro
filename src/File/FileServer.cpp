@@ -2,7 +2,8 @@
  * @file FileServer.cpp
  * @author Arthur Jourdan
  * @date of creation 9/11/22.
- * @brief TODO
+ * @brief Implementation of the gRPC procedures (server) for file upload, index and download,
+ *          interfacing with mongo db's gridfs for storage
  */
 
 #include <sstream>
@@ -40,7 +41,7 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
         const auto &result =
             this->_fileBucket.upload_from_stream(bsoncxx::stdx::string_view{metadata.name}, &fileStream, options);
 
-        response->set_fileid(result.id().get_oid().value.to_string());
+        //        response->set_fileid(result.id().get_oid().value.to_string());
     } catch (const mongocxx::query_exception &e) {
         std::cerr << "[FileServer::fileUpload] mongocxx::query_exception: " << e.what() << std::endl;
         return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
@@ -73,8 +74,9 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
         const char *envWaitingTime = getenv("DOWNLOAD_WAITING_TIME");
 
         if (!envWaitingTime)
-            throw std::invalid_argument("DOWNLOAD_WAITING_TIME environment variable not found");
-        waitingTime->set_seconds(atoi(envWaitingTime));
+            waitingTime->set_seconds(DEFAULT_WAITING_TIME);
+        else
+            waitingTime->set_seconds(toInteger(envWaitingTime));
         response->set_allocated_waitingtime(waitingTime);
 
     } catch (const mongocxx::query_exception &e) {
@@ -102,32 +104,17 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
 
     if (cursor.begin() == cursor.end()) // todo check for exceptions
         return grpc::Status::CANCELLED;
-    for (auto i : cursor) {
-        for (auto j : i) {
-            std::cout << "j.get_string().value" << std::endl;
-            std::cout << j.get_string().value << std::endl;
-            //            j.key();
-            //            j.get_value();
-        }
-    }
 
-    //    response->set_content(); // TODO
-    auto *metadata(new File::FileMetadata());
-    auto *approxMetadata(new File::FileApproxMetadata());
-    //    approxMetadata->set_name();
-    //    approxMetadata->set_userid();
-    //    approxMetadata->set_dirname();
-    metadata->set_allocated_approxmetadata(approxMetadata);
-    auto *creationTime(new google::protobuf::Timestamp());
-    //    creationTime->set_seconds();
-    metadata->set_allocated_creation(creationTime);
-    auto *lastEditTime(new google::protobuf::Timestamp());
-    //    lastEditTime->set_seconds();
-    metadata->set_allocated_lastedit(lastEditTime);
-    //    metadata->set_lasteditorid("");
-    //    metadata->set_fileid("");
-    response->set_allocated_metadata(metadata); // todo
-    return grpc::Status::OK;
+    std::ostringstream my_ostringstream(std::ostringstream() << "");
+    std::ostream my_ostream{my_ostringstream.rdbuf()};
+    for (auto i : cursor) {
+        FileMetadata metadata(i);
+        response->set_allocated_metadata(metadata.toProtobuf());
+        _fileBucket.download_to_stream(i["_id"].get_value(), &my_ostream);
+        response->set_content(my_ostringstream.str());
+        return grpc::Status::OK;
+    }
+    return grpc::Status::CANCELLED;
 }
 
 ::grpc::Status FileServer::getFilesIndex(

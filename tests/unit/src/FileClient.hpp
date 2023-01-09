@@ -23,7 +23,7 @@ class FileClient {
     bool fileUpload(UsersBack_Maestro::FileUploadStatus &response, const std::string &name, const std::string &dirname,
         const std::string &userID, const std::string &content) const;
     bool askFileDownload(UsersBack_Maestro::AskFileDownloadStatus &response, const std::string &fileId) const;
-    bool fileDownload();
+    bool fileDownload(File::File &response, const std::string &fileId);
     bool getFilesIndex(File::FilesIndex &response, const std::string &userId, const std::string &dirpath) const;
 
   private:

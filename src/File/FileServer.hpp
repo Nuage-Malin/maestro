@@ -78,6 +78,7 @@ class FileServer : public UsersBack_Maestro::UsersBack_Maestro_Service::Service 
     mongocxx::gridfs::bucket _fileBucket;
 
     const string _fileBucketName{"fileBucket"};
+    static const int DEFAULT_WAITING_TIME = 60 /* seconds */;
 
   private:
     void _setFileBucket();
