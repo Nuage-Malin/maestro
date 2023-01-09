@@ -62,9 +62,8 @@ if (NOT DEFINED doxygen)
     # MongoDB
     include(${CMAKE_MODULES_DIR}/mongodb.cmake)
 
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wno-missing-field-initializers)
 endif ()
-
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wno-missing-field-initializers)
 
 # custom cmake modules
 include(${CMAKE_MODULES_DIR}/clang-format.cmake)
