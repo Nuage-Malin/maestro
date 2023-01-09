@@ -66,6 +66,7 @@ TEST(FileServer, getFilesIndex)
         std::cout << "File dirpath: " << file.approxmetadata().dirpath() << std::endl;
         std::cout << "File name: " << file.approxmetadata().name() << std::endl;
         std::cout << "File user id: " << file.approxmetadata().userid() << std::endl;
+        std::cout << std::boolalpha << "File is downloadable: " << file.isdownloadable() << std::endl;
         std::cout << "File lastEditor: " << file.lasteditorid() << std::endl;
         std::cout << "File creation: " << file.creation().seconds() << std::endl;
         std::cout << "File lastEdit: " << file.lastedit().seconds() << std::endl;
@@ -86,7 +87,6 @@ TEST(FileServer, askFileDownload)
     FileClient &client = getCommonFileClient();
     UsersBack_Maestro::AskFileDownloadStatus response;
 
-    setenv("DOWNLOAD_WAITING_TIME", "100", true);
     EXPECT_TRUE(client.askFileDownload(response, fileId_toDownload));
     EXPECT_GT(response.waitingtime().seconds(), 0);
     waitingTime = response.waitingtime().seconds();
@@ -125,22 +125,33 @@ TEST(FileServer, fileDownloadAvailable)
 {
     FileClient &client = getCommonFileClient();
     UsersBack_Maestro::FileUploadStatus responseUpload;
-    File::FilesIndex responseIndex;
     UsersBack_Maestro::AskFileDownloadStatus responseAsk;
+    File::FilesIndex responseFilesIndex;
     File::File responseDownload;
-    const std::string my_fileName_uploaded("some_filename");
-    const std::string my_fileDirpath_uploaded("/file/my_dirpath/");
-    const std::string my_fileContent_uploaded("the file content is such as this one");
-    std::string my_fileId_toDownload;
+    const std::string fileNameUploaded("some_filename");
+    const std::string fileDirpathUploaded("/FileServer/fileDownloadAvailable/");
+    const std::string fileContentUploaded("the file content is such as this one");
+    const char *downloadWaitingTime = std::getenv("DOWNLOAD_WAITING_TIME");
 
-    setenv("DOWNLOAD_WAITING_TIME", "100", true); // does not work cause maestro is another program
-    EXPECT_TRUE(client.fileUpload(
-        responseUpload, my_fileName_uploaded, my_fileDirpath_uploaded, DUMMY_USER_ID, my_fileContent_uploaded));
-    EXPECT_TRUE(client.getFilesIndex(responseIndex, DUMMY_USER_ID, my_fileDirpath_uploaded));
-    for (const auto &file : responseIndex.index()) {
-        my_fileId_toDownload = file.fileid(); // set file id for further tests on download
-    }
-    EXPECT_TRUE(client.askFileDownload(responseAsk, my_fileId_toDownload));
-    EXPECT_TRUE(client.fileDownload(responseDownload, my_fileId_toDownload));
-    EXPECT_EQ(responseDownload.content(), my_fileContent_uploaded);
+    if (!downloadWaitingTime)
+        throw std::invalid_argument("DOWNLOAD_WAITING_TIME environment variable not found");
+    EXPECT_TRUE(
+        client.fileUpload(responseUpload, fileNameUploaded, fileDirpathUploaded, DUMMY_USER_ID, fileContentUploaded));
+    EXPECT_TRUE(client.askFileDownload(responseAsk, responseUpload.fileid()));
+    EXPECT_TRUE(client.getFilesIndex(responseFilesIndex, DUMMY_USER_ID, fileDirpathUploaded));
+    for (const auto &file : responseFilesIndex.index())
+        if (file.fileid() == responseUpload.fileid()) {
+            EXPECT_FALSE(file.isdownloadable());
+            break;
+        }
+    std::cout << "Waiting " << downloadWaitingTime << " seconds to download the file..." << std::endl;
+    sleep(std::stoi(downloadWaitingTime));
+    EXPECT_TRUE(client.getFilesIndex(responseFilesIndex, DUMMY_USER_ID, fileDirpathUploaded));
+    for (const auto &file : responseFilesIndex.index())
+        if (file.fileid() == responseUpload.fileid()) {
+            EXPECT_TRUE(file.isdownloadable());
+            break;
+        }
+    EXPECT_TRUE(client.fileDownload(responseDownload, responseUpload.fileid()));
+    EXPECT_EQ(responseDownload.content(), fileContentUploaded);
 }

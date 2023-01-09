@@ -41,7 +41,7 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
         const auto &result =
             this->_fileBucket.upload_from_stream(bsoncxx::stdx::string_view{metadata.name}, &fileStream, options);
 
-        //        response->set_fileid(result.id().get_oid().value.to_string());
+        response->set_fileid(result.id().get_oid().value.to_string());
     } catch (const mongocxx::query_exception &e) {
         std::cerr << "[FileServer::fileUpload] mongocxx::query_exception: " << e.what() << std::endl;
         return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
@@ -64,7 +64,7 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
  *          if 0, the file is available,
  *          if negative (-1), the file has not been asked for download
  */
-int FileServer::isDownloadable(string fileId)
+int FileServer::_isDownloadable(const string &fileId)
 {
     try {
         auto fileAvailabilityCountdown(_availabilityCountdown.at(fileId));
@@ -105,7 +105,7 @@ int FileServer::isDownloadable(string fileId)
 ::grpc::Status FileServer::askFileDownload(::grpc::ServerContext *context,
     const ::UsersBack_Maestro::AskFileDownloadRequest *request, ::UsersBack_Maestro::AskFileDownloadStatus *response)
 {
-    auto timeToWait(isDownloadable(request->fileid()));
+    auto timeToWait(this->_isDownloadable(request->fileid()));
     auto *availabilityCountdown = new google::protobuf::Duration();
 
     if (timeToWait >= 0) {
@@ -148,33 +148,40 @@ int FileServer::isDownloadable(string fileId)
 ::grpc::Status FileServer::fileDownload(
     ::grpc::ServerContext *context, const ::UsersBack_Maestro::FileDownloadRequest *request, ::File::File *response)
 {
+    std::cout << "[FileServer::fileDownload] Downloading file " << request->fileid() << std::endl;
     const string &fileId{request->fileid()};
 
-    auto timeToWait(isDownloadable(request->fileid()));
+    // Validate request
+    toObjectId(fileId);
+
+    // Check if the file is available
+    const int &timeToWait = this->_isDownloadable(fileId);
 
     if (timeToWait != 0) {
-        return grpc::Status(grpc::StatusCode::NOT_FOUND, "File not available",
-            "The file was either never requested , is not available yet or is no longer available");
+        return grpc::Status(grpc::StatusCode::NOT_FOUND,
+            "File not available",
+            "The file was either never requested, is not available yet or is no longer available");
     }
 
-    const bsoncxx::document::value filter = bsoncxx::builder::basic::make_document(
-        bsoncxx::builder::basic::kvp("_id", bsoncxx::oid{bsoncxx::stdx::string_view{fileId}}));
+    // Download the file
+    const bsoncxx::document::value filter =
+        bsoncxx::builder::basic::make_document(bsoncxx::builder::basic::kvp("_id", toObjectId(fileId)));
     const mongocxx::options::find options;
     mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
 
     if (cursor.begin() == cursor.end()) // todo check for exceptions
-        return grpc::Status::CANCELLED;
+        return grpc::Status(grpc::StatusCode::NOT_FOUND, "File not found");
 
-    std::ostringstream my_ostringstream(std::ostringstream() << "");
-    std::ostream my_ostream{my_ostringstream.rdbuf()};
-    for (auto i : cursor) {
-        FileMetadata metadata(i);
-        response->set_allocated_metadata(metadata.toProtobuf());
-        _fileBucket.download_to_stream(i["_id"].get_value(), &my_ostream);
-        response->set_content(my_ostringstream.str());
-        return grpc::Status::OK;
-    }
-    return grpc::Status::CANCELLED;
+    std::ostringstream oss("");
+    std::ostream ostream(oss.rdbuf());
+    const auto &fileDocument = *cursor.begin();
+    FileMetadata metadata(fileDocument, timeToWait == 0);
+
+    this->_fileBucket.download_to_stream(fileDocument["_id"].get_value(), &ostream);
+    response->set_allocated_metadata(metadata.toProtobuf());
+    std::cout << "Downloaded file content: " << oss.str() << std::endl;
+    response->set_content(oss.str());
+    return grpc::Status::OK;
 }
 
 ::grpc::Status FileServer::getFilesIndex(
@@ -197,7 +204,10 @@ int FileServer::isDownloadable(string fileId)
         mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
 
         for (auto i : cursor) {
-            FileMetadata(i).toProtobuf(*response->add_index());
+            auto file{FileMetadata(i)};
+
+            file.isDownloadable = this->_isDownloadable(file.fileId) == 0;
+            file.toProtobuf(*response->add_index());
         }
     } catch (const mongocxx::query_exception &e) {
         std::cerr << "[FileServer::getFilesIndex] mongocxx::query_exception: " << e.what() << std::endl;

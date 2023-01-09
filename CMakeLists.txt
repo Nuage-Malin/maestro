@@ -64,6 +64,8 @@ if (NOT DEFINED doxygen)
 
 endif ()
 
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wno-missing-field-initializers)
+
 # custom cmake modules
 include(${CMAKE_MODULES_DIR}/clang-format.cmake)
 include(${CMAKE_MODULES_DIR}/clang-tidy.cmake)

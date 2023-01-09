@@ -14,7 +14,7 @@
 class FileMetadata : public TemplateMessage<File::FileMetadata> {
   public:
     FileMetadata(const File::FileMetadata &message);
-    FileMetadata(const bsoncxx::v_noabi::document::view &view);
+    FileMetadata(const bsoncxx::v_noabi::document::view &view, bool isDownloadable = false);
 
     void toProtobuf(File::FileMetadata &message) const override;
     File::FileMetadata *toProtobuf() const override;
@@ -22,6 +22,7 @@ class FileMetadata : public TemplateMessage<File::FileMetadata> {
     // Protobuf fields
     FileApproxMetadata approxMetadata;
     string fileId;
+    bool isDownloadable;
     string lastEditorId;
     google::protobuf::Timestamp creation;
     google::protobuf::Timestamp lastEdit;
