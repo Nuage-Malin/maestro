@@ -153,7 +153,8 @@ int FileServer::isDownloadable(string fileId)
     auto timeToWait(isDownloadable(request->fileid()));
 
     if (timeToWait != 0) {
-        return grpc::Status::CANCELLED;
+        return grpc::Status(grpc::StatusCode::NOT_FOUND, "File not available",
+            "The file was either never requested , is not available yet or is no longer available");
     }
 
     const bsoncxx::document::value filter = bsoncxx::builder::basic::make_document(

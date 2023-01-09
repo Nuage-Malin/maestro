@@ -29,10 +29,12 @@ class FileServer : public UsersBack_Maestro::UsersBack_Maestro_Service::Service 
     /**
      * @brief Upload a file to the database
      *
-     * @param context
-     * @param request
-     * @param response
-     * @return ::grpc::Status
+     * @param context gRPC related
+     * @param request gRPC related, see protobuf and related documentation
+     * @param response gRPC related, see protobuf and related documentation
+     * @return ::grpc::Status OK if uploaded successfully,
+     *          INVALID_ARGUMENT if bad query or invalid param
+     *          INTERNAL if any other exception was thrown
      */
     ::grpc::Status fileUpload(::grpc::ServerContext *context, const ::UsersBack_Maestro::FileUploadRequest *request,
         ::UsersBack_Maestro::FileUploadStatus *response) override;
@@ -40,10 +42,12 @@ class FileServer : public UsersBack_Maestro::UsersBack_Maestro_Service::Service 
     /**
      * @brief Ask to download a file to download it later
      *
-     * @param context
-     * @param request
-     * @param response
-     * @return ::grpc::Status
+     * @param context gRPC related
+     * @param request gRPC related, see protobuf and related documentation
+     * @param response gRPC related, see protobuf and related documentation
+     * @return ::grpc::Status OK if file is waiting before being downloadable,
+     *          INVALID_ARGUMENT if bad query
+     *          INTERNAL if any other exception was thrown
      *
      * @throw std::invalid_argument if the environment variable DOWNLOAD_WAITING_TIME isn't found
      */
@@ -54,10 +58,12 @@ class FileServer : public UsersBack_Maestro::UsersBack_Maestro_Service::Service 
     /**
      * @brief Download an asked and available file
      *
-     * @param context
-     * @param request
-     * @param response
-     * @return ::grpc::Status
+     * @param context gRPC related
+     * @param request gRPC related, see protobuf and related documentation
+     * @param response gRPC related, see protobuf and related documentation
+     * @return ::grpc::Status OK if uploaded successfully,
+     *          NOT_FOUND if the file is not downloadable at the moment
+     *          CANCELLED if miscellaneous behaviour occurred
      */
     ::grpc::Status fileDownload(::grpc::ServerContext *context, const ::UsersBack_Maestro::FileDownloadRequest *request,
         ::File::File *response) override;
@@ -65,10 +71,12 @@ class FileServer : public UsersBack_Maestro::UsersBack_Maestro_Service::Service 
     /**
      * @brief Get user files list
      *
-     * @param context
-     * @param request
-     * @param response
-     * @return ::grpc::Status
+     * @param context gRPC related
+     * @param request gRPC related, see protobuf and related documentation
+     * @param response gRPC related, see protobuf and related documentation
+     * @return ::grpc::Status OK if got file index successfully,
+     *          INVALID_ARGUMENT if bad query or invalid param
+     *          INTERNAL if any other exception was thrown
      */
     ::grpc::Status getFilesIndex(::grpc::ServerContext *context,
         const ::UsersBack_Maestro::GetFilesIndexRequest *request, ::File::FilesIndex *response) override;
@@ -91,4 +99,4 @@ class FileServer : public UsersBack_Maestro::UsersBack_Maestro_Service::Service 
     int isDownloadable(string fileId);
 };
 
-#endif
+#endif /* MAESTRO_FILESERVER_HPP */
