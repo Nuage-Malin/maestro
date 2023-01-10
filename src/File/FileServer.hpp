@@ -2,7 +2,7 @@
  * @file FileServer.hpp
  * @author Arthur Jourdan
  * @date of creation 9/11/22.
- * @brief TODO
+ * @brief Declaration of UsersBack_Maestro::UsersBack_Maestro_Service::Service abstraction.
  */
 
 #ifndef MAESTRO_FILESERVER_HPP
@@ -91,10 +91,21 @@ class FileServer : public UsersBack_Maestro::UsersBack_Maestro_Service::Service 
         std::tuple<google::protobuf::Duration, std::chrono::time_point<std::chrono::high_resolution_clock>>>
         _downloadCountdown;
 
+    /**
+     * @brief Mongo file collection name
+     */
     const string _fileBucketName{"fileBucket"};
+    /**
+     * @brief Default DOWNLOAD_WAITING_TIME if the environment variable isn't found
+     */
     static const int DEFAULT_WAITING_TIME = 60 /* seconds */;
 
   private:
+    /**
+     * @brief Set file bucket with if _fileDatabase is settled. Otherwise throw an error.
+     *
+     * @throw std::logic_error if _fileDatabase is not settled
+     */
     void _setFileBucket();
     NODISCARD int _isDownloadable(const string &fileId);
 };

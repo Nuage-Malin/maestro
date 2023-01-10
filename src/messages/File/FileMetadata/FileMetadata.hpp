@@ -14,6 +14,12 @@
 class FileMetadata : public TemplateMessage<File::FileMetadata> {
   public:
     FileMetadata(const File::FileMetadata &message);
+    /**
+     * @brief Construct a new File Metadata object
+     *
+     * @param view
+     * @param isDownloadable {bool} Can be check with FileServer::_isDownloadable
+     */
     FileMetadata(const bsoncxx::v_noabi::document::view &view, const bool isDownloadable = false);
 
     void toProtobuf(File::FileMetadata &message) const override;

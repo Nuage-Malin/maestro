@@ -3,7 +3,7 @@
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 05/01/2023
  * @copyright Nuage Malin
- * @brief Messages utils
+ * @brief Global functions useful for messages
  */
 
 #include <bsoncxx/builder/stream/document.hpp>
