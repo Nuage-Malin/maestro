@@ -104,7 +104,6 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
 ::grpc::Status FileServer::fileDownload(UNUSED grpc::ServerContext *context,
     const ::UsersBack_Maestro::FileDownloadRequest *request, ::File::File *response)
 {
-    std::cout << "[FileServer::fileDownload] Downloading file " << request->fileid() << std::endl;
     const string &fileId{request->fileid()};
 
     // Validate request
@@ -135,7 +134,6 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
 
     this->_fileBucket.download_to_stream(fileDocument["_id"].get_value(), &ostream);
     response->set_allocated_metadata(metadata.toProtobuf());
-    std::cout << "Downloaded file content: " << oss.str() << std::endl;
     response->set_content(oss.str());
     return grpc::Status::OK;
 }
