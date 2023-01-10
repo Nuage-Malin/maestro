@@ -83,7 +83,7 @@ jobs:
         env:
           MAESTRO_ADDRESS: "[::]:8080"
           MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@localhost:27017/maestro?authSource=admin
-          DOWNLOAD_WAITING_TIME: 86400 # 24 hours (seconds * minutes * hours)
+          DOWNLOAD_WAITING_TIME: 42
           MAESTRO_TESTS_HOST: localhost
           MAESTRO_TESTS_PORT: 8080
 
