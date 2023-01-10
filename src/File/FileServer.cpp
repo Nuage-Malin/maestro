@@ -24,12 +24,13 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     this->_setFileBucket();
 }
 
-::grpc::Status FileServer::fileUpload(::grpc::ServerContext *context,
+::grpc::Status FileServer::fileUpload(UNUSED grpc::ServerContext *context,
     const ::UsersBack_Maestro::FileUploadRequest *request, ::UsersBack_Maestro::FileUploadStatus *response)
 {
     try {
         const FileApproxMetadata metadata = request->file().metadata();
-        std::istream fileStream{std::istringstream(request->file().content()).rdbuf()};
+        std::istringstream ss(request->file().content());
+        std::istream fileStream(ss.rdbuf());
         mongocxx::v_noabi::options::gridfs::upload options;
 
         options.metadata(bsoncxx::builder::basic::make_document(bsoncxx::builder::basic::kvp("userId", metadata.userId),
@@ -38,10 +39,9 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
             bsoncxx::builder::basic::kvp("lastEdit", bsoncxx::types::b_date(std::chrono::high_resolution_clock::now())),
             bsoncxx::builder::basic::kvp("lastEditorId", metadata.userId)));
 
-        const auto &result =
-            this->_fileBucket.upload_from_stream(bsoncxx::stdx::string_view{metadata.name}, &fileStream, options);
+        const auto &result = this->_fileBucket.upload_from_stream(metadata.name, &fileStream, options);
 
-        //        response->set_fileid(result.id().get_oid().value.to_string());
+        response->set_fileid(result.id().get_oid().value.to_string());
     } catch (const mongocxx::query_exception &e) {
         std::cerr << "[FileServer::fileUpload] mongocxx::query_exception: " << e.what() << std::endl;
         return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
@@ -58,54 +58,10 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     return ::grpc::Status::OK;
 }
 
-/**
- * @brief Know if a file is downloadable in a certain time, available for download or none
- * @return Duration, in seconds, in which the file will be available
- *          if 0, the file is available,
- *          if negative (-1), the file has not been asked for download
- */
-int FileServer::isDownloadable(string fileId)
-{
-    try {
-        auto fileAvailabilityCountdown(_availabilityCountdown.at(fileId));
-        auto [waitingTime, start] = fileAvailabilityCountdown;
-        auto timeToWait(std::chrono::duration_cast<std::chrono::seconds>(start.time_since_epoch()
-            - std::chrono::high_resolution_clock::now().time_since_epoch()
-            + std::chrono::seconds(waitingTime.seconds()))
-                            .count());
-        if (timeToWait < 0) {
-            _downloadCountdown.insert(_availabilityCountdown.extract(fileId));
-            return 0;
-        }
-        return timeToWait;
-    } catch (const std::out_of_range &e) {
-        // could not find the file id in _availabilityCountdown,
-        // which means that the file has not been asked for download
-        try {
-            auto fileDownloadCountdown(_downloadCountdown.at(fileId));
-            auto [downloadTime, start] = fileDownloadCountdown;
-            auto timeAvailable(std::chrono::duration_cast<std::chrono::seconds>(start.time_since_epoch()
-                - std::chrono::high_resolution_clock::now().time_since_epoch()
-                + std::chrono::seconds(downloadTime.seconds()))
-                                   .count());
-            if (timeAvailable < 0) {
-                _downloadCountdown.erase(fileId);
-                return -1;
-            }
-            return 0;
-        } catch (const std::out_of_range &e) {
-            // could not find the file id in _downloadCountdown,
-            // which means that the file has not been asked for download
-            return -1;
-        }
-        return -1;
-    }
-}
-
-::grpc::Status FileServer::askFileDownload(::grpc::ServerContext *context,
+::grpc::Status FileServer::askFileDownload(UNUSED grpc::ServerContext *context,
     const ::UsersBack_Maestro::AskFileDownloadRequest *request, ::UsersBack_Maestro::AskFileDownloadStatus *response)
 {
-    auto timeToWait(isDownloadable(request->fileid()));
+    auto timeToWait(this->_isDownloadable(request->fileid()));
     auto *availabilityCountdown = new google::protobuf::Duration();
 
     if (timeToWait >= 0) {
@@ -145,41 +101,47 @@ int FileServer::isDownloadable(string fileId)
     return grpc::Status::OK;
 }
 
-::grpc::Status FileServer::fileDownload(
-    ::grpc::ServerContext *context, const ::UsersBack_Maestro::FileDownloadRequest *request, ::File::File *response)
+::grpc::Status FileServer::fileDownload(UNUSED grpc::ServerContext *context,
+    const ::UsersBack_Maestro::FileDownloadRequest *request, ::File::File *response)
 {
+    std::cout << "[FileServer::fileDownload] Downloading file " << request->fileid() << std::endl;
     const string &fileId{request->fileid()};
 
-    auto timeToWait(isDownloadable(request->fileid()));
+    // Validate request
+    toObjectId(fileId);
+
+    // Check if the file is available
+    const int &timeToWait = this->_isDownloadable(fileId);
 
     if (timeToWait != 0) {
         return grpc::Status(grpc::StatusCode::NOT_FOUND,
             "File not available",
-            "The file was either never requested , is not available yet or is no longer available");
+            "The file was either never requested, is not available yet or is no longer available");
     }
 
-    const bsoncxx::document::value filter = bsoncxx::builder::basic::make_document(
-        bsoncxx::builder::basic::kvp("_id", bsoncxx::oid{bsoncxx::stdx::string_view{fileId}}));
+    // Download the file
+    const bsoncxx::document::value filter =
+        bsoncxx::builder::basic::make_document(bsoncxx::builder::basic::kvp("_id", toObjectId(fileId)));
     const mongocxx::options::find options;
     mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
 
     if (cursor.begin() == cursor.end()) // todo check for exceptions
-        return grpc::Status::CANCELLED;
+        return grpc::Status(grpc::StatusCode::NOT_FOUND, "File not found");
 
-    std::ostringstream my_ostringstream(std::ostringstream() << "");
-    std::ostream my_ostream{my_ostringstream.rdbuf()};
-    for (auto i : cursor) {
-        FileMetadata metadata(i);
-        response->set_allocated_metadata(metadata.toProtobuf());
-        _fileBucket.download_to_stream(i["_id"].get_value(), &my_ostream);
-        response->set_content(my_ostringstream.str());
-        return grpc::Status::OK;
-    }
-    return grpc::Status::CANCELLED;
+    std::ostringstream oss("");
+    std::ostream ostream(oss.rdbuf());
+    const auto &fileDocument = *cursor.begin();
+    FileMetadata metadata(fileDocument, timeToWait == 0);
+
+    this->_fileBucket.download_to_stream(fileDocument["_id"].get_value(), &ostream);
+    response->set_allocated_metadata(metadata.toProtobuf());
+    std::cout << "Downloaded file content: " << oss.str() << std::endl;
+    response->set_content(oss.str());
+    return grpc::Status::OK;
 }
 
-::grpc::Status FileServer::getFilesIndex(
-    grpc::ServerContext *context, const UsersBack_Maestro::GetFilesIndexRequest *request, File::FilesIndex *response)
+::grpc::Status FileServer::getFilesIndex(UNUSED grpc::ServerContext *context,
+    const UsersBack_Maestro::GetFilesIndexRequest *request, File::FilesIndex *response)
 {
     try {
         const string &userId{request->userid()};
@@ -198,8 +160,10 @@ int FileServer::isDownloadable(string fileId)
         mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
 
         for (auto i : cursor) {
-            FileMetadata(i, !isDownloadable(string(i["_id"].get_oid().value.to_string())))
-                .toProtobuf(*response->add_index());
+            auto file{FileMetadata(i)};
+
+            file.isDownloadable = this->_isDownloadable(file.fileId) == 0;
+            file.toProtobuf(*response->add_index());
         }
     } catch (const mongocxx::query_exception &e) {
         std::cerr << "[FileServer::getFilesIndex] mongocxx::query_exception: " << e.what() << std::endl;
@@ -215,6 +179,50 @@ int FileServer::isDownloadable(string fileId)
         return grpc::Status(grpc::StatusCode::INTERNAL, "Unknown error");
     }
     return grpc::Status::OK;
+}
+
+/**
+ * @brief Know if a file is downloadable in a certain time, available for download or none
+ * @return Duration, in seconds, in which the file will be available
+ *          if 0, the file is available,
+ *          if negative (-1), the file has not been asked for download
+ */
+int FileServer::_isDownloadable(const string &fileId)
+{
+    try {
+        auto fileAvailabilityCountdown(_availabilityCountdown.at(fileId));
+        auto [waitingTime, start] = fileAvailabilityCountdown;
+        auto timeToWait(std::chrono::duration_cast<std::chrono::seconds>(start.time_since_epoch()
+            - std::chrono::high_resolution_clock::now().time_since_epoch()
+            + std::chrono::seconds(waitingTime.seconds()))
+                            .count());
+        if (timeToWait < 0) {
+            _downloadCountdown.insert(_availabilityCountdown.extract(fileId));
+            return 0;
+        }
+        return timeToWait;
+    } catch (const std::out_of_range &e) {
+        // could not find the file id in _availabilityCountdown,
+        // which means that the file has not been asked for download
+        try {
+            auto fileDownloadCountdown(_downloadCountdown.at(fileId));
+            auto [downloadTime, start] = fileDownloadCountdown;
+            auto timeAvailable(std::chrono::duration_cast<std::chrono::seconds>(start.time_since_epoch()
+                - std::chrono::high_resolution_clock::now().time_since_epoch()
+                + std::chrono::seconds(downloadTime.seconds()))
+                                   .count());
+            if (timeAvailable < 0) {
+                _downloadCountdown.erase(fileId);
+                return -1;
+            }
+            return 0;
+        } catch (const std::out_of_range &e) {
+            // could not find the file id in _downloadCountdown,
+            // which means that the file has not been asked for download
+            return -1;
+        }
+        return -1;
+    }
 }
 
 void FileServer::_setFileBucket()

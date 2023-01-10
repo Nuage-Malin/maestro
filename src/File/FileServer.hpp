@@ -96,7 +96,7 @@ class FileServer : public UsersBack_Maestro::UsersBack_Maestro_Service::Service 
 
   private:
     void _setFileBucket();
-    int isDownloadable(string fileId);
+    NODISCARD int _isDownloadable(const string &fileId);
 };
 
 #endif /* MAESTRO_FILESERVER_HPP */
