@@ -24,12 +24,13 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     this->_setFileBucket();
 }
 
-::grpc::Status FileServer::fileUpload(::grpc::ServerContext *context,
+::grpc::Status FileServer::fileUpload(UNUSED grpc::ServerContext *context,
     const ::UsersBack_Maestro::FileUploadRequest *request, ::UsersBack_Maestro::FileUploadStatus *response)
 {
     try {
         const FileApproxMetadata metadata = request->file().metadata();
-        std::istream fileStream{std::istringstream(request->file().content()).rdbuf()};
+        std::istringstream ss(request->file().content());
+        std::istream fileStream(ss.rdbuf());
         mongocxx::v_noabi::options::gridfs::upload options;
 
         options.metadata(bsoncxx::builder::basic::make_document(bsoncxx::builder::basic::kvp("userId", metadata.userId),
@@ -38,8 +39,7 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
             bsoncxx::builder::basic::kvp("lastEdit", bsoncxx::types::b_date(std::chrono::high_resolution_clock::now())),
             bsoncxx::builder::basic::kvp("lastEditorId", metadata.userId)));
 
-        const auto &result =
-            this->_fileBucket.upload_from_stream(bsoncxx::stdx::string_view{metadata.name}, &fileStream, options);
+        const auto &result = this->_fileBucket.upload_from_stream(metadata.name, &fileStream, options);
 
         response->set_fileid(result.id().get_oid().value.to_string());
     } catch (const mongocxx::query_exception &e) {
@@ -56,6 +56,129 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
         return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error");
     }
     return ::grpc::Status::OK;
+}
+
+::grpc::Status FileServer::askFileDownload(UNUSED grpc::ServerContext *context,
+    const ::UsersBack_Maestro::AskFileDownloadRequest *request, ::UsersBack_Maestro::AskFileDownloadStatus *response)
+{
+    auto timeToWait(this->_isDownloadable(request->fileid()));
+    auto *availabilityCountdown = new google::protobuf::Duration();
+
+    if (timeToWait >= 0) {
+        availabilityCountdown->set_seconds(timeToWait);
+        response->set_allocated_waitingtime(availabilityCountdown);
+    } else {
+        try {
+            const bsoncxx::document::value filter = bsoncxx::builder::basic::make_document(
+                bsoncxx::builder::basic::kvp("_id", toObjectId(request->fileid())));
+            const mongocxx::options::find options;
+            mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
+
+            if (cursor.begin() == cursor.end())
+                return grpc::Status(grpc::StatusCode::NOT_FOUND, "File not found");
+
+            const char *envWaitingTime = getenv("DOWNLOAD_WAITING_TIME");
+
+            if (!envWaitingTime)
+                availabilityCountdown->set_seconds(DEFAULT_WAITING_TIME);
+            else
+                availabilityCountdown->set_seconds(toInteger(envWaitingTime));
+            response->set_allocated_waitingtime(availabilityCountdown);
+            _availabilityCountdown.emplace(
+                request->fileid(), std::make_tuple(*availabilityCountdown, std::chrono::high_resolution_clock::now()));
+        } catch (const mongocxx::query_exception &e) {
+            std::cerr << "[FileServer::askFileDownload] mongocxx::query_exception: " << e.what() << std::endl;
+            return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
+        } catch (const std::exception &e) {
+            std::cerr << "[FileServer::askFileDownload] std::exception: " << e.what() << std::endl;
+            return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error", e.what());
+        } catch (...) {
+            std::cerr << "[FileServer::askFileDownload] Error" << std::endl;
+            return grpc::Status(grpc::StatusCode::INTERNAL, "Unknown error");
+        }
+    }
+
+    return grpc::Status::OK;
+}
+
+::grpc::Status FileServer::fileDownload(UNUSED grpc::ServerContext *context,
+    const ::UsersBack_Maestro::FileDownloadRequest *request, ::File::File *response)
+{
+    std::cout << "[FileServer::fileDownload] Downloading file " << request->fileid() << std::endl;
+    const string &fileId{request->fileid()};
+
+    // Validate request
+    toObjectId(fileId);
+
+    // Check if the file is available
+    const int &timeToWait = this->_isDownloadable(fileId);
+
+    if (timeToWait != 0) {
+        return grpc::Status(grpc::StatusCode::NOT_FOUND,
+            "File not available",
+            "The file was either never requested, is not available yet or is no longer available");
+    }
+
+    // Download the file
+    const bsoncxx::document::value filter =
+        bsoncxx::builder::basic::make_document(bsoncxx::builder::basic::kvp("_id", toObjectId(fileId)));
+    const mongocxx::options::find options;
+    mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
+
+    if (cursor.begin() == cursor.end()) // todo check for exceptions
+        return grpc::Status(grpc::StatusCode::NOT_FOUND, "File not found");
+
+    std::ostringstream oss("");
+    std::ostream ostream(oss.rdbuf());
+    const auto &fileDocument = *cursor.begin();
+    FileMetadata metadata(fileDocument, timeToWait == 0);
+
+    this->_fileBucket.download_to_stream(fileDocument["_id"].get_value(), &ostream);
+    response->set_allocated_metadata(metadata.toProtobuf());
+    std::cout << "Downloaded file content: " << oss.str() << std::endl;
+    response->set_content(oss.str());
+    return grpc::Status::OK;
+}
+
+::grpc::Status FileServer::getFilesIndex(UNUSED grpc::ServerContext *context,
+    const UsersBack_Maestro::GetFilesIndexRequest *request, File::FilesIndex *response)
+{
+    try {
+        const string &userId{request->userid()};
+        const string &dirPath{request->dirpath()};
+
+        // Validate request
+        toObjectId(userId);
+        if (!isValidDirectory(dirPath))
+            throw std::invalid_argument("Invalid directory path: " + dirPath);
+
+        // Get files index
+        const bsoncxx::document::value filter =
+            bsoncxx::builder::basic::make_document(bsoncxx::builder::basic::kvp("metadata.userId", request->userid()),
+                bsoncxx::builder::basic::kvp("metadata.dirPath", request->dirpath()));
+        const mongocxx::options::find options;
+        mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
+
+        for (auto i : cursor) {
+            auto file{FileMetadata(i)};
+
+            file.isDownloadable = this->_isDownloadable(file.fileId) == 0;
+            file.toProtobuf(*response->add_index());
+        }
+    } catch (const mongocxx::query_exception &e) {
+        std::cerr << "[FileServer::getFilesIndex] mongocxx::query_exception: " << e.what() << std::endl;
+        return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
+    } catch (const mongocxx::exception &e) {
+        std::cerr << "[FileServer::getFilesIndex] mongocxx::exception: " << e.what() << std::endl;
+        return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error", e.what());
+    } catch (const std::exception &e) {
+        std::cerr << "[FileServer::getFilesIndex] std::exception: " << e.what() << std::endl;
+        return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error", e.what());
+    } catch (...) {
+        std::cerr << "[FileServer::getFilesIndex] Unknown exception" << std::endl;
+        return grpc::Status(grpc::StatusCode::INTERNAL, "Unknown error");
+    }
+    return grpc::Status::OK;
 }
 
 /**
@@ -100,129 +223,6 @@ int FileServer::_isDownloadable(const string &fileId)
         }
         return -1;
     }
-}
-
-::grpc::Status FileServer::askFileDownload(::grpc::ServerContext *context,
-    const ::UsersBack_Maestro::AskFileDownloadRequest *request, ::UsersBack_Maestro::AskFileDownloadStatus *response)
-{
-    auto timeToWait(this->_isDownloadable(request->fileid()));
-    auto *availabilityCountdown = new google::protobuf::Duration();
-
-    if (timeToWait >= 0) {
-        availabilityCountdown->set_seconds(timeToWait);
-        response->set_allocated_waitingtime(availabilityCountdown);
-    } else {
-        try {
-            const bsoncxx::document::value filter = bsoncxx::builder::basic::make_document(
-                bsoncxx::builder::basic::kvp("_id", toObjectId(request->fileid())));
-            const mongocxx::options::find options;
-            mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
-
-            if (cursor.begin() == cursor.end())
-                return grpc::Status(grpc::StatusCode::NOT_FOUND, "File not found");
-
-            const char *envWaitingTime = getenv("DOWNLOAD_WAITING_TIME");
-
-            if (!envWaitingTime)
-                availabilityCountdown->set_seconds(DEFAULT_WAITING_TIME);
-            else
-                availabilityCountdown->set_seconds(toInteger(envWaitingTime));
-            response->set_allocated_waitingtime(availabilityCountdown);
-            _availabilityCountdown.emplace(
-                request->fileid(), std::make_tuple(*availabilityCountdown, std::chrono::high_resolution_clock::now()));
-        } catch (const mongocxx::query_exception &e) {
-            std::cerr << "[FileServer::askFileDownload] mongocxx::query_exception: " << e.what() << std::endl;
-            return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
-        } catch (const std::exception &e) {
-            std::cerr << "[FileServer::askFileDownload] std::exception: " << e.what() << std::endl;
-            return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error", e.what());
-        } catch (...) {
-            std::cerr << "[FileServer::askFileDownload] Error" << std::endl;
-            return grpc::Status(grpc::StatusCode::INTERNAL, "Unknown error");
-        }
-    }
-
-    return grpc::Status::OK;
-}
-
-::grpc::Status FileServer::fileDownload(
-    ::grpc::ServerContext *context, const ::UsersBack_Maestro::FileDownloadRequest *request, ::File::File *response)
-{
-    std::cout << "[FileServer::fileDownload] Downloading file " << request->fileid() << std::endl;
-    const string &fileId{request->fileid()};
-
-    // Validate request
-    toObjectId(fileId);
-
-    // Check if the file is available
-    const int &timeToWait = this->_isDownloadable(fileId);
-
-    if (timeToWait != 0) {
-        return grpc::Status(grpc::StatusCode::NOT_FOUND,
-            "File not available",
-            "The file was either never requested, is not available yet or is no longer available");
-    }
-
-    // Download the file
-    const bsoncxx::document::value filter =
-        bsoncxx::builder::basic::make_document(bsoncxx::builder::basic::kvp("_id", toObjectId(fileId)));
-    const mongocxx::options::find options;
-    mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
-
-    if (cursor.begin() == cursor.end()) // todo check for exceptions
-        return grpc::Status(grpc::StatusCode::NOT_FOUND, "File not found");
-
-    std::ostringstream oss("");
-    std::ostream ostream(oss.rdbuf());
-    const auto &fileDocument = *cursor.begin();
-    FileMetadata metadata(fileDocument, timeToWait == 0);
-
-    this->_fileBucket.download_to_stream(fileDocument["_id"].get_value(), &ostream);
-    response->set_allocated_metadata(metadata.toProtobuf());
-    std::cout << "Downloaded file content: " << oss.str() << std::endl;
-    response->set_content(oss.str());
-    return grpc::Status::OK;
-}
-
-::grpc::Status FileServer::getFilesIndex(
-    grpc::ServerContext *context, const UsersBack_Maestro::GetFilesIndexRequest *request, File::FilesIndex *response)
-{
-    try {
-        const string &userId{request->userid()};
-        const string &dirPath{request->dirpath()};
-
-        // Validate request
-        toObjectId(userId);
-        if (!isValidDirectory(dirPath))
-            throw std::invalid_argument("Invalid directory path: " + dirPath);
-
-        // Get files index
-        const bsoncxx::document::value filter =
-            bsoncxx::builder::basic::make_document(bsoncxx::builder::basic::kvp("metadata.userId", request->userid()),
-                bsoncxx::builder::basic::kvp("metadata.dirPath", request->dirpath()));
-        const mongocxx::options::find options;
-        mongocxx::cursor cursor = this->_fileBucket.find(bsoncxx::document::view_or_value(filter), options);
-
-        for (auto i : cursor) {
-            auto file{FileMetadata(i)};
-
-            file.isDownloadable = this->_isDownloadable(file.fileId) == 0;
-            file.toProtobuf(*response->add_index());
-        }
-    } catch (const mongocxx::query_exception &e) {
-        std::cerr << "[FileServer::getFilesIndex] mongocxx::query_exception: " << e.what() << std::endl;
-        return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
-    } catch (const mongocxx::exception &e) {
-        std::cerr << "[FileServer::getFilesIndex] mongocxx::exception: " << e.what() << std::endl;
-        return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error", e.what());
-    } catch (const std::exception &e) {
-        std::cerr << "[FileServer::getFilesIndex] std::exception: " << e.what() << std::endl;
-        return grpc::Status(grpc::StatusCode::INTERNAL, "Internal error", e.what());
-    } catch (...) {
-        std::cerr << "[FileServer::getFilesIndex] Unknown exception" << std::endl;
-        return grpc::Status(grpc::StatusCode::INTERNAL, "Unknown error");
-    }
-    return grpc::Status::OK;
 }
 
 void FileServer::_setFileBucket()
