@@ -70,7 +70,6 @@ TEST(FileServer, getFilesIndex)
         std::cout << "File lastEditor: " << file.lasteditorid() << std::endl;
         std::cout << "File creation: " << file.creation().seconds() << std::endl;
         std::cout << "File lastEdit: " << file.lastedit().seconds() << std::endl;
-        std::cout << "File is downloadable: " << file.isdownloadable() << std::endl;
         fileId_toDownload = file.fileid(); // set file id for further tests on download
         if (file.approxmetadata().dirpath() == fileDirpath_uploaded && file.approxmetadata().name() == fileName_uploaded
             && file.approxmetadata().userid() == DUMMY_USER_ID)

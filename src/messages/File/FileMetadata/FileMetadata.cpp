@@ -37,7 +37,6 @@ void FileMetadata::toProtobuf(File::FileMetadata &message) const
     message.set_lasteditorid(this->lastEditorId);
     message.set_allocated_creation(new google::protobuf::Timestamp(this->creation));
     message.set_allocated_lastedit(new google::protobuf::Timestamp(this->lastEdit));
-    message.set_isdownloadable(this->isDownloadable);
 }
 
 File::FileMetadata *FileMetadata::toProtobuf() const
@@ -53,7 +52,6 @@ FileMetadata &FileMetadata::operator=(const File::FileMetadata &message)
     this->lastEditorId = message.lasteditorid();
     this->creation = message.creation();
     this->lastEdit = message.lastedit();
-    this->isDownloadable = message.isdownloadable();
 
     this->_validation();
     return *this;
