@@ -30,7 +30,7 @@ if [ $OS_DISTRIB = "ubuntu" ]; then
             pkg-config
     fi
 elif [ $OS_DISTRIB = "fedora" ]; then
-    if [ ! `dnf list installed | grep libtool` ]; then
+    if [ `! (dnf list installed | grep libtool)` ]; then
         if [ `command -v sudo` ]; then
             sudo dnf install    \
                 libtool
