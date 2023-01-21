@@ -1,18 +1,41 @@
-name: Compile and execute unit tests
+name: Unit tests
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-  pull_request:
-    branches:
-      - main
+  workflow_run:
+    workflows: [ "Check compilation" ]
+    branches: [ main, develop ]
+    types:
+      - completed
 
 jobs:
-  build:
-    runs-on: ubuntu-20.04
+  unit-tests:
+    runs-on: ubuntu-22.04
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt-get install -y \
+            build-essential       \
+            autoconf              \
+            libtool               \
+            pkg-config            \
+            libssl-dev            \
+            libsasl2-dev          \
+            libmongoc-dev         \
+            libmongoc-doc         \
+            libstdc++-12-dev      \
+            libmongoc-1.0-0       \
+            libbson-1.0-0         \
+
+      - name: Cache project
+        uses: actions/cache@v3
+        with:
+          path: |
+            /opt/mongo
+            ./
+          key: ${{ runner.os }}-unit_tests
+
       - name: Checkout code
         uses: actions/checkout@v3
         with:
@@ -20,42 +43,52 @@ jobs:
           token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
           # secret containing a token allowing access to private repo (protobuf-interface submodule)
 
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v1.12
-        with:
-          cmake-version: '3.17.x'
+      - name: Generate Makefile
+        run: cmake -D unit_tests=true -S . -B build
 
-      - name: Meta build (generate Makefile)
-        run: |
-          mkdir -p build
-          cmake -D unit_tests=true -S . -B build
-
-      - name: Build
+      - name: Build tests
         run: make -C build unit_tests
 
-      - name: cache
-        uses: actions/cache@v3
-        id: cache
-        with:
-          path: ./
-          key: cache_key_unit_tests_build
+      - name: Build project
+        run: make -C build
 
-  tests:
-    runs-on: ubuntu-20.04
-    needs: build
-    steps:
-      - name: cache
-        uses: actions/cache@v3
-        id: cache
-        with:
-          path: ./
-          key: cache_key_unit_tests_build
-
-      - name: Check if cache missed
-        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Run MongoDB & maestro & unit tests
         run: |
-          echo "::error title=Cache miss::Could not retrieve cache from build unit tests job"
+          docker run -d -p 27017:27017 -e MONGO_INITDB_DATABASE=maestro -e MONGO_INITDB_ROOT_USERNAME=maestro_admin -e MONGO_INITDB_ROOT_PASSWORD=maestro_admin_password --name maestro-mongo mongo:6
+          ./build/maestro &
+          export MAESTRO_PID=$!
+          sleep 3
+          echo "Waiting MongoDB to be ready..."
+          until $(curl --output /dev/null --silent --fail http://localhost:27017); do
+            if [ "$( docker container inspect -f '{{.State.Status}}' maestro-mongo )" != "running" ]; then
+              echo "::error::MongoDB exited unexpectedly"
+              exit 1
+            fi
+            printf '.'
+            sleep 1
+          done
+          echo "MongoDB is ready"
+          echo "Waiting maestro to be ready..."
+          while ! nc -z localhost 8080; do
+            if ! ps -p $MAESTRO_PID > /dev/null; then
+              echo "::error file=./build/maestro::Maestro exited unexpectedly"
+              exit 1
+            fi
+            printf '.'
+            sleep 1
+          done
+          echo "Maestro is ready"
+          echo "Run unit tests"
+          ./build/unit_tests > /tmp/unit_tests.log
+        env:
+          MAESTRO_ADDRESS: "[::]:8080"
+          MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@localhost:27017/maestro?authSource=admin
+          DOWNLOAD_WAITING_TIME: 42
+          MAESTRO_TESTS_HOST: localhost
+          MAESTRO_TESTS_PORT: 8080
 
-      - name: Run unit tests
-        run: cd build && ctest
-      #    run: ./unit_tests
+      - name: Result
+        if: always()
+        run: |
+          cat /tmp/unit_tests.log > $GITHUB_STEP_SUMMARY
+          cat /tmp/unit_tests.log

@@ -19,12 +19,14 @@
 
 cmake_minimum_required(VERSION 3.5.1)
 
-set(PROJECT_NAME cmake-template)
+set(PROJECT_NAME maestro)
 set(EXECUTABLE_NAME maestro)
 
-project(${PROJECT_NAME} LANGUAGES C CXX)
+project(${PROJECT_NAME} LANGUAGES CXX)
 set(CMAKE_BUILD_TYPE DEBUG)
 set(CMAKE_CXX_STANDARD 20)
+set(CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 get_filename_component(THIRD_PARTIES_DIR
                        "${CMAKE_HOME_DIRECTORY}/third_parties/" ABSOLUTE)
@@ -33,36 +35,49 @@ get_filename_component(CMAKE_MODULES_DIR "${CMAKE_HOME_DIRECTORY}/cmake/"
 get_filename_component(INCL_DIR "${CMAKE_HOME_DIRECTORY}/include/" ABSOLUTE)
 get_filename_component(SRC_DIR "${CMAKE_HOME_DIRECTORY}/src/" ABSOLUTE)
 get_filename_component(DOCS_DIR "${CMAKE_HOME_DIRECTORY}/docs/" ABSOLUTE)
+get_filename_component(TEST_DIR "${CMAKE_HOME_DIRECTORY}/tests/" ABSOLUTE)
 
-set(SRCS ${SRC_DIR}/main.cpp)
+set(SRCS ${SRC_DIR}/main.cpp
+    ${SRC_DIR}/messages/MessagesUtils/MessagesUtils.cpp
+    ${SRC_DIR}/messages/File/FileApproxMetadata/FileApproxMetadata.cpp
+    ${SRC_DIR}/messages/File/FileMetadata/FileMetadata.cpp
+    ${SRC_DIR}/File/FileServer.cpp)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY})
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY})
 
-if(DEFINED gRPC)
-  include("cmake/gRPC_cpp.cmake")
-endif()
+# Effectuer les règles gRPC et MongoDB seulement quand doxygen n'est pas activé
+if (NOT DEFINED doxygen)
+    # gRPC
+    include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
 
-add_executable(${EXECUTABLE_NAME} ${SRCS})
-target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCL_DIR})
 
-if(DEFINED gRPC)
-  target_link_libraries(${EXECUTABLE_NAME} ${my_grpc_proto} ${_REFLECTION}
-                        ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
-endif()
+    add_executable(${EXECUTABLE_NAME} ${SRCS})
+    set_property(TARGET ${EXECUTABLE_NAME} PROPERTY CXX_STANDARD 20)
+    target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCL_DIR} ${SRC_DIR} ${my_protos_include_dir})
+
+    # gRPC
+    target_link_libraries(${EXECUTABLE_NAME} ${my_grpc_proto} ${_REFLECTION}
+                          ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
+
+    # MongoDB
+    include(${CMAKE_MODULES_DIR}/mongodb.cmake)
+
+    target_compile_options(${EXECUTABLE_NAME} PRIVATE -Wall -Wextra -Wno-missing-field-initializers)
+endif ()
 
 # custom cmake modules
 include(${CMAKE_MODULES_DIR}/clang-format.cmake)
 include(${CMAKE_MODULES_DIR}/clang-tidy.cmake)
 include(${CMAKE_MODULES_DIR}/cmake-format.cmake)
 
-if(DEFINED functional_tests)
-  include(${CMAKE_MODULES_DIR}/functional_tests.cmake)
-endif()
+if (DEFINED functional_tests)
+    include(${CMAKE_MODULES_DIR}/functional_tests.cmake)
+endif ()
 
-if(DEFINED unit_tests)
-  include(${CMAKE_MODULES_DIR}/GoogleTest.cmake)
-endif()
+if (DEFINED unit_tests) ## todo build only unit_tests, not maestro ? for docker compose unit_tests
+    include(${CMAKE_MODULES_DIR}/gTest.cmake)
+endif ()
 
-if(DEFINED doxygen)
-  include(${CMAKE_MODULES_DIR}/doxygen.cmake)
-endif()
+if (DEFINED doxygen)
+    include(${CMAKE_MODULES_DIR}/doxygen.cmake)
+endif ()

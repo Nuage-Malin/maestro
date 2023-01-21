@@ -1,0 +1,63 @@
+name: Generate documentation
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+   doxygen:
+     runs-on: ubuntu-22.04
+     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build documentation
+        run: docker build -f Dockerfile.documentation -t maestro-documentation .
+
+      - name: Run temporary container
+        run: docker run --rm -d --name maestro-documentation maestro-documentation
+
+      - name: Copy HTML documentation
+        run: |
+          mkdir -p /tmp/maestro-documentation/html
+          docker cp maestro-documentation:/usr/share/nginx/html /tmp/maestro-documentation/html
+
+      - name: Stop temporary container
+        run: docker stop maestro-documentation
+
+      - name: Upload documentation
+        uses: actions/upload-artifact@v3
+        with:
+          name: doxygen-html
+          path: /tmp/maestro-documentation/html
+
+  # doxygen_github_pages:
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
+  #       with:
+  #         submodules: false
+
+  #     - name: Install Doxygen
+  #       run: sudo apt-get install doxygen -y
+  #       shell: bash
+
+  #     - name: Generate Doxygen Documentation
+  #       run: |
+  #         mkdir -p build
+  #         cmake -D doxygen=true -S . -B build
+  #         make -C build doxygen
+
+  #     - name: Create .nojekyll (ensures pages with underscores work on gh pages)
+  #       run: touch docs/Doxygen/html/.nojekyll
+  #       shell: bash
+
+  #     - name: Deploy to GitHub Pages
+  #       uses: JamesIves/github-pages-deploy-action@3.7.1
+  #       with:
+  #         github_token: ${{ inputs.REPO_PROTOBUF_INTERFACES_TOKEN }}
+  #         branch: gh-pages
+  #         folder: docs/Doxygen/html

@@ -1,14 +1,13 @@
-/*
-** EPITECH PROJECT, 2022
-** test.c
-** File description:
-** TODO: add description
-*/
-
+/**
+* @file test.cpp
+* @author Arthur Jourdan
+* @date of creation 11/11/22.
+* @brief Example test with google test
+ */
 #include <gtest/gtest.h>
 
 // Demonstrate some basic assertions.
-TEST(HelloTest, BasicAssertions)
+TEST(TestSuiteName, TestName)
 {
     // Expect two strings not to be equal.
     EXPECT_STRNE("hello", "world");
