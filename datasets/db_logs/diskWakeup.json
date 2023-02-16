@@ -1,0 +1,172 @@
+[
+    {
+        "_id": "61e2b2cc16fbdf1b5e3e5c5d",
+        "diskId": "4GGE3N4G",
+        "startup": {
+            "date": "2022-01-01T12:00:00Z",
+            "isManual": false
+        },
+        "shutdown": {
+            "date": "2022-01-02T00:00:00Z",
+            "isManual": false
+        },
+        "periodInfo": {
+            "consumption": 1000
+        }
+    },
+    {
+        "_id": "61e2b2cc16fbdf1b5e3e5c5e",
+        "diskId": "JN83N29F",
+        "startup": {
+            "date": "2022-01-02T12:00:00Z",
+            "isManual": false
+        },
+        "shutdown": {
+            "date": "2022-01-03T00:00:00Z",
+            "isManual": false
+        },
+        "periodInfo": {
+            "consumption": 800
+        }
+    },
+    {
+        "_id": "61e2b2cc16fbdf1b5e3e5c5f",
+        "diskId": "5JG8M93A",
+        "startup": {
+            "date": "2022-01-03T12:00:00Z",
+            "isManual": false
+        },
+        "shutdown": {
+            "date": "2022-01-04T00:00:00Z",
+            "isManual": true
+        },
+        "periodInfo": {
+            "consumption": 500
+        }
+    },
+    {
+        "_id": "61e2b2cc16fbdf1b5e3e5c60",
+        "diskId": "XG7V43L1",
+        "startup": {
+            "date": "2022-01-13T00:00:00Z",
+            "isManual": false
+        },
+        "shutdown": null,
+        "periodInfo": null
+    },
+    {
+        "_id": "61e2b2cc16fbdf1b5e3e5c61",
+        "diskId": "FJ64K29A",
+        "startup": {
+            "date": "2022-01-05T12:00:00Z",
+            "isManual": false
+        },
+        "shutdown": {
+            "date": "2022-01-06T00:00:00Z",
+            "isManual": false
+        },
+        "periodInfo": {
+            "consumption": 2000
+        }
+    },
+    {
+        "_id": "61e2b2cc16fbdf1b5e3e5c62",
+        "diskId": "5JG8M93A",
+        "startup": {
+            "date": "2022-01-07T12:00:00Z",
+            "isManual": false
+        },
+        "shutdown": {
+            "date": "2022-01-08T00:00:00Z",
+            "isManual": false
+        },
+        "periodInfo": {
+            "consumption": 1500
+        }
+    },
+    {
+        "_id": "61e2b2cc16fbdf1b5e3e5c63",
+        "diskId": "JN83N29F",
+        "startup": {
+            "date": "2022-01-08T12:00:00Z",
+            "isManual": false
+        },
+        "shutdown": null,
+        "periodInfo": null
+    },
+    {
+        "_id": "61e2b2cc16fbdf1b5e3e5c64",
+        "diskId": "4GGE3N4G",
+        "startup": {
+            "date": "2022-01-09T12:00:00Z",
+            "isManual": false
+        },
+        "shutdown": {
+            "date": "2022-01-10T00:00:00Z",
+            "isManual": true
+        },
+        "periodInfo": {
+            "consumption": 2000
+        }
+    },
+    {
+        "_id": "61e2b2cc16fbdf1b5e3e5c65",
+        "diskId": "XG7V43L1",
+        "startup": {
+            "date": "2022-01-10T12:00:00Z",
+            "isManual": false
+        },
+        "shutdown": {
+            "date": "2022-01-11T00:00:00Z",
+            "isManual": false
+        },
+        "periodInfo": {
+            "consumption": 3000
+        }
+    },
+    {
+        "_id": "61e2b2cc16fbdf1b5e3e5c66",
+        "diskId": "4GGE3N4G",
+        "startup": {
+            "date": "2022-01-11T12:00:00Z",
+            "isManual": true
+        },
+        "shutdown": {
+            "date": "2022-01-12T00:00:00Z",
+            "isManual": false
+        },
+        "periodInfo": {
+            "consumption": 2500
+        }
+    },
+    {
+        "_id": "61e2b2cc16fbdf1b5e3e5c67",
+        "diskId": "XG7V43L1",
+        "startup": {
+            "date": "2022-01-04T12:00:00Z",
+            "isManual": true
+        },
+        "shutdown": {
+            "date": "2022-01-06T12:00:00Z",
+            "isManual": true
+        },
+        "periodInfo": {
+            "consumption": 4000
+        }
+    },
+    {
+        "_id": "61e2b2cc16fbdf1b5e3e5c68",
+        "diskId": "FJ64K29A",
+        "startup": {
+            "date": "2022-02-14T10:13:45.000Z",
+            "isManual": false
+        },
+        "shutdown": {
+            "date": "2022-02-14T17:21:34.000Z",
+            "isManual": false
+        },
+        "periodInfo": {
+            "consumption": 1984
+        }
+    }
+]
