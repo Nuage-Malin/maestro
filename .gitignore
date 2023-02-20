@@ -86,17 +86,3 @@ simplify_test
 string_generator_test
 third_parties/mongo-cxx-driver-r3.7.0.tar.gz
 third_parties/mongo-cxx-driver-r3.7.0/
-parse_test
-possible_match_test
-protoc
-protoc-3.21.6.0
-random_test
-re2_arg_test
-re2_test
-regexp_benchmark
-regexp_test
-required_prefix_test
-search_test
-set_test
-simplify_test
-string_generator_test
