@@ -6,7 +6,6 @@
  */
 
 #include "StatsUserDiskInfoSchema.hpp"
-#include "Document/StatsUserDiskInfoDocument.hpp"
 #include "Schemas/Stats/DiskWakeup/StatsDiskWakeupSchema.hpp"
 
 StatsUserDiskInfoSchema::StatsUserDiskInfoSchema(const mongocxx::database &database)
