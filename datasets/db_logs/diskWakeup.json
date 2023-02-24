@@ -1,6 +1,8 @@
 [
     {
-        "_id": "61e2b2cc16fbdf1b5e3e5c5d",
+        "_id": {
+            "$oid": "61e2b2cc16fbdf1b5e3e5c5d"
+        },
         "diskId": "4GGE3N4G",
         "startup": {
             "date": {
@@ -19,7 +21,9 @@
         }
     },
     {
-        "_id": "61e2b2cc16fbdf1b5e3e5c5e",
+        "_id": {
+            "$oid": "61e2b2cc16fbdf1b5e3e5c5e"
+        },
         "diskId": "JN83N29F",
         "startup": {
             "date": {
@@ -38,7 +42,9 @@
         }
     },
     {
-        "_id": "61e2b2cc16fbdf1b5e3e5c5f",
+        "_id": {
+            "$oid": "61e2b2cc16fbdf1b5e3e5c5f"
+        },
         "diskId": "5JG8M93A",
         "startup": {
             "date": {
@@ -57,7 +63,9 @@
         }
     },
     {
-        "_id": "61e2b2cc16fbdf1b5e3e5c60",
+        "_id": {
+            "$oid": "61e2b2cc16fbdf1b5e3e5c60"
+        },
         "diskId": "XG7V43L1",
         "startup": {
             "date": {
@@ -69,7 +77,9 @@
         "periodInfo": null
     },
     {
-        "_id": "61e2b2cc16fbdf1b5e3e5c61",
+        "_id": {
+            "$oid": "61e2b2cc16fbdf1b5e3e5c61"
+        },
         "diskId": "FJ64K29A",
         "startup": {
             "date": {
@@ -88,7 +98,9 @@
         }
     },
     {
-        "_id": "61e2b2cc16fbdf1b5e3e5c62",
+        "_id": {
+            "$oid": "61e2b2cc16fbdf1b5e3e5c62"
+        },
         "diskId": "5JG8M93A",
         "startup": {
             "date": {
@@ -107,7 +119,9 @@
         }
     },
     {
-        "_id": "61e2b2cc16fbdf1b5e3e5c63",
+        "_id": {
+            "$oid": "61e2b2cc16fbdf1b5e3e5c63"
+        },
         "diskId": "JN83N29F",
         "startup": {
             "date": {
@@ -119,7 +133,9 @@
         "periodInfo": null
     },
     {
-        "_id": "61e2b2cc16fbdf1b5e3e5c64",
+        "_id": {
+            "$oid": "61e2b2cc16fbdf1b5e3e5c64"
+        },
         "diskId": "4GGE3N4G",
         "startup": {
             "date": {
@@ -138,7 +154,9 @@
         }
     },
     {
-        "_id": "61e2b2cc16fbdf1b5e3e5c65",
+        "_id": {
+            "$oid": "61e2b2cc16fbdf1b5e3e5c65"
+        },
         "diskId": "XG7V43L1",
         "startup": {
             "date": {
@@ -157,7 +175,9 @@
         }
     },
     {
-        "_id": "61e2b2cc16fbdf1b5e3e5c66",
+        "_id": {
+            "$oid": "61e2b2cc16fbdf1b5e3e5c66"
+        },
         "diskId": "4GGE3N4G",
         "startup": {
             "date": {
@@ -176,7 +196,9 @@
         }
     },
     {
-        "_id": "61e2b2cc16fbdf1b5e3e5c67",
+        "_id": {
+            "$oid": "61e2b2cc16fbdf1b5e3e5c67"
+        },
         "diskId": "XG7V43L1",
         "startup": {
             "date": {
@@ -195,7 +217,9 @@
         }
     },
     {
-        "_id": "61e2b2cc16fbdf1b5e3e5c68",
+        "_id": {
+            "$oid": "61e2b2cc16fbdf1b5e3e5c68"
+        },
         "diskId": "FJ64K29A",
         "startup": {
             "date": {
