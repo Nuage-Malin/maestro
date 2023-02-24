@@ -16,7 +16,7 @@
 #include "Services/UsersBack/UsersBackService.hpp"
 
 static const string fileDb{"maestro"};
-static const string statsDb{"stats"};
+static const string statsDb{"logs"};
 
 /**
  * @brief Run the server

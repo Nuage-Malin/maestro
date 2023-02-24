@@ -18,31 +18,25 @@
 
 class TemplateService {
   protected:
-    grpc::Status _procedureRunner(std::function<grpc::Status()> callback);
-
     /**
-     * @param location Error location (shouldn't be overriden)
+     * @param location should be overriden
+     * @param functionName should be overriden
      */
+    grpc::Status _procedureRunner(
+        std::function<grpc::Status()> callback, const std::source_location &location = std::source_location::current()
+    );
+
+  private:
     grpc::Status
     _manageErrors(const mongocxx::query_exception &error, const std::source_location &location = std::source_location::current());
-    /**
-     * @param location Error location (shouldn't be overriden)
-     */
     grpc::Status
     _manageErrors(const std::out_of_range &error, const std::source_location &location = std::source_location::current());
-    /**
-     * @param location Error location (shouldn't be overriden)
-     */
     grpc::Status
     _manageErrors(const std::invalid_argument &error, const std::source_location &location = std::source_location::current());
-    /**
-     * @param location Error location (shouldn't be overriden)
-     */
     grpc::Status
     _manageErrors(const std::exception &error, const std::source_location &location = std::source_location::current());
 
-  private:
-    NODISCARD string _getCaller(const std::source_location &location);
+    NODISCARD string _getErrorCaller(const std::source_location &location);
 };
 
 #endif

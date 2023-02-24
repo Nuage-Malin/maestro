@@ -19,7 +19,7 @@ class StatsDiskWakeupSchema : public TemplateSchema {
     StatsDiskWakeupSchema(const mongocxx::database &database);
     ~StatsDiskWakeupSchema() = default;
 
-    uint64 getConsumption(std::vector<MongoCXX::ObjectId> ids);
+    uint64 getConsumption(const MongoCXX::ArrayView &ids);
 };
 
 #endif

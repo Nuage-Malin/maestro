@@ -34,6 +34,8 @@ namespace MongoCXX
     typedef bsoncxx::document::view DocumentView;
     typedef bsoncxx::types::b_null Null;
     typedef bsoncxx::types::b_array Array;
+    typedef bsoncxx::array::view ArrayView;
+    typedef bsoncxx::builder::basic::array ArrayBuilder;
 
     template <typename T> bsoncxx::array::view toArray(std::vector<T> list)
     {

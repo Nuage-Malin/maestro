@@ -21,15 +21,13 @@ uint64 StatsUserDiskInfoSchema::getUserConsumption(const string &userId, const D
     );
     mongocxx::options::find options;
 
-    options.projection(makeDocument(makeField("_id", false), makeField("diskWakeup", true)).view());
-    mongocxx::cursor userDiskInfoCursor = this->_model.find(filter.view(), options);
-    const auto &userDiskInfoBegin = userDiskInfoCursor.begin();
-    const auto &userDiskInfoEnd = userDiskInfoCursor.end();
-    std::vector<MongoCXX::ObjectId> diskWakeupIds;
+    options.projection(makeDocument(makeField("_id", false), makeField("diskWakeup", true)));
+    mongocxx::cursor cursor = this->_model.find(filter.view(), options);
+    MongoCXX::ArrayBuilder diskWakeupIds;
 
-    diskWakeupIds.resize(std::distance(userDiskInfoBegin, userDiskInfoEnd));
-    std::transform(userDiskInfoBegin, userDiskInfoEnd, diskWakeupIds.begin(), [](const MongoCXX::DocumentView &document) {
-        return document["diskWakeup"].get_oid().value;
-    });
-    return StatsDiskWakeupSchema(this->_database).getConsumption(diskWakeupIds);
+    for (const auto &document : cursor) {
+        diskWakeupIds.append(document["diskWakeup"].get_oid().value);
+    }
+
+    return StatsDiskWakeupSchema(this->_database).getConsumption(diskWakeupIds.view());
 }

@@ -48,12 +48,9 @@ NODISCARD bsoncxx::v_noabi::types::b_date Date::toBSON() const
 
 NODISCARD google::protobuf::Timestamp Date::toProtobuf() const
 {
-    const auto &time = this->_date.time_since_epoch();
-
     google::protobuf::Timestamp timestamp;
-    const auto &seconds = std::chrono::duration_cast<std::chrono::seconds>(time);
-    timestamp.set_seconds(seconds.count());
-    timestamp.set_nanos(static_cast<int32_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(time - seconds).count()));
+
+    this->_toProtobuf(timestamp);
     return timestamp;
 }
 
