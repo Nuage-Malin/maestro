@@ -6,7 +6,7 @@ if [ ! $INSTALL_DIR ]; then
 fi
 
 if [ ! $CLONE_DIR ]; then
-    CLONE_DIR="third_parties"
+    CLONE_DIR=$THIRD_PARTIES_DIR
 fi
 
 if [ ! $OS_DISTRIB ]; then

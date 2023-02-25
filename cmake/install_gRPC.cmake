@@ -27,6 +27,7 @@ endif ()
 
 find_package(Threads REQUIRED)
 
+set(ENV{THIRD_PARTIES_DIR} ${THIRD_PARTIES_DIR})
 if (DEFINED GRPC_CLONE_SUBMODULE)
     set(ENV{GRPC_CLONE_SUBMODULE} true)
     execute_process(COMMAND "${CMAKE_MODULES_DIR}/install_gRPC.sh")

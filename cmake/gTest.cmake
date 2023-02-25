@@ -37,10 +37,11 @@ include(GoogleTest)
 include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
 #
 add_executable(${TEST_EXEC_NAME}
-               ${TEST_SRC_DIR}/test.cpp
-               ${TEST_SRC_DIR}/FileClient.cpp
-               ${TEST_SRC_DIR}/test_FileServer.cpp)
+               ${TEST_SRC_DIR}/Utils/Date/Date.cpp
+               ${TEST_SRC_DIR}/UsersBack/UsersBackClient.cpp
+               ${TEST_SRC_DIR}/UsersBack/UsersBackTest.cpp)
 
+target_include_directories(${TEST_EXEC_NAME} PUBLIC ${INCL_DIR} ${TEST_SRC_DIR})
 target_link_libraries(${TEST_EXEC_NAME} gtest_main)
 
 

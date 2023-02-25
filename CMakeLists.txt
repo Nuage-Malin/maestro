@@ -38,10 +38,12 @@ get_filename_component(DOCS_DIR "${CMAKE_HOME_DIRECTORY}/docs/" ABSOLUTE)
 get_filename_component(TEST_DIR "${CMAKE_HOME_DIRECTORY}/tests/" ABSOLUTE)
 
 set(SRCS ${SRC_DIR}/main.cpp
-    ${SRC_DIR}/messages/MessagesUtils/MessagesUtils.cpp
-    ${SRC_DIR}/messages/File/FileApproxMetadata/FileApproxMetadata.cpp
-    ${SRC_DIR}/messages/File/FileMetadata/FileMetadata.cpp
-    ${SRC_DIR}/File/FileServer.cpp)
+    ${SRC_DIR}/Utils/Date/Date.cpp
+    ${SRC_DIR}/Schemas/Template/TemplateSchema.cpp
+    ${SRC_DIR}/Schemas/Stats/DiskWakeup/StatsDiskWakeupSchema.cpp
+    ${SRC_DIR}/Schemas/Stats/UserDiskInfo/StatsUserDiskInfoSchema.cpp
+    ${SRC_DIR}/Services/Template/TemplateService.cpp
+    ${SRC_DIR}/Services/UsersBack/UsersBackService.cpp)
 
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY})
 
