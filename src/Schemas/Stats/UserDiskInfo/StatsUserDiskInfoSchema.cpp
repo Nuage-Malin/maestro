@@ -15,19 +15,40 @@ StatsUserDiskInfoSchema::StatsUserDiskInfoSchema(const mongocxx::database &datab
 
 uint64 StatsUserDiskInfoSchema::getUserConsumption(const string &userId, const Date &startDate, const Date &endDate)
 {
-    MongoCXX::Document filter = makeDocument(
-        makeField("userId", userId),
-        makeField("createdAt", makeDocument(makeField("$gte", startDate.toBSON()), makeField("$lte", endDate.toBSON())))
+    mongocxx::pipeline pipeline;
+
+    pipeline.match(
+        makeDocument(
+            makeField("userId", userId),
+            makeField("createdAt", makeDocument(makeField("$gte", startDate.toBSON()), makeField("$lte", endDate.toBSON())))
+        )
+            .view()
     );
-    mongocxx::options::find options;
+    pipeline.lookup(makeDocument(
+                        makeField("from", "diskWakeup"),
+                        makeField("localField", "diskWakeup"),
+                        makeField("foreignField", "_id"),
+                        makeField("as", "diskWakeup")
+    )
+                        .view());
+    pipeline.unwind("$diskWakeup");
+    pipeline.group(makeDocument(
+                       makeField("_id", MongoCXX::Null()),
+                       makeField("consumption", makeDocument(makeField("$sum", "$diskWakeup.periodInfo.consumption")))
+    )
+                       .view());
 
-    options.projection(makeDocument(makeField("_id", false), makeField("diskWakeup", true)));
-    mongocxx::cursor cursor = this->_model.find(filter.view(), options);
-    MongoCXX::ArrayBuilder diskWakeupIds;
+    mongocxx::cursor cursor = this->_model.aggregate(pipeline);
 
-    for (const auto &document : cursor) {
-        diskWakeupIds.append(document["diskWakeup"].get_oid().value);
-    }
+    if (cursor.begin() == cursor.end())
+        return 0;
 
-    return StatsDiskWakeupSchema(this->_database).getConsumption(diskWakeupIds.view());
+    const MongoCXX::DocumentElement &consumptionValue = (*cursor.begin())["consumption"];
+
+    if (consumptionValue.type() == bsoncxx::type::k_int32)
+        return static_cast<uint64>(consumptionValue.get_int32().value);
+    else if (consumptionValue.type() == bsoncxx::type::k_int64)
+        return static_cast<uint64>(consumptionValue.get_int64().value);
+    else
+        throw std::runtime_error("Invalid consumption type");
 }
