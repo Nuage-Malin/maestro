@@ -37,4 +37,6 @@ class Date {
     std::chrono::system_clock::time_point _date;
 };
 
+std::ostream &operator<<(std::ostream &stream, const Date &date);
+
 #endif

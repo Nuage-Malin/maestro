@@ -78,3 +78,11 @@ void Date::_toProtobuf(google::protobuf::Timestamp &timestamp) const
     timestamp.set_seconds(seconds.count());
     timestamp.set_nanos(static_cast<int32_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(time - seconds).count()));
 }
+
+std::ostream &operator<<(std::ostream &stream, const Date &date)
+{
+    std::time_t time = std::chrono::system_clock::to_time_t(date.toChrono());
+
+    stream << std::put_time(std::localtime(&time), "%d-%m-%Y %H:%M:%S");
+    return stream;
+}

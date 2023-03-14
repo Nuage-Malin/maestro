@@ -32,6 +32,7 @@ namespace MongoCXX
     typedef bsoncxx::document::value Document;
     typedef bsoncxx::builder::basic::sub_document SubDocument;
     typedef bsoncxx::document::view DocumentView;
+    typedef bsoncxx::document::element DocumentElement;
     typedef bsoncxx::types::b_null Null;
     typedef bsoncxx::types::b_array Array;
     typedef bsoncxx::array::view ArrayView;
