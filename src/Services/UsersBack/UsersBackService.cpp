@@ -37,12 +37,14 @@ grpc::Status UsersBackService::fileUpload(
             } catch (const RequestFailureException &error) {
                 // If the upload failed, add it to the queue database
                 this->_filesSchemas.uploadQueue.uploadFile(
-                    addFileStatus.fileid(), addFileStatus.diskid(), request->file().content()
+                    addFileStatus.fileid(), request->file().metadata().userid(), addFileStatus.diskid(), request->file().content()
                 );
             }
         } else {
             // If the disk is offline, add it to the queue database
-            this->_filesSchemas.uploadQueue.uploadFile(addFileStatus.fileid(), addFileStatus.diskid(), request->file().content());
+            this->_filesSchemas.uploadQueue.uploadFile(
+                addFileStatus.fileid(), request->file().metadata().userid(), addFileStatus.diskid(), request->file().content()
+            );
         }
         return grpc::Status::OK;
     });
