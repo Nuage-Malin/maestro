@@ -14,13 +14,20 @@
 #include "UsersBack_Maestro/UsersBack_Maestro.grpc.pb.h"
 
 #include "utils.hpp"
+#include "clients.hpp"
+#include "schemas.hpp"
 #include "Services/Template/TemplateService.hpp"
 #include "Schemas/Stats/UserDiskInfo/StatsUserDiskInfoSchema.hpp"
 
 class UsersBackService : public TemplateService, public UsersBack_Maestro::UsersBack_Maestro_Service::Service {
   public:
-    UsersBackService(const mongocxx::database &fileDatabase, const mongocxx::database &statsDatabase);
+    UsersBackService(const mongocxx::database &fileDatabase, const mongocxx::database &statsDatabase, const GrpcClients &clients);
     ~UsersBackService() = default;
+
+    grpc::Status fileUpload(
+        grpc::ServerContext *context, const UsersBack_Maestro::FileUploadRequest *request,
+        UsersBack_Maestro::FileUploadStatus *response
+    ) override;
 
     grpc::Status getUserConsumption(
         grpc::ServerContext *context, const UsersBack_Maestro::GetUserConsumptionRequest *request,
@@ -28,18 +35,9 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
     ) override;
 
   private:
-    /**
-     * @brief Set file bucket with if _fileDatabase is settled. Otherwise throw an error.
-     *
-     * @throw std::logic_error if _fileDatabase is not settled
-     */
-    // void _setFileBucket();
-    // NODISCARD int _isDownloadable(const string &fileId);
-
-  private:
-    // mongocxx::gridfs::bucket _fileBucket;
-
+    FilesSchemas _filesSchemas;
     StatsUserDiskInfoSchema _statsUserDiskInfoSchema;
+    const GrpcClients &_clients;
 };
 
-#endif /* MAESTRO_FILESERVER_HPP */
+#endif

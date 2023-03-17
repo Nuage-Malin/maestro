@@ -1,0 +1,35 @@
+/**
+ * @file SantaclausClient.cpp
+ * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
+ * @date 14/03/2023
+ * @copyright Nuage Malin
+ */
+
+#include <string>
+
+#include <grpcpp/channel.h>
+
+#include "SantaclausClient.hpp"
+#include "Exceptions/RequestFailure/RequestFailureException.hpp"
+
+SantaclausClient::SantaclausClient(const std::shared_ptr<grpc::ChannelInterface> &channel)
+    : _stub(Maestro_Santaclaus::Maestro_Santaclaus_Service::NewStub(channel))
+{
+    if (!this->_stub)
+        throw std::runtime_error(string(__FUNCTION__) + " could not create gRPC stub");
+}
+
+Maestro_Santaclaus::AddFileStatus SantaclausClient::addFile(const File::FileApproxMetadata &file, const uint64 &fileSize) const
+{
+    grpc::ClientContext context;
+    Maestro_Santaclaus::AddFileRequest request;
+    Maestro_Santaclaus::AddFileStatus response;
+
+    request.set_filesize(fileSize);
+    request.set_allocated_file(new File::FileApproxMetadata(file));
+    grpc::Status status = this->_stub->addFile(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status);
+    return response;
+}

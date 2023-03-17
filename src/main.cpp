@@ -13,6 +13,7 @@
 #include <grpcpp/server_builder.h>
 
 #include "utils.hpp"
+#include "clients.hpp"
 #include "Services/UsersBack/UsersBackService.hpp"
 
 static const string fileDb{"maestro"};
@@ -28,11 +29,7 @@ static const string statsDb{"logs"};
 void RunServer()
 {
     mongocxx::instance inst{}; // This should be done only once.
-    const char *mongoUrl = getenv("MAESTRO_MONGO_URL");
-    if (!mongoUrl)
-        throw std::invalid_argument("MAESTRO_MONGO_URL environment variable not found");
-
-    mongocxx::client client{mongocxx::uri{mongoUrl}};
+    mongocxx::client client{mongocxx::uri{getEnv("MAESTRO_MONGO_URL")}};
     if (!client)
         throw std::runtime_error("Could not access mongo database");
 
@@ -44,8 +41,15 @@ void RunServer()
     if (!statsDatabase)
         throw std::runtime_error("Could not access '" + statsDb + "' database");
 
-    // Backend
-    UsersBackService usersBackService(fileDatabase, statsDatabase);
+    // Clients
+    GrpcClients clients = {
+        .santaclaus = SantaclausClient(grpc::CreateChannel(getEnv("MAESTRO_SANTACLAUS_URI"), grpc::InsecureChannelCredentials())),
+        .hardwareMalin =
+            HardwareMalinClient(grpc::CreateChannel(getEnv("MAESTRO_HARDWARE_MALIN_URI"), grpc::InsecureChannelCredentials())),
+        .vault = VaultClient(grpc::CreateChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials()))};
+
+    // Services
+    UsersBackService usersBackService(fileDatabase, statsDatabase, clients);
 
     // gRPC
     const char *address = getenv("MAESTRO_ADDRESS");

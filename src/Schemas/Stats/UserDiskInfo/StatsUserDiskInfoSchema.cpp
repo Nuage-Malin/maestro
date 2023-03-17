@@ -8,8 +8,7 @@
 #include "StatsUserDiskInfoSchema.hpp"
 #include "Schemas/Stats/DiskWakeup/StatsDiskWakeupSchema.hpp"
 
-StatsUserDiskInfoSchema::StatsUserDiskInfoSchema(const mongocxx::database &database)
-    : TemplateSchema(database, "userDiskInfo"), _database(database)
+StatsUserDiskInfoSchema::StatsUserDiskInfoSchema(const mongocxx::database &database) : TemplateSchema(database, "userDiskInfo")
 {
 }
 

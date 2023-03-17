@@ -22,9 +22,18 @@ typedef uint64_t uint64;
 #define toString(str)  std::to_string(str)
 #define toInteger(str) std::stoi(str)
 #define toSize_t(str)  std::stoul(str)
-#define getenv(env)    std::getenv(env)
 #define UNUSED         __attribute__((unused))
 #define NODISCARD      [[nodiscard]]
+#define STR_FUNCTION   string(__FUNCTION__)
+
+inline string getEnv(const string &env)
+{
+    const char *value = std::getenv(env.c_str());
+
+    if (!value)
+        throw std::invalid_argument(env + " environment variable not found");
+    return value;
+}
 
 namespace MongoCXX
 {
