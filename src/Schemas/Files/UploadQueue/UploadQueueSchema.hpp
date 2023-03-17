@@ -10,9 +10,9 @@
 
 #include <mongocxx/database.hpp>
 
-#include "Schemas/Template/TemplateSchema.hpp"
+#include "Schemas/Templates/FileBucket/TemplateFileBucket.hpp"
 
-class UploadQueueSchema : public TemplateSchema {
+class UploadQueueSchema : public TemplateFileBucket {
   public:
     UploadQueueSchema(const mongocxx::database &database);
     ~UploadQueueSchema() = default;

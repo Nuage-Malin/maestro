@@ -8,8 +8,7 @@
 #include "UploadQueueSchema.hpp"
 #include "Utils/Date/Date.hpp"
 
-UploadQueueSchema::UploadQueueSchema(const mongocxx::database &database)
-    : TemplateSchema(database, "uploadQueue", "uploadQueueFiles")
+UploadQueueSchema::UploadQueueSchema(const mongocxx::database &database) : TemplateFileBucket(database, "uploadQueue")
 {
 }
 
@@ -21,5 +20,5 @@ void UploadQueueSchema::uploadFile(const string &fileId, const string &diskId, c
 
     options.metadata(makeDocument(makeField("diskId", diskId), makeField("createdAt", Date().toBSON())));
 
-    const auto &result = this->_fileBucket->upload_from_stream(fileId, &fileStream, options);
+    const auto &result = this->_fileBucket.upload_from_stream(fileId, &fileStream, options);
 }

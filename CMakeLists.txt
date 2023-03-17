@@ -41,7 +41,8 @@ set(SRCS ${SRC_DIR}/main.cpp
     ${SRC_DIR}/Utils/Date/Date.cpp
     ${SRC_DIR}/Utils/GrpcStatus/GrpcStatus.cpp
     ${SRC_DIR}/Exceptions/RequestFailure/RequestFailureException.cpp
-    ${SRC_DIR}/Schemas/Template/TemplateSchema.cpp
+    ${SRC_DIR}/Schemas/Templates/Schema/TemplateSchema.cpp
+    ${SRC_DIR}/Schemas/Templates/FileBucket/TemplateFileBucket.cpp
     ${SRC_DIR}/Schemas/Files/UploadQueue/UploadQueueSchema.cpp
     ${SRC_DIR}/Schemas/Stats/DiskWakeup/StatsDiskWakeupSchema.cpp
     ${SRC_DIR}/Schemas/Stats/UserDiskInfo/StatsUserDiskInfoSchema.cpp
