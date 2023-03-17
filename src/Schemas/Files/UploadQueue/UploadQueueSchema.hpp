@@ -17,7 +17,7 @@ class UploadQueueSchema : public TemplateFileBucket {
     UploadQueueSchema(const mongocxx::database &database);
     ~UploadQueueSchema() = default;
 
-    void uploadFile(const string &fileId, const string &diskId, const string &content);
+    void uploadFile(const string &fileId, const string &userId, const string &diskId, const string &content);
 };
 
 #endif

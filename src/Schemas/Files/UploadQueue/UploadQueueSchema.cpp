@@ -12,13 +12,15 @@ UploadQueueSchema::UploadQueueSchema(const mongocxx::database &database) : Templ
 {
 }
 
-void UploadQueueSchema::uploadFile(const string &fileId, const string &diskId, const string &content)
+void UploadQueueSchema::uploadFile(const string &fileId, const string &userId, const string &diskId, const string &content)
 {
     std::istringstream ss(content);
     std::istream fileStream(ss.rdbuf());
     mongocxx::v_noabi::options::gridfs::upload options;
 
-    options.metadata(makeDocument(makeField("diskId", diskId), makeField("createdAt", Date().toBSON())));
+    options.metadata(
+        makeDocument(makeField("diskId", diskId), makeField("userId", userId), makeField("createdAt", Date().toBSON()))
+    );
 
     const auto &result = this->_fileBucket.upload_from_stream(fileId, &fileStream, options);
 }
