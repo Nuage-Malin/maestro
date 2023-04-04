@@ -81,8 +81,7 @@ if [ "$GRPC_CLONE_SUBMODULE" == "true" ] || [ "$GRPC_RECOMPILE" == "true"  ]; th
   mkdir -p cmake/build
   pushd cmake/build
   cmake ../..
-  nbr_cpu=`nproc`
-  make -j ($nbr_cpu - 1)
+  make -j $((`nproc` - 1))
 fi
 
 if [ "$GRPC_FULL_INSTALL" == "true" ]; then
@@ -109,7 +108,7 @@ if [ "$GRPC_FULL_INSTALL" == "true" ]; then
     fi
 
     nbr_cpu=`nproc`
-    make -j ($nbr_cpu - 1)
+    make -j $((`nproc` - 1))
     make install
     popd
     popd
