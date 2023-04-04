@@ -62,3 +62,11 @@ grpc::Status UsersBackService::getUserConsumption(
         return grpc::Status::OK;
     });
 }
+
+grpc::Status UsersBackService::getUserDiskSpace(
+    grpc::ServerContext *context, const UsersBack_Maestro::GetUserDiskSpaceRequest *request,
+    UsersBack_Maestro::GetUserDiskSpaceStatus *response
+)
+{
+    return grpc::Status();
+}
