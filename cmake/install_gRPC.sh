@@ -6,7 +6,7 @@ if [ ! $INSTALL_DIR ]; then
 fi
 
 if [ ! $CLONE_DIR ]; then
-    CLONE_DIR="third_parties"
+    CLONE_DIR=$THIRD_PARTIES_DIR
 fi
 
 if [ ! $OS_DISTRIB ]; then
@@ -81,7 +81,7 @@ if [ "$GRPC_CLONE_SUBMODULE" == "true" ] || [ "$GRPC_RECOMPILE" == "true"  ]; th
   mkdir -p cmake/build
   pushd cmake/build
   cmake ../..
-  make -j 10
+  make -j $((`nproc` - 1))
 fi
 
 if [ "$GRPC_FULL_INSTALL" == "true" ]; then
@@ -107,7 +107,8 @@ if [ "$GRPC_FULL_INSTALL" == "true" ]; then
         ## todo add other possible shells
     fi
 
-    make -j 10
+    nbr_cpu=`nproc`
+    make -j $((`nproc` - 1))
     make install
     popd
     popd

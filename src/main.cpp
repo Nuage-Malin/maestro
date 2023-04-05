@@ -11,13 +11,12 @@
 #include <mongocxx/instance.hpp>
 
 #include <grpcpp/server_builder.h>
-// #include <grpcpp/server.h>
 
 #include "utils.hpp"
-#include "File/FileServer.hpp"
+#include "Services/UsersBack/UsersBackService.hpp"
 
-static const string dbName{"maestro"};
-static const string collName{"Uploaded"};
+static const string fileDb{"maestro"};
+static const string statsDb{"logs"};
 
 /**
  * @brief Run the server
@@ -28,22 +27,25 @@ static const string collName{"Uploaded"};
  */
 void RunServer()
 {
-    // mongo db instanciationn // todo put somewhere else
     mongocxx::instance inst{}; // This should be done only once.
     const char *mongoUrl = getenv("MAESTRO_MONGO_URL");
     if (!mongoUrl)
         throw std::invalid_argument("MAESTRO_MONGO_URL environment variable not found");
-    mongocxx::client conn{mongocxx::uri{mongoUrl}};
-    if (!conn)
+
+    mongocxx::client client{mongocxx::uri{mongoUrl}};
+    if (!client)
         throw std::runtime_error("Could not access mongo database");
-    mongocxx::database db = conn[dbName];
-    if (!db)
-        throw std::runtime_error("Could not access database '" + dbName + "'");
-    mongocxx::collection coll = db[collName];
-    if (!coll)
-        throw std::runtime_error("Could not access collection '" + collName + "'");
+
+    mongocxx::database fileDatabase = client[fileDb];
+    mongocxx::database statsDatabase = client[statsDb];
+
+    if (!fileDatabase)
+        throw std::runtime_error("Could not access '" + fileDb + "' database");
+    if (!statsDatabase)
+        throw std::runtime_error("Could not access '" + statsDb + "' database");
+
     // Backend
-    FileServer service(db);
+    UsersBackService usersBackService(fileDatabase, statsDatabase);
 
     // gRPC
     const char *address = getenv("MAESTRO_ADDRESS");
@@ -51,7 +53,7 @@ void RunServer()
     grpc::ServerBuilder builder;
 
     builder.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());
-    builder.RegisterService(&service);
+    builder.RegisterService(&usersBackService);
     std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
     std::cout << "Server listening on " << serverAddress << std::endl;
     server->Wait();
@@ -75,6 +77,9 @@ int main(UNUSED const int ac, UNUSED const char *av[])
         return EXIT_FAILURE;
     } catch (const std::exception &e) {
         std::cerr << "Exception: " << e.what() << std::endl;
+        return EXIT_FAILURE;
+    } catch (...) {
+        std::cerr << "Unknown exception" << std::endl;
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
