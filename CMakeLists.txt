@@ -40,6 +40,7 @@ get_filename_component(TEST_DIR "${CMAKE_HOME_DIRECTORY}/tests/" ABSOLUTE)
 set(SRCS ${SRC_DIR}/main.cpp
     ${SRC_DIR}/Utils/Date/Date.cpp
     ${SRC_DIR}/Utils/GrpcStatus/GrpcStatus.cpp
+    ${SRC_DIR}/Cron/Manager/ManagerCron.cpp
     ${SRC_DIR}/Exceptions/RequestFailure/RequestFailureException.cpp
     ${SRC_DIR}/Schemas/Templates/Schema/TemplateSchema.cpp
     ${SRC_DIR}/Schemas/Templates/FileBucket/TemplateFileBucket.cpp
@@ -70,6 +71,9 @@ if (NOT DEFINED doxygen)
 
     # MongoDB
     include(${CMAKE_MODULES_DIR}/mongodb.cmake)
+
+    # LibCron
+    include(${CMAKE_MODULES_DIR}/libcron.cmake)
 
     target_compile_options(${EXECUTABLE_NAME} PRIVATE -Wall -Wextra -Wno-missing-field-initializers)
 endif ()

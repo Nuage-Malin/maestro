@@ -13,6 +13,7 @@
 #include <grpcpp/server_builder.h>
 
 #include "utils.hpp"
+#include "Cron/Manager/ManagerCron.hpp"
 #include "clients.hpp"
 #include "Services/UsersBack/UsersBackService.hpp"
 
@@ -60,6 +61,13 @@ void RunServer()
     builder.RegisterService(&usersBackService);
     std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
     std::cout << "Server listening on " << serverAddress << std::endl;
+
+    ManagerCron managerCron;
+
+    managerCron.add("Hello world", "1 * * * * *", []() {
+        std::cout << "Hello world" << std::endl;
+    });
+    managerCron._start();
     server->Wait();
 }
 
