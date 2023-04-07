@@ -18,12 +18,18 @@
 
 typedef std::function<void()> CronTask;
 
+struct CronRunningTask
+{
+    std::thread thread;
+    std::unique_ptr<std::atomic_bool> isRunning;
+};
+
 struct CronTaskInfo
 {
     string schedule;
     CronTask task;
     bool isPaused;
-    std::vector<std::thread> running;
+    std::vector<CronRunningTask> running;
 };
 
 class ManagerCron {
@@ -32,7 +38,7 @@ class ManagerCron {
     ~ManagerCron();
 
     void run(const string &name);
-    void add(const string &name, const string &schedule, CronTask &&task);
+    void add(const string &name, const string &schedule, const CronTask &&task);
     void remove(const string &name);
     void resume(); // Resume the global state
     void resume(const string &name);
@@ -44,9 +50,8 @@ class ManagerCron {
     NODISCARD size_t getRunningTasksCount(const string &name) const;
     NODISCARD size_t getTotalRunningTasksCount() const;
 
-    void _start();
-
   private:
+    void _start();
     void _checkStoppedTasks();
 
   private:
