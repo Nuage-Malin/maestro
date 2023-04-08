@@ -30,31 +30,7 @@ void ManagerCron::run(const string &name)
     if (this->_isPaused || job.isPaused())
         std::cerr << "[WARNING] CronManager job " << name << " forced to run while paused" << std::endl;
 
-    std::cout << "CRON start: " << name << std::endl;
     job.addRunningTask();
-}
-
-void ManagerCron::add(const string &schedule, const std::shared_ptr<TemplateCron> &job)
-{
-    for (auto &job : this->_jobs)
-        if (job->getName() == job->getName())
-            throw std::runtime_error("CronManager job " + job->getName() + " already exists");
-    this->_jobs.push_back(job);
-
-    this->_cron.add_schedule(job->getName(), schedule, [this](const libcron::TaskInformation &taskInfo) {
-        const TemplateCron &job = this->_getJob(taskInfo.get_name());
-
-        if (!this->_isPaused && !job.isPaused()) {
-            if (!this->_allowMultipleInstances && job.getRunningTasks().size() > 0) {
-                std::cerr << "[WARNING] CronManager task " << taskInfo.get_name() << " skipped. Task already running."
-                          << std::endl;
-                return;
-            }
-
-            this->run(taskInfo.get_name());
-        }
-    });
-    job->onAdd();
 }
 
 void ManagerCron::remove(const string &name)
@@ -142,7 +118,7 @@ void ManagerCron::_start()
             this->_checkStoppedTasks();
             this->_cron.tick();
 
-            std::this_thread::sleep_for(std::chrono::seconds(4));
+            std::this_thread::sleep_for(std::chrono::seconds(2));
         }
     });
 }

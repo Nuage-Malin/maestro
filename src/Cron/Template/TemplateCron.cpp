@@ -136,7 +136,7 @@ void TemplateCron::checkStoppedTasks()
 
     this->_mutex.lock();
     for (auto it = this->_tasks.begin(); it != this->_tasks.end(); it++)
-        if (!it->isRunning) {
+        if (!*it->isRunning) {
             if (it->thread.joinable())
                 it->thread.join();
             toRemove.push_back(it);

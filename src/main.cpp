@@ -13,9 +13,10 @@
 #include <grpcpp/server_builder.h>
 
 #include "utils.hpp"
-#include "Cron/Manager/ManagerCron.hpp"
 #include "clients.hpp"
 #include "Services/UsersBack/UsersBackService.hpp"
+#include "Cron/Manager/ManagerCron.hpp"
+#include "Cron/FileUpload/FileUploadCron.hpp"
 
 static const string fileDb{"maestro"};
 static const string statsDb{"logs"};
@@ -64,9 +65,7 @@ void RunServer()
 
     ManagerCron managerCron;
 
-    // managerCron.add("Hello world", "20 * * * * ?", []() {
-    //     std::cout << "Hello world !!!" << std::endl;
-    // });
+    managerCron.add("* * * * * ?", FileUploadCron());
 
     server->Wait();
 }

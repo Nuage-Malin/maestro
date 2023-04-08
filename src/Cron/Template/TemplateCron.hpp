@@ -5,8 +5,8 @@
  * @copyright Nuage Malin
  */
 
-#ifndef MAESTRO_TEMPLATECRON_HPP
-#define MAESTRO_TEMPLATECRON_HPP
+#ifndef MAESTRO_TEMPLATE_CRON_HPP
+#define MAESTRO_TEMPLATE_CRON_HPP
 
 #include <thread>
 
@@ -49,7 +49,7 @@ class TemplateCron {
 
   protected:
     string _name;
-    bool _isPaused; // Reffer to isPaused() comment
+    bool _isPaused = false; // Reffer to isPaused() comment
     std::vector<CronTask> _tasks;
 
   private:
