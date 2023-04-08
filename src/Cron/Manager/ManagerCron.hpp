@@ -8,29 +8,11 @@
 #ifndef MAESTRO_MANAGERCRON_HPP
 #define MAESTRO_MANAGERCRON_HPP
 
-#include <functional>
 #include <unordered_map>
-#include <thread>
 
 #include <libcron/Cron.h>
 
-#include "utils.hpp"
-
-typedef std::function<void()> CronTask;
-
-struct CronRunningTask
-{
-    std::thread thread;
-    std::unique_ptr<std::atomic_bool> isRunning;
-};
-
-struct CronTaskInfo
-{
-    string schedule;
-    CronTask task;
-    bool isPaused;
-    std::vector<CronRunningTask> running;
-};
+#include "Cron/Template/TemplateCron.hpp"
 
 class ManagerCron {
   public:
@@ -38,7 +20,7 @@ class ManagerCron {
     ~ManagerCron();
 
     void run(const string &name);
-    void add(const string &name, const string &schedule, const CronTask &&task);
+    void add(const string &schedule, const std::shared_ptr<TemplateCron> &job);
     void remove(const string &name);
     void resume(); // Resume the global state
     void resume(const string &name);
@@ -53,12 +35,13 @@ class ManagerCron {
   private:
     void _start();
     void _checkStoppedTasks();
+    NODISCARD TemplateCron &_getJob(const string &name);
+    NODISCARD const TemplateCron &_getJob(const string &name) const;
 
   private:
     libcron::Cron<libcron::LocalClock, libcron::NullLock> _cron;
     std::thread _runner;
-    std::unordered_map<string, CronTaskInfo> _tasks;
-    std::mutex _runningTasksMutex;
+    std::vector<std::shared_ptr<TemplateCron>> _jobs;
     bool _isPaused = false;
     bool _allowMultipleInstances;
 };

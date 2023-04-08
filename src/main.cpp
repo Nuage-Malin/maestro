@@ -64,9 +64,9 @@ void RunServer()
 
     ManagerCron managerCron;
 
-    managerCron.add("Hello world", "20 * * * * ?", []() {
-        std::cout << "Hello world !!!" << std::endl;
-    });
+    // managerCron.add("Hello world", "20 * * * * ?", []() {
+    //     std::cout << "Hello world !!!" << std::endl;
+    // });
 
     server->Wait();
 }
