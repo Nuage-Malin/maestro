@@ -30,7 +30,7 @@ FetchContent_Declare(
         googletest
         URL https://github.com/google/googletest/archive/e2239ee6043f73722e7aa812a459f54a28552929.zip
 )
-FetchContent_MakeAvailable(googletest)
+FetchContent_MakeAvailable(googletest) # TODO make this non-fatal so that the entire build doesn't fail when no connection
 
 include(GoogleTest)
 # gRPC
