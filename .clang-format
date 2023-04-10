@@ -13,13 +13,13 @@ Language: Cpp
 #--------#
 
 # F3 - Maximum columns count
-ColumnLimit: 120
+ColumnLimit: 130
 
 # F3 - Column limit wrapping for comments
 ReflowComments: true
 
 # L3 - Prevent alignment of wrapped names to avoid misplaced spaces
-AlignAfterOpenBracket: DontAlign
+AlignAfterOpenBracket: BlockIndent
 AllowAllArgumentsOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
 IndentWrappedFunctionNames: false
@@ -50,6 +50,8 @@ BraceWrapping:
 
 # Don't break after return type
 AlwaysBreakAfterReturnType: None
+AlwaysBreakAfterDefinitionReturnType: None
+PenaltyReturnTypeOnItsOwnLine: 150
 
 #===========================================================================#
 # Indentation and spaces                                                    #

@@ -6,30 +6,44 @@ services:
         container_name: maestro
         environment:
             MAESTRO_ADDRESS: "[::]:8080"
-            MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@mongo:27017/maestro?authSource=admin
+            MAESTRO_MONGO_URL: mongodb://admin:big_brain@big-brain:27017/maestro?authSource=admin
             DOWNLOAD_WAITING_TIME: 86400 # 24 hours (seconds * minutes * hours)
         expose:
             - 8080
         networks:
-            - mongo
+            - big-brain
             - users-back:maestro
+            - chouf:maestro
         depends_on:
-            - mongo
-        restart: on-failure
+            - big-brain
+        restart: always
 
-    mongo:
+    big-brain:
         image: mongo:6
         environment:
             MONGO_INITDB_DATABASE: maestro
-            MONGO_INITDB_ROOT_USERNAME: maestro_admin
-            MONGO_INITDB_ROOT_PASSWORD: maestro_admin_password
+            MONGO_INITDB_ROOT_USERNAME: admin
+            MONGO_INITDB_ROOT_PASSWORD: big_brain
         expose:
             - 27017
         networks:
-            - mongo
+            - big-brain
         volumes:
-            - mongo:/data/db
+            - big-brain:/data/db
         restart: always
+
+    big-brain-loader:
+        build:
+            context: datasets
+            dockerfile: Dockerfile.big-brain-loader
+        environment:
+            MONGO_LOGS_NAME: logs
+            MONGO_LOGS_URI: mongodb://admin:big_brain@big-brain:27017/logs?authSource=admin
+        networks:
+            - big-brain
+        depends_on:
+            - big-brain
+        restart: on-failure
 
     documentation:
         build:
@@ -39,9 +53,11 @@ services:
             - 50051:80
 
 networks:
-    mongo: null
+    big-brain: null
     users-back:maestro:
+        external: true
+    chouf:maestro:
         external: true
 
 volumes:
-    mongo: null
+    big-brain: null
