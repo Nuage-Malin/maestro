@@ -34,3 +34,13 @@ void VaultClient::uploadFile(const string &fileId, const string &userId, const s
     if (!status.ok())
         throw RequestFailureException(status);
 }
+
+void VaultClient::uploadFiles(const Maestro_Vault::UploadFilesRequest &files) const
+{
+    grpc::ClientContext context;
+    Maestro_Vault::UploadFilesStatus response;
+    grpc::Status status = this->_stub->uploadFiles(&context, files, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status);
+}

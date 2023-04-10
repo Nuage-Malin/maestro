@@ -10,6 +10,8 @@
 
 #include <mongocxx/database.hpp>
 
+#include "Maestro_Vault/Maestro_Vault.grpc.pb.h"
+
 #include "Schemas/Templates/FileBucket/TemplateFileBucket.hpp"
 
 class UploadQueueSchema : public TemplateFileBucket {
@@ -18,6 +20,8 @@ class UploadQueueSchema : public TemplateFileBucket {
     ~UploadQueueSchema() = default;
 
     void uploadFile(const string &fileId, const string &userId, const string &diskId, const string &content);
+    Maestro_Vault::UploadFilesRequest getDiskFiles(const string &diskId);
+    std::unordered_set<string> getFilesDisk();
 };
 
 #endif

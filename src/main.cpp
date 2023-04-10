@@ -35,23 +35,27 @@ void RunServer()
     if (!client)
         throw std::runtime_error("Could not access mongo database");
 
-    mongocxx::database fileDatabase = client[fileDb];
+    mongocxx::database filesDatabase = client[fileDb];
     mongocxx::database statsDatabase = client[statsDb];
 
-    if (!fileDatabase)
+    if (!filesDatabase)
         throw std::runtime_error("Could not access '" + fileDb + "' database");
     if (!statsDatabase)
         throw std::runtime_error("Could not access '" + statsDb + "' database");
 
+    // Events
+    EventsManager events;
+
     // Clients
     GrpcClients clients = {
         .santaclaus = SantaclausClient(grpc::CreateChannel(getEnv("MAESTRO_SANTACLAUS_URI"), grpc::InsecureChannelCredentials())),
-        .hardwareMalin =
-            HardwareMalinClient(grpc::CreateChannel(getEnv("MAESTRO_HARDWARE_MALIN_URI"), grpc::InsecureChannelCredentials())),
+        .hardwareMalin = HardwareMalinClient(
+            grpc::CreateChannel(getEnv("MAESTRO_HARDWARE_MALIN_URI"), grpc::InsecureChannelCredentials()), events
+        ),
         .vault = VaultClient(grpc::CreateChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials()))};
 
     // Services
-    UsersBackService usersBackService(fileDatabase, statsDatabase, clients);
+    UsersBackService usersBackService(filesDatabase, statsDatabase, clients);
 
     // gRPC
     const char *address = getenv("MAESTRO_ADDRESS");
@@ -63,9 +67,10 @@ void RunServer()
     std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
     std::cout << "Server listening on " << serverAddress << std::endl;
 
+    // CRON
     ManagerCron managerCron;
 
-    managerCron.add("* * * * * ?", FileUploadCron());
+    managerCron.add("* * 3 * * ?", FileUploadCron(filesDatabase, clients, events));
 
     server->Wait();
 }

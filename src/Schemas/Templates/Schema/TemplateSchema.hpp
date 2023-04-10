@@ -18,17 +18,12 @@
 class TemplateSchema {
   public:
     TemplateSchema(
-        const mongocxx::database &database, const string &collectionName,
-        const std::optional<string> &fileBucketName = std::nullopt
+        const mongocxx::database &database, const string &collectionName
     );
     ~TemplateSchema() = default;
 
-  private:
-    void _setFileBucket(const mongocxx::database &database, const string &fileBucketName);
-
   protected:
     mongocxx::collection _model;
-    std::optional<mongocxx::gridfs::bucket> _fileBucket = std::nullopt;
 };
 
 #endif

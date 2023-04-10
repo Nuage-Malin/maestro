@@ -22,5 +22,44 @@ void UploadQueueSchema::uploadFile(const string &fileId, const string &userId, c
         makeDocument(makeField("diskId", diskId), makeField("userId", userId), makeField("createdAt", Date().toBSON()))
     );
 
-    const auto &result = this->_fileBucket.upload_from_stream(fileId, &fileStream, options);
+    this->_fileBucket.upload_from_stream(fileId, &fileStream, options);
+}
+
+Maestro_Vault::UploadFilesRequest UploadQueueSchema::getDiskFiles(const string &diskId)
+{
+    const bsoncxx::document::value filter = makeDocument(makeField("metadata.diskId", diskId));
+    const mongocxx::options::find options;
+    mongocxx::cursor cursor = this->_fileBucket.find(filter.view());
+    Maestro_Vault::UploadFilesRequest result;
+
+    std::for_each(cursor.begin(), cursor.end(), [&result, this](const MongoCXX::DocumentView &file) {
+        const bsoncxx::document::view metadata = file["metadata"].get_document().value;
+        auto *resultFile = result.add_files();
+
+        resultFile->set_fileid(file["_id"].get_oid().value.to_string());
+        resultFile->set_userid(metadata["userId"].get_string().value.to_string());
+        resultFile->set_diskid(metadata["diskId"].get_string().value.to_string());
+
+        std::ostringstream oss("");
+        std::ostream ostream(oss.rdbuf());
+
+        this->_fileBucket.download_to_stream(file["_id"].get_value(), &ostream);
+        resultFile->set_content(oss.str());
+    });
+    return result;
+}
+
+std::unordered_set<string> UploadQueueSchema::getFilesDisk()
+{
+    const bsoncxx::document::value filter = makeDocument();
+    mongocxx::options::find options;
+
+    options.projection(makeDocument(makeField("_id", false), makeField("metadata.diskId", true)));
+    mongocxx::cursor cursor = this->_fileBucket.find(filter.view(), options);
+    std::unordered_set<string> disks;
+
+    std::for_each(cursor.begin(), cursor.end(), [&disks](const MongoCXX::DocumentView &file) {
+        disks.insert(file["metadata"].get_document().value["diskId"].get_string().value.to_string());
+    });
+    return disks;
 }

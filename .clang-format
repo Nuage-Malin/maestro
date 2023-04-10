@@ -69,7 +69,7 @@ ContinuationIndentWidth: 4
 UseTab: Never
 
 # G3 - Preprocessor
-IndentPPDirectives: BeforeHash
+IndentPPDirectives: None
 
 # L3 - Declarations and assignments
 AlignConsecutiveAssignments: false
