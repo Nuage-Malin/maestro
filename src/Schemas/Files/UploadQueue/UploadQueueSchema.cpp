@@ -36,7 +36,7 @@ Maestro_Vault::UploadFilesRequest UploadQueueSchema::getDiskFiles(const string &
         const bsoncxx::document::view metadata = file["metadata"].get_document().value;
         auto *resultFile = result.add_files();
 
-        resultFile->set_fileid(file["_id"].get_oid().value.to_string());
+        resultFile->set_fileid(file["filename"].get_string().value.to_string());
         resultFile->set_userid(metadata["userId"].get_string().value.to_string());
         resultFile->set_diskid(metadata["diskId"].get_string().value.to_string());
 
