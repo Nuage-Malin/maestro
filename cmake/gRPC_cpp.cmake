@@ -5,7 +5,7 @@ if (NOT DEFINED GRPC_CPP_ONCE)
     if (NOT EXISTS ${GRPC_SUBMODULE_DIR})
         set(GRPC_CLONE_SUBMODULE true)
     endif ()
-    set(GRPC_FULL_INSTALL 0)
+    set(GRPC_FULL_INSTALL true)
 
     include("${CMAKE_MODULES_DIR}/install_gRPC.cmake")
 
