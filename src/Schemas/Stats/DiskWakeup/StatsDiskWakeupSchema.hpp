@@ -12,7 +12,7 @@
 #include <mongocxx/database.hpp>
 
 #include "Utils/Date/Date.hpp"
-#include "Schemas/Template/TemplateSchema.hpp"
+#include "Schemas/Templates/Schema/TemplateSchema.hpp"
 
 class StatsDiskWakeupSchema : public TemplateSchema {
   public:

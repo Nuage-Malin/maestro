@@ -4,3 +4,6 @@
 [submodule "third_parties/grpc"]
 	path = third_parties/grpc
 	url = git@github.com:grpc/grpc.git
+[submodule "third_parties/libcron"]
+	path = third_parties/libcron
+	url = git@github.com:PerMalmberg/libcron.git

@@ -5,7 +5,7 @@ if (NOT DEFINED GRPC_CPP_ONCE)
     if (NOT EXISTS ${GRPC_SUBMODULE_DIR})
         set(GRPC_CLONE_SUBMODULE true)
     endif ()
-    set(GRPC_FULL_INSTALL true)
+    set(GRPC_FULL_INSTALL 0)
 
     include("${CMAKE_MODULES_DIR}/install_gRPC.cmake")
 
@@ -30,18 +30,36 @@ if (NOT DEFINED GRPC_CPP_ONCE)
 
     # Protobuf inpout file
     set(my_protos "${my_protos_path_src}/common/File.proto"
-        "${my_protos_path_src}/UsersBack_Maestro/UsersBack_Maestro.proto")
+        "${my_protos_path_src}/UsersBack_Maestro/UsersBack_Maestro.proto"
+        "${my_protos_path_src}/Maestro_Santaclaus/Maestro_Santaclaus.proto"
+        "${my_protos_path_src}/Maestro_HardwareMalin/Maestro_HardwareMalin.proto"
+        "${my_protos_path_src}/Maestro_Vault/Maestro_Vault.proto")
 
 
     # Generated sources
     set(my_protos_srcs "${my_generated_path}/common/File.pb.cc"
-        "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.pb.cc")
+        "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.pb.cc"
+        "${my_generated_path}/Maestro_Santaclaus/Maestro_Santaclaus.pb.cc"
+        "${my_generated_path}/Maestro_HardwareMalin/Maestro_HardwareMalin.pb.cc"
+        "${my_generated_path}/Maestro_Vault/Maestro_Vault.pb.cc")
+
     set(my_protos_hdrs "${my_generated_path}/common/File.pb.h"
-        "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.pb.h")
+        "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.pb.h"
+        "${my_generated_path}/Maestro_Santaclaus/Maestro_Santaclaus.pb.h"
+        "${my_generated_path}/Maestro_HardwareMalin/Maestro_HardwareMalin.pb.h"
+        "${my_generated_path}/Maestro_Vault/Maestro_Vault.pb.h")
+
     set(my_grpc_srcs "${my_generated_path}/common/File.grpc.pb.cc"
-        "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.grpc.pb.cc")
+        "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.grpc.pb.cc"
+        "${my_generated_path}/Maestro_Santaclaus/Maestro_Santaclaus.grpc.pb.cc"
+        "${my_generated_path}/Maestro_HardwareMalin/Maestro_HardwareMalin.grpc.pb.cc"
+        "${my_generated_path}/Maestro_Vault/Maestro_Vault.grpc.pb.cc")
+
     set(my_grpc_hdrs "${my_generated_path}/common/File.grpc.pb.h"
-        "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.grpc.pb.h")
+        "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.grpc.pb.h"
+        "${my_generated_path}/Maestro_Santaclaus/Maestro_Santaclaus.grpc.pb.h"
+        "${my_generated_path}/Maestro_HardwareMalin/Maestro_HardwareMalin.grpc.pb.h"
+        "${my_generated_path}/Maestro_Vault/Maestro_Vault.grpc.pb.h")
 
     set(my_protos_include_dir ${my_generated_path}/)
 
