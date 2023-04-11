@@ -26,7 +26,9 @@ void FileUploadCron::run()
 
 void FileUploadCron::_uploadFiles(const string &diskId)
 {
-    const Maestro_Vault::UploadFilesRequest &files = this->_filesSchemas.uploadQueue.getDiskFiles(diskId);
+    const std::pair<std::vector<MongoCXX::ValueView>, Maestro_Vault::UploadFilesRequest> &files =
+        this->_filesSchemas.uploadQueue.getDiskFiles(diskId);
 
-    this->_clients.vault.uploadFiles(files);
+    this->_clients.vault.uploadFiles(files.second);
+    this->_filesSchemas.uploadQueue.deleteFiles(files.first);
 }

@@ -12,6 +12,7 @@
 
 #include "Maestro_Vault/Maestro_Vault.grpc.pb.h"
 
+#include "mongocxx.hpp"
 #include "Schemas/Templates/FileBucket/TemplateFileBucket.hpp"
 
 class FilesUploadQueueSchema : public TemplateFileBucket {
@@ -20,8 +21,9 @@ class FilesUploadQueueSchema : public TemplateFileBucket {
     ~FilesUploadQueueSchema() = default;
 
     void uploadFile(const string &fileId, const string &userId, const string &diskId, const string &content);
-    NODISCARD Maestro_Vault::UploadFilesRequest getDiskFiles(const string &diskId);
+    NODISCARD std::pair<std::vector<MongoCXX::ValueView>, Maestro_Vault::UploadFilesRequest> getDiskFiles(const string &diskId);
     NODISCARD std::unordered_set<string> getFilesDisk();
+    void deleteFiles(const std::vector<MongoCXX::ValueView> &filesId);
 };
 
 #endif

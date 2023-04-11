@@ -19,17 +19,28 @@ TEST(UploadQueue, getFilesDisk)
 
     ASSERT_EQ(diskIds.size(), 1);
     ASSERT_EQ(diskIds.count("diskIdTest"), 1);
-
-    Maestro_Vault::UploadFilesRequest files = filesSchemas.uploadQueue.getDiskFiles("diskIdTest");
 }
 
 TEST(UploadQueue, getDiskFiles)
 {
-    Maestro_Vault::UploadFilesRequest files = filesSchemas.uploadQueue.getDiskFiles("diskIdTest");
+    const std::pair<std::vector<MongoCXX::ValueView>, Maestro_Vault::UploadFilesRequest> &files =
+        filesSchemas.uploadQueue.getDiskFiles("diskIdTest");
 
-    ASSERT_EQ(files.files_size(), 1);
-    ASSERT_EQ(files.files(0).fileid(), "fileIdTest");
-    ASSERT_EQ(files.files(0).userid(), "userIdTest");
-    ASSERT_EQ(files.files(0).diskid(), "diskIdTest");
-    ASSERT_EQ(files.files(0).content(), "contentTest");
+    ASSERT_EQ(files.second.files_size(), 1);
+    ASSERT_EQ(files.second.files(0).fileid(), "fileIdTest");
+    ASSERT_EQ(files.second.files(0).userid(), "userIdTest");
+    ASSERT_EQ(files.second.files(0).diskid(), "diskIdTest");
+    ASSERT_EQ(files.second.files(0).content(), "contentTest");
+}
+
+TEST(UploadQueue, deleteFiles)
+{
+    std::pair<std::vector<MongoCXX::ValueView>, Maestro_Vault::UploadFilesRequest> files =
+        filesSchemas.uploadQueue.getDiskFiles("diskIdTest");
+
+    ASSERT_GT(files.first.size(), 0);
+    filesSchemas.uploadQueue.deleteFiles(files.first);
+    files = filesSchemas.uploadQueue.getDiskFiles("diskIdTest");
+
+    ASSERT_EQ(files.first.size(), 0);
 }
