@@ -37,7 +37,7 @@ get_filename_component(SRC_DIR "${CMAKE_HOME_DIRECTORY}/src/" ABSOLUTE)
 get_filename_component(DOCS_DIR "${CMAKE_HOME_DIRECTORY}/docs/" ABSOLUTE)
 get_filename_component(TEST_DIR "${CMAKE_HOME_DIRECTORY}/tests/" ABSOLUTE)
 
-set(SRCS ${SRC_DIR}/main.cpp
+set(SRCS
     ${SRC_DIR}/Utils/Date/Date.cpp
     ${SRC_DIR}/Utils/GrpcStatus/GrpcStatus.cpp
     ${SRC_DIR}/Cron/Manager/ManagerCron.cpp
@@ -64,7 +64,7 @@ if (NOT DEFINED doxygen)
     include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
 
 
-    add_executable(${EXECUTABLE_NAME} ${SRCS})
+    add_executable(${EXECUTABLE_NAME} ${SRC_DIR}/main.cpp ${SRCS})
     set_property(TARGET ${EXECUTABLE_NAME} PROPERTY CXX_STANDARD 20)
     target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCL_DIR} ${SRC_DIR} ${my_protos_include_dir})
 

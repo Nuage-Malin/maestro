@@ -40,8 +40,8 @@ void RunServer()
         .vault = VaultClient(grpc::CreateChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials()))};
 
     // Services
-    FilesSchemas filesSchemas = mongo.getFilesSchema();
-    StatsSchemas statsDatabase = mongo.getStatsSchema();
+    FilesSchemas filesSchemas = mongo.getFilesSchemas();
+    StatsSchemas statsDatabase = mongo.getStatsSchemas();
     UsersBackService usersBackService(filesSchemas, statsDatabase, clients);
 
     // gRPC

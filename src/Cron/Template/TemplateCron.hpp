@@ -37,6 +37,7 @@ class TemplateCron {
     void wait(); // Wait is blocking for all tasks to finish (This method should be called before the destructor)
 
     // This methods should only be called by the cron manager
+    // TODO: friend class CronManager;
     void resume(bool callEvent = true);
     void pause();
     // Return true if the job is paused.

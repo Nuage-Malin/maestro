@@ -19,8 +19,8 @@ namespace MongoCXX
         Mongo();
         ~Mongo() = default;
 
-        NODISCARD FilesSchemas getFilesSchema() const;
-        NODISCARD StatsSchemas getStatsSchema() const;
+        NODISCARD FilesSchemas getFilesSchemas() const;
+        NODISCARD StatsSchemas getStatsSchemas() const;
 
       private:
         mongocxx::client _client;

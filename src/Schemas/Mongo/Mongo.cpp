@@ -26,14 +26,14 @@ MongoCXX::Mongo::Mongo()
         throw std::runtime_error("Could not access '" + statsDb + "' database");
 }
 
-FilesSchemas MongoCXX::Mongo::getFilesSchema() const
+FilesSchemas MongoCXX::Mongo::getFilesSchemas() const
 {
     const mongocxx::database filesDatabase = this->_client[fileDb];
 
     return {.uploadQueue = FilesUploadQueueSchema(filesDatabase)};
 }
 
-StatsSchemas MongoCXX::Mongo::getStatsSchema() const
+StatsSchemas MongoCXX::Mongo::getStatsSchemas() const
 {
     const mongocxx::database statsDatabase = this->_client[statsDb];
 
