@@ -1,5 +1,5 @@
 /**
- * @file UploadQueueSchema.hpp
+ * @file FilesUploadQueueSchema.hpp
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 16/03/2023
  * @copyright Nuage Malin
@@ -14,14 +14,14 @@
 
 #include "Schemas/Templates/FileBucket/TemplateFileBucket.hpp"
 
-class UploadQueueSchema : public TemplateFileBucket {
+class FilesUploadQueueSchema : public TemplateFileBucket {
   public:
-    UploadQueueSchema(const mongocxx::database &database);
-    ~UploadQueueSchema() = default;
+    FilesUploadQueueSchema(const mongocxx::database &database);
+    ~FilesUploadQueueSchema() = default;
 
     void uploadFile(const string &fileId, const string &userId, const string &diskId, const string &content);
-    Maestro_Vault::UploadFilesRequest getDiskFiles(const string &diskId);
-    std::unordered_set<string> getFilesDisk();
+    NODISCARD Maestro_Vault::UploadFilesRequest getDiskFiles(const string &diskId);
+    NODISCARD std::unordered_set<string> getFilesDisk();
 };
 
 #endif

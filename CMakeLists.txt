@@ -44,6 +44,7 @@ set(SRCS ${SRC_DIR}/main.cpp
     ${SRC_DIR}/Cron/Template/TemplateCron.cpp
     ${SRC_DIR}/Cron/FileUpload/FileUploadCron.cpp
     ${SRC_DIR}/Exceptions/RequestFailure/RequestFailureException.cpp
+    ${SRC_DIR}/Schemas/Mongo/Mongo.cpp
     ${SRC_DIR}/Schemas/Templates/Schema/TemplateSchema.cpp
     ${SRC_DIR}/Schemas/Templates/FileBucket/TemplateFileBucket.cpp
     ${SRC_DIR}/Schemas/Files/UploadQueue/UploadQueueSchema.cpp

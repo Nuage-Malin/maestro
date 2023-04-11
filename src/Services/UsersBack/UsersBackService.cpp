@@ -5,13 +5,12 @@
  * @copyright Nuage Malin
  */
 
+#include "schemas.hpp"
 #include "UsersBackService.hpp"
 #include "Exceptions/RequestFailure/RequestFailureException.hpp"
 
-UsersBackService::UsersBackService(
-    FilesSchemas &filesSchemas, const mongocxx::database &statsDatabase, const GrpcClients &clients
-)
-    : _filesSchemas(filesSchemas), _statsUserDiskInfoSchema(StatsUserDiskInfoSchema(statsDatabase)), _clients(clients)
+UsersBackService::UsersBackService(FilesSchemas &filesSchemas, StatsSchemas &statsSchemas, const GrpcClients &clients)
+    : _filesSchemas(filesSchemas), _statsSchemas(statsSchemas), _clients(clients)
 {
 }
 
@@ -55,7 +54,7 @@ grpc::Status UsersBackService::getUserConsumption(
 )
 {
     return this->_procedureRunner([this, request, response]() {
-        const uint64 consumption = this->_statsUserDiskInfoSchema.getUserConsumption(
+        const uint64 consumption = this->_statsSchemas.userDiskInfo.getUserConsumption(
             request->userid(), Date(request->startdate()), Date(request->enddate())
         );
 

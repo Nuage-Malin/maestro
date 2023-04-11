@@ -7,19 +7,14 @@
 
 #include <exception>
 
-#include <mongocxx/client.hpp>
-#include <mongocxx/instance.hpp>
-
 #include <grpcpp/server_builder.h>
 
 #include "utils.hpp"
 #include "clients.hpp"
+#include "Schemas/Mongo/Mongo.hpp"
 #include "Services/UsersBack/UsersBackService.hpp"
 #include "Cron/Manager/ManagerCron.hpp"
 #include "Cron/FileUpload/FileUploadCron.hpp"
-
-static const string fileDb{"maestro"};
-static const string statsDb{"logs"};
 
 /**
  * @brief Run the server
@@ -30,18 +25,8 @@ static const string statsDb{"logs"};
  */
 void RunServer()
 {
-    mongocxx::instance inst{}; // This should be done only once.
-    mongocxx::client client{mongocxx::uri{getEnv("MAESTRO_MONGO_URL")}};
-    if (!client)
-        throw std::runtime_error("Could not access mongo database");
-
-    mongocxx::database filesDatabase = client[fileDb];
-    mongocxx::database statsDatabase = client[statsDb];
-
-    if (!filesDatabase)
-        throw std::runtime_error("Could not access '" + fileDb + "' database");
-    if (!statsDatabase)
-        throw std::runtime_error("Could not access '" + statsDb + "' database");
+    // Mongo
+    MongoCXX::Mongo mongo;
 
     // Events
     EventsManager events;
@@ -55,7 +40,8 @@ void RunServer()
         .vault = VaultClient(grpc::CreateChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials()))};
 
     // Services
-    FilesSchemas filesSchemas = {.uploadQueue = UploadQueueSchema(filesDatabase)};
+    FilesSchemas filesSchemas = mongo.getFilesSchema();
+    StatsSchemas statsDatabase = mongo.getStatsSchema();
     UsersBackService usersBackService(filesSchemas, statsDatabase, clients);
 
     // gRPC
@@ -71,7 +57,7 @@ void RunServer()
     // CRON
     ManagerCron managerCron;
 
-    managerCron.add("* * 3 * * ?", FileUploadCron(filesDatabase, clients, events));
+    managerCron.add("* * 3 * * ?", FileUploadCron(filesSchemas, clients, events));
 
     server->Wait();
 }

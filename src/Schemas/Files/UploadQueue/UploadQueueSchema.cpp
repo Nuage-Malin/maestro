@@ -1,18 +1,19 @@
 /**
- * @file UploadQueueSchema.cpp
+ * @file FilesUploadQueueSchema.cpp
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 16/03/2023
  * @copyright Nuage Malin
  */
 
+#include "schemas.hpp"
 #include "UploadQueueSchema.hpp"
 #include "Utils/Date/Date.hpp"
 
-UploadQueueSchema::UploadQueueSchema(const mongocxx::database &database) : TemplateFileBucket(database, "uploadQueue")
+FilesUploadQueueSchema::FilesUploadQueueSchema(const mongocxx::database &database) : TemplateFileBucket(database, "uploadQueue")
 {
 }
 
-void UploadQueueSchema::uploadFile(const string &fileId, const string &userId, const string &diskId, const string &content)
+void FilesUploadQueueSchema::uploadFile(const string &fileId, const string &userId, const string &diskId, const string &content)
 {
     std::istringstream ss(content);
     std::istream fileStream(ss.rdbuf());
@@ -25,7 +26,7 @@ void UploadQueueSchema::uploadFile(const string &fileId, const string &userId, c
     this->_fileBucket.upload_from_stream(fileId, &fileStream, options);
 }
 
-Maestro_Vault::UploadFilesRequest UploadQueueSchema::getDiskFiles(const string &diskId)
+Maestro_Vault::UploadFilesRequest FilesUploadQueueSchema::getDiskFiles(const string &diskId)
 {
     const bsoncxx::document::value filter = makeDocument(makeField("metadata.diskId", diskId));
     const mongocxx::options::find options;
@@ -49,7 +50,7 @@ Maestro_Vault::UploadFilesRequest UploadQueueSchema::getDiskFiles(const string &
     return result;
 }
 
-std::unordered_set<string> UploadQueueSchema::getFilesDisk()
+std::unordered_set<string> FilesUploadQueueSchema::getFilesDisk()
 {
     const bsoncxx::document::value filter = makeDocument();
     mongocxx::options::find options;

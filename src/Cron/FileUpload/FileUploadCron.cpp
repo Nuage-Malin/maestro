@@ -8,8 +8,8 @@
 #include "FileUploadCron.hpp"
 #include "Cron/Manager/ManagerCron.hpp"
 
-FileUploadCron::FileUploadCron(const mongocxx::database &filesDatabase, GrpcClients &grpcClient, EventsManager &events)
-    : TemplateCron("FileUpload"), _uploadQueue(UploadQueueSchema(filesDatabase)), _clients(grpcClient)
+FileUploadCron::FileUploadCron(FilesSchemas &filesSchemas, GrpcClients &grpcClient, EventsManager &events)
+    : TemplateCron("FileUpload"), _filesSchemas(filesSchemas), _clients(grpcClient)
 {
     const std::function<void(const string &)> &callback = std::bind(&FileUploadCron::_uploadFiles, this, std::placeholders::_1);
 
@@ -18,7 +18,7 @@ FileUploadCron::FileUploadCron(const mongocxx::database &filesDatabase, GrpcClie
 
 void FileUploadCron::run()
 {
-    std::unordered_set<string> disks = this->_uploadQueue.getFilesDisk();
+    std::unordered_set<string> disks = this->_filesSchemas.uploadQueue.getFilesDisk();
 
     for (const auto &disk : disks)
         this->_clients.hardwareMalin.setDiskState(disk, true);
@@ -26,7 +26,7 @@ void FileUploadCron::run()
 
 void FileUploadCron::_uploadFiles(const string &diskId)
 {
-    const Maestro_Vault::UploadFilesRequest &files = this->_uploadQueue.getDiskFiles(diskId);
+    const Maestro_Vault::UploadFilesRequest &files = this->_filesSchemas.uploadQueue.getDiskFiles(diskId);
 
     this->_clients.vault.uploadFiles(files);
 }
