@@ -9,10 +9,9 @@
 #include "Exceptions/RequestFailure/RequestFailureException.hpp"
 
 UsersBackService::UsersBackService(
-    const mongocxx::database &filesDatabase, const mongocxx::database &statsDatabase, const GrpcClients &clients
+    FilesSchemas &filesSchemas, const mongocxx::database &statsDatabase, const GrpcClients &clients
 )
-    : _filesSchemas({.uploadQueue = UploadQueueSchema(filesDatabase)}),
-      _statsUserDiskInfoSchema(StatsUserDiskInfoSchema(statsDatabase)), _clients(clients)
+    : _filesSchemas(filesSchemas), _statsUserDiskInfoSchema(StatsUserDiskInfoSchema(statsDatabase)), _clients(clients)
 {
 }
 

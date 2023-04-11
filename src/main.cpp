@@ -55,7 +55,8 @@ void RunServer()
         .vault = VaultClient(grpc::CreateChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials()))};
 
     // Services
-    UsersBackService usersBackService(filesDatabase, statsDatabase, clients);
+    FilesSchemas filesSchemas = {.uploadQueue = UploadQueueSchema(filesDatabase)};
+    UsersBackService usersBackService(filesSchemas, statsDatabase, clients);
 
     // gRPC
     const char *address = getenv("MAESTRO_ADDRESS");
