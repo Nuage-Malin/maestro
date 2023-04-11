@@ -48,8 +48,8 @@ set(SRCS
     ${SRC_DIR}/Schemas/Templates/Schema/TemplateSchema.cpp
     ${SRC_DIR}/Schemas/Templates/FileBucket/TemplateFileBucket.cpp
     ${SRC_DIR}/Schemas/Files/UploadQueue/UploadQueueSchema.cpp
-    ${SRC_DIR}/Schemas/Stats/DiskWakeup/StatsDiskWakeupSchema.cpp
-    ${SRC_DIR}/Schemas/Stats/UserDiskInfo/StatsUserDiskInfoSchema.cpp
+    ${SRC_DIR}/Schemas/Stats/DiskWakeup/DiskWakeupSchema.cpp
+    ${SRC_DIR}/Schemas/Stats/UserDiskInfo/UserDiskInfoSchema.cpp
     ${SRC_DIR}/Services/Template/TemplateService.cpp
     ${SRC_DIR}/Services/UsersBack/UsersBackService.cpp
     ${SRC_DIR}/Clients/Santaclaus/SantaclausClient.cpp

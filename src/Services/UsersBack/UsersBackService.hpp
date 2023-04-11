@@ -17,7 +17,7 @@
 #include "clients.hpp"
 #include "schemas.hpp"
 #include "Services/Template/TemplateService.hpp"
-#include "Schemas/Stats/UserDiskInfo/StatsUserDiskInfoSchema.hpp"
+#include "Schemas/Stats/UserDiskInfo/UserDiskInfoSchema.hpp"
 
 class UsersBackService : public TemplateService, public UsersBack_Maestro::UsersBack_Maestro_Service::Service {
   public:
