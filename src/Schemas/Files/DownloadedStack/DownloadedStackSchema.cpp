@@ -24,6 +24,15 @@ void FilesDownloadedStackSchema::pushFile(const string &fileId, const Date &expi
     this->_fileBucket.upload_from_stream(fileId, &fileStream, options);
 }
 
+NODISCARD string FilesDownloadedStackSchema::downloadFile(const string &fileId)
+{
+    std::ostringstream oss("");
+    std::ostream ostream(oss.rdbuf());
+
+    this->_fileBucket.download_to_stream(bsoncxx::types::bson_value::value(fileId), &ostream);
+    return oss.str();
+}
+
 void FilesDownloadedStackSchema::deleteExpiredFiles(const Date &expirationDate)
 {
     const bsoncxx::document::value filter =

@@ -106,3 +106,23 @@ grpc::Status UsersBackService::askFileDownload(
         }
     });
 }
+
+grpc::Status UsersBackService::fileDownload(
+    UNUSED grpc::ServerContext *context, const UsersBack_Maestro::FileDownloadRequest *request, File::File *response
+)
+{
+    return this->_procedureRunner([this, request, response]() {
+        File::FileApproxMetadata approxMetadata = this->_clients.santaclaus.getFile(request->fileid()).file();
+        File::FileMetadata metadata;
+
+        metadata.set_fileid(request->fileid());
+        metadata.set_isdownloadable(true);
+
+        File::File file;
+        file.set_content(this->_filesSchemas.downloadedStack.downloadFile(request->fileid()));
+        metadata.set_allocated_approxmetadata(new File::FileApproxMetadata(approxMetadata));
+        file.set_allocated_metadata(new File::FileMetadata(metadata));
+
+        return grpc::Status::OK;
+    });
+}

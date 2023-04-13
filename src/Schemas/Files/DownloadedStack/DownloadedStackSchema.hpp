@@ -21,6 +21,7 @@ class FilesDownloadedStackSchema : public TemplateFileBucket {
     ~FilesDownloadedStackSchema() = default;
 
     void pushFile(const string &fileId, const Date &expirationDate, const string &content);
+    NODISCARD string downloadFile(const string &fileId);
     void deleteExpiredFiles(const Date &expirationDate = Date());
     NODISCARD Date getFileExpirationDate(const string &fileId);
     NODISCARD bool doesFileExist(const string &fileId);
