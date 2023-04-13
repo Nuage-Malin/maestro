@@ -58,6 +58,7 @@ string VaultClient::downloadFile(const string &fileId, const string &userId, con
 
     if (!status.ok())
         throw RequestFailureException(status);
+    return response.content();
 }
 
 Maestro_Vault::DownloadFilesStatus VaultClient::downloadFiles(const Maestro_Vault::DownloadFilesRequest &files) const
