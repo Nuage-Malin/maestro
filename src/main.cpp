@@ -15,6 +15,8 @@
 #include "Services/UsersBack/UsersBackService.hpp"
 #include "Cron/Manager/ManagerCron.hpp"
 #include "Cron/FileUpload/FileUploadCron.hpp"
+#include "Cron/ExpiredDownloadedFiles/ExpiredDownloadedFilesCron.hpp"
+#include "Cron/DownloadFiles/DownloadFilesCron.hpp"
 
 /**
  * @brief Run the server
@@ -57,7 +59,9 @@ void RunServer()
     // CRON
     ManagerCron managerCron;
 
-    managerCron.add("* * 3 * * ?", FileUploadCron(filesSchemas, clients, events));
+    managerCron.add("0 30 3 * * ?", ExpiredDownloadedFilesCron(filesSchemas));
+    managerCron.add("0 0 3 * * ?", FileUploadCron(filesSchemas, clients, events));
+    managerCron.add("0 0 3 * * ?", DownloadFilesCron(filesSchemas, clients, events));
 
     server->Wait();
 }

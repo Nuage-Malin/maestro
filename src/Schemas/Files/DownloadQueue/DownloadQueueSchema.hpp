@@ -8,6 +8,8 @@
 #ifndef MAESTRO_FILES_DOWNLOADQUEUE_SCHEMA_HPP
 #define MAESTRO_FILES_DOWNLOADQUEUE_SCHEMA_HPP
 
+#include "Maestro_Vault/Maestro_Vault.grpc.pb.h"
+
 #include "mongocxx.hpp"
 #include "Schemas/Templates/Schema/TemplateSchema.hpp"
 
@@ -17,8 +19,10 @@ class FilesDownloadQueueSchema : public TemplateSchema {
     ~FilesDownloadQueueSchema() = default;
 
     void add(const string &fileId, const string &userId, const string &diskId);
-    void remove(const MongoCXX::ObjectId &id);
+    void deleteDiskFiles(const string &diskId);
     Date getRequestedDate(const string &fileId, const string &diskId);
+    NODISCARD Maestro_Vault::DownloadFilesRequest getDiskFiles(const string &diskId);
+    NODISCARD std::unordered_set<string> getFilesDisk();
 };
 
 #endif

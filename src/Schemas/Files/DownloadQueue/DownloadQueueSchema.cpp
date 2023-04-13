@@ -25,11 +25,11 @@ void FilesDownloadQueueSchema::add(const string &fileId, const string &userId, c
     this->_model.insert_one(filter.view());
 }
 
-void FilesDownloadQueueSchema::remove(const MongoCXX::ObjectId &id)
+void FilesDownloadQueueSchema::deleteDiskFiles(const string &diskId)
 {
-    MongoCXX::Document filter = makeDocument(makeField("_id", id));
+    MongoCXX::Document filter = makeDocument(makeField("diskId", diskId));
 
-    this->_model.delete_one(filter.view());
+    this->_model.delete_many(filter.view());
 }
 
 Date FilesDownloadQueueSchema::getRequestedDate(const string &fileId, const string &diskId)
@@ -44,4 +44,35 @@ Date FilesDownloadQueueSchema::getRequestedDate(const string &fileId, const stri
     if (result)
         return Date((*result)["requestedAt"].get_date());
     throw NotFoundException("File not found");
+}
+
+NODISCARD Maestro_Vault::DownloadFilesRequest FilesDownloadQueueSchema::getDiskFiles(const string &diskId)
+{
+    const MongoCXX::Document filter = makeDocument(makeField("diskId", diskId));
+    mongocxx::cursor cursor = this->_model.find(filter.view());
+    Maestro_Vault::DownloadFilesRequest result;
+
+    for (const MongoCXX::DocumentView &file : cursor) {
+        auto *resultFile = result.add_files();
+
+        resultFile->set_fileid(file["fileId"].get_string().value.to_string());
+        resultFile->set_userid(file["userId"].get_string().value.to_string());
+        resultFile->set_diskid(file["diskId"].get_string().value.to_string());
+    };
+    return result;
+}
+
+NODISCARD std::unordered_set<string> FilesDownloadQueueSchema::getFilesDisk()
+{
+    const MongoCXX::Document filter = makeDocument();
+    mongocxx::options::find options;
+
+    options.projection(makeDocument(makeField("_id", false), makeField("diskId", true)));
+    mongocxx::cursor cursor = this->_model.find(filter.view(), options);
+    std::unordered_set<string> disks;
+
+    for (const MongoCXX::DocumentView &file : cursor) {
+        disks.insert(file["diskId"].get_string().value.to_string());
+    };
+    return disks;
 }
