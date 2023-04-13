@@ -66,45 +66,43 @@ grpc::Status UsersBackService::getUserConsumption(
 }
 
 grpc::Status UsersBackService::askFileDownload(
-    grpc::ServerContext *context, const UsersBack_Maestro::AskFileDownloadRequest *request,
+    UNUSED grpc::ServerContext *context, const UsersBack_Maestro::AskFileDownloadRequest *request,
     UsersBack_Maestro::AskFileDownloadStatus *response
 )
 {
     return this->_procedureRunner([this, request, response]() {
-        try {
-            // Check if the file is already downloaded
-            this->_filesSchemas.downloadedStack.getFileExpirationDate(request->fileid());
-
+        // Check if the file is already downloaded
+        if (this->_filesSchemas.downloadedStack.doesFileExist(request->fileid())) {
             response->set_allocated_waitingtime(new google::protobuf::Duration());
             return grpc::Status::OK;
+        }
+
+        const Maestro_Santaclaus::GetFileStatus file = this->_clients.santaclaus.getFile(request->fileid());
+        const std::chrono::days expirationLimit(2);
+
+        try {
+            // Check if the file is already in the database
+            const Date &requestedDate = this->_filesSchemas.downloadQueue.getRequestedDate(request->fileid(), file.diskid());
+
+            response->set_allocated_waitingtime((requestedDate + expirationLimit).toAllocatedDuration());
+            return grpc::Status::OK;
         } catch (const NotFoundException &error) {
-            const Maestro_Santaclaus::GetFileStatus file = this->_clients.santaclaus.getFile(request->fileid());
-            const std::chrono::days expirationLimit(2);
+            const Date &expirationDate = Date() + expirationLimit;
 
-            try {
-                // Check if the file is already in the database
-                const Date &requestedDate = this->_filesSchemas.downloadQueue.getRequestedDate(request->fileid(), file.diskid());
+            if (this->_clients.hardwareMalin.diskStatus(file.diskid())) {
+                // If the disk is online, download the file from the filesystem and upload it to the database
+                const string fileContent =
+                    this->_clients.vault.downloadFile(request->fileid(), file.file().userid(), file.diskid());
 
-                response->set_allocated_waitingtime((requestedDate + expirationLimit).toAllocatedDuration());
-                return grpc::Status::OK;
-            } catch (const NotFoundException &error) {
-                const Date &expirationDate = Date() + expirationLimit;
+                this->_filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, fileContent);
+                response->set_allocated_waitingtime(expirationDate.toAllocatedDuration()); // TODO: Edit waiting time
+            } else {
+                // If the disk is offline, add the file to the queue database
+                this->_filesSchemas.downloadQueue.add(request->fileid(), file.file().userid(), file.diskid());
 
-                if (this->_clients.hardwareMalin.diskStatus(file.diskid())) {
-                    // If the disk is online, download the file from the filesystem and upload it to the database
-                    const string fileContent =
-                        this->_clients.vault.downloadFile(request->fileid(), file.file().userid(), file.diskid());
-
-                    this->_filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, fileContent);
-                    response->set_allocated_waitingtime(expirationDate.toAllocatedDuration()); // TODO: Edit waiting time
-                } else {
-                    // If the disk is offline, add the file to the queue database
-                    this->_filesSchemas.downloadQueue.add(request->fileid(), file.file().userid(), file.diskid());
-
-                    response->set_allocated_waitingtime(expirationDate.toAllocatedDuration());
-                }
-                return grpc::Status::OK;
+                response->set_allocated_waitingtime(expirationDate.toAllocatedDuration());
             }
+            return grpc::Status::OK;
         }
     });
 }

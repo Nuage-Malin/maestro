@@ -13,7 +13,7 @@
 static const string fileDb{"maestro"};
 static const string statsDb{"logs"};
 
-MongoCXX::Mongo::Mongo()
+MongoCXX::Mongo::Mongo(const EventsManager &events) : _events(events)
 {
     mongocxx::instance inst{}; // This should be done only once.
 
@@ -30,7 +30,10 @@ FilesSchemas MongoCXX::Mongo::getFilesSchemas() const
 {
     const mongocxx::database filesDatabase = this->_client[fileDb];
 
-    return {.uploadQueue = FilesUploadQueueSchema(filesDatabase)};
+    return {
+        .uploadQueue = FilesUploadQueueSchema(filesDatabase),
+        .downloadedStack = FilesDownloadedStackSchema(filesDatabase, this->_events),
+        .downloadQueue = FilesDownloadQueueSchema(filesDatabase)};
 }
 
 StatsSchemas MongoCXX::Mongo::getStatsSchemas() const

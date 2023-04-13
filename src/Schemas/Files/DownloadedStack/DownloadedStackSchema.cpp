@@ -47,9 +47,23 @@ void FilesDownloadedStackSchema::deleteExpiredFiles(const Date &expirationDate)
 NODISCARD Date FilesDownloadedStackSchema::getFileExpirationDate(const string &fileId)
 {
     const bsoncxx::document::value filter = makeDocument(makeField("filename", fileId));
-    mongocxx::cursor cursor = this->_fileBucket.find(filter.view());
+    mongocxx::options::find options;
+
+    options.projection(makeDocument(makeField("_id", false), makeField("metadata.expirationDate", true)));
+    mongocxx::cursor cursor = this->_fileBucket.find(filter.view(), options);
 
     if (cursor.begin() == cursor.end())
         throw NotFoundException("File not found");
     return Date((*cursor.begin())["metadata"]["expirationDate"].get_date());
+}
+
+NODISCARD bool FilesDownloadedStackSchema::doesFileExist(const string &fileId)
+{
+    const bsoncxx::document::value filter = makeDocument(makeField("filename", fileId));
+    mongocxx::options::find options;
+
+    options.projection(makeDocument(makeField("_id", true)));
+    mongocxx::cursor cursor = this->_fileBucket.find(filter.view(), options);
+
+    return cursor.begin() != cursor.end();
 }

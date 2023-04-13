@@ -25,11 +25,11 @@
  */
 void RunServer()
 {
-    // Mongo
-    MongoCXX::Mongo mongo;
-
     // Events
     EventsManager events;
+
+    // Mongo
+    MongoCXX::Mongo mongo(events);
 
     // Clients
     GrpcClients clients = {

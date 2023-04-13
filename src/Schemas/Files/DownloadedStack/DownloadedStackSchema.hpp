@@ -23,6 +23,7 @@ class FilesDownloadedStackSchema : public TemplateFileBucket {
     void pushFile(const string &fileId, const Date &expirationDate, const string &content);
     void deleteExpiredFiles(const Date &expirationDate = Date());
     NODISCARD Date getFileExpirationDate(const string &fileId);
+    NODISCARD bool doesFileExist(const string &fileId);
 
   private:
     const EventsManager &_events;
