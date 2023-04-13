@@ -44,3 +44,29 @@ void VaultClient::uploadFiles(const Maestro_Vault::UploadFilesRequest &files) co
     if (!status.ok())
         throw RequestFailureException(status);
 }
+
+string VaultClient::downloadFile(const string &fileId, const string &userId, const string &diskId) const
+{
+    grpc::ClientContext context;
+    Maestro_Vault::DownloadFileRequest request;
+    Maestro_Vault::DownloadFileStatus response;
+
+    request.set_fileid(fileId);
+    request.set_userid(userId);
+    request.set_diskid(diskId);
+    grpc::Status status = this->_stub->downloadFile(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status);
+}
+
+Maestro_Vault::DownloadFilesStatus VaultClient::downloadFiles(const Maestro_Vault::DownloadFilesRequest &files) const
+{
+    grpc::ClientContext context;
+    Maestro_Vault::DownloadFilesStatus response;
+    grpc::Status status = this->_stub->downloadFiles(&context, files, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status);
+    return response;
+}
