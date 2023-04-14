@@ -5,13 +5,13 @@ if (NOT DEFINED GRPC_CPP_ONCE)
     if (NOT EXISTS ${GRPC_SUBMODULE_DIR})
         set(GRPC_CLONE_SUBMODULE true)
     endif ()
-    set(GRPC_FULL_INSTALL true)
+    set(GRPC_FULL_INSTALL 0)
 
     include("${CMAKE_MODULES_DIR}/install_gRPC.cmake")
 
     # Proto file
     get_filename_component(my_protos_path
-    "${THIRD_PARTIES_DIR}/protobuf-interfaces/" ABSOLUTE)
+                           "${THIRD_PARTIES_DIR}/protobuf-interfaces/" ABSOLUTE)
     if (NOT EXISTS ${my_protos_path})
         message(FATAL_ERROR "Could not find ${my_protos_path}, exiting")
     endif ()
@@ -67,7 +67,7 @@ if (NOT DEFINED GRPC_CPP_ONCE)
             OUTPUT ${my_protos_srcs} ${my_protos_hdrs} ${my_grpc_srcs} ${my_grpc_hdrs}
             COMMAND
             ${_PROTOBUF_PROTOC} ARGS --grpc_out ${my_generated_path} --cpp_out
-            ${my_generated_path} -I ${my_protos_path_src} -I /usr/include
+            ${my_generated_path} -I ${my_protos_path_src} -I ${my_protos_path} -I /usr/include
             --plugin=protoc-gen-grpc=${_GRPC_CPP_PLUGIN_EXECUTABLE} ${my_protos}
             DEPENDS ${my_protos})
 

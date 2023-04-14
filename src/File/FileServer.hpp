@@ -81,6 +81,18 @@ class FileServer : public UsersBack_Maestro::UsersBack_Maestro_Service::Service 
     ::grpc::Status getFilesIndex(::grpc::ServerContext *context,
         const ::UsersBack_Maestro::GetFilesIndexRequest *request, ::File::FilesIndex *response) override;
 
+    ::grpc::Status fileRemove(::grpc::ServerContext *context, const ::UsersBack_Maestro::FileRemoveRequest *request,
+        ::UsersBack_Maestro::FileRemoveStatus *response) override;
+    ::grpc::Status fileMove(::grpc::ServerContext *context, const ::UsersBack_Maestro::FileMoveRequest *request,
+        ::UsersBack_Maestro::FileMoveStatus *response) override;
+
+    ::grpc::Status dirMake(::grpc::ServerContext *context, const ::UsersBack_Maestro::DirMakeRequest *request,
+        ::UsersBack_Maestro::DirMakeStatus *response) override;
+    ::grpc::Status dirRemove(::grpc::ServerContext *context, const ::UsersBack_Maestro::DirRemoveRequest *request,
+        ::UsersBack_Maestro::DirRemoveStatus *response) override;
+    ::grpc::Status dirMove(::grpc::ServerContext *context, const ::UsersBack_Maestro::DirMoveRequest *request,
+        ::UsersBack_Maestro::DirMoveStatus *response) override;
+
   private:
     mongocxx::database _fileDatabase;
     mongocxx::gridfs::bucket _fileBucket;

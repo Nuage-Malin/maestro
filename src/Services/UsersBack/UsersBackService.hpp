@@ -21,7 +21,7 @@
 
 class UsersBackService : public TemplateService, public UsersBack_Maestro::UsersBack_Maestro_Service::Service {
   public:
-    UsersBackService(const mongocxx::database &fileDatabase, const mongocxx::database &statsDatabase, const GrpcClients &clients);
+    UsersBackService(FilesSchemas &filesSchemas, StatsSchemas &statsSchemas, const GrpcClients &clients);
     ~UsersBackService() = default;
 
     grpc::Status fileUpload(
@@ -40,8 +40,8 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
     ) override;
 
   private:
-    FilesSchemas _filesSchemas;
-    StatsUserDiskInfoSchema _statsUserDiskInfoSchema;
+    FilesSchemas &_filesSchemas;
+    StatsSchemas &_statsSchemas;
     const GrpcClients &_clients;
 };
 

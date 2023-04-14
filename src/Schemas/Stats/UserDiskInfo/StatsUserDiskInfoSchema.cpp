@@ -5,6 +5,7 @@
  * @copyright Nuage Malin
  */
 
+#include "schemas.hpp"
 #include "StatsUserDiskInfoSchema.hpp"
 #include "Schemas/Stats/DiskWakeup/StatsDiskWakeupSchema.hpp"
 

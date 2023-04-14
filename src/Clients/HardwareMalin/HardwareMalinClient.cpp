@@ -12,8 +12,8 @@
 #include "HardwareMalinClient.hpp"
 #include "Exceptions/RequestFailure/RequestFailureException.hpp"
 
-HardwareMalinClient::HardwareMalinClient(const std::shared_ptr<grpc::ChannelInterface> &channel)
-    : _stub(Maestro_HardwareMalin::Maestro_HardwareMalin_Service::NewStub(channel))
+HardwareMalinClient::HardwareMalinClient(const std::shared_ptr<grpc::ChannelInterface> &channel, const EventsManager &events)
+    : _stub(Maestro_HardwareMalin::Maestro_HardwareMalin_Service::NewStub(channel)), _events(events)
 {
     if (!this->_stub)
         throw std::runtime_error(string(__FUNCTION__) + " could not create gRPC stub");
@@ -31,4 +31,24 @@ bool HardwareMalinClient::diskStatus(const string &diskId) const
     if (!status.ok())
         throw RequestFailureException(status);
     return response.status();
+}
+
+void HardwareMalinClient::setDiskState(const string &diskId, bool state) const
+{
+    if (!state)
+        this->_events.emit<const string &>(Event::DISK_SHUTDOWN_BEFORE, diskId);
+    grpc::ClientContext context;
+    Maestro_HardwareMalin::SetDiskStateRequest request;
+    Maestro_HardwareMalin::SetDiskStateStatus response;
+
+    request.set_diskid(diskId);
+    request.set_state(state);
+    grpc::Status status = this->_stub->setDiskState(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status);
+    if (state)
+        this->_events.emit<const string &>(Event::DISK_STARTUP, diskId);
+    else
+        this->_events.emit<const string &>(Event::DISK_SHUTDOWN, diskId);
 }

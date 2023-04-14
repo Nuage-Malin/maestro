@@ -7,17 +7,14 @@
 
 #include <exception>
 
-#include <mongocxx/client.hpp>
-#include <mongocxx/instance.hpp>
-
 #include <grpcpp/server_builder.h>
 
 #include "utils.hpp"
 #include "clients.hpp"
+#include "Schemas/Mongo/Mongo.hpp"
 #include "Services/UsersBack/UsersBackService.hpp"
-
-static const string fileDb{"maestro"};
-static const string statsDb{"logs"};
+#include "Cron/Manager/ManagerCron.hpp"
+#include "Cron/FileUpload/FileUploadCron.hpp"
 
 /**
  * @brief Run the server
@@ -28,28 +25,24 @@ static const string statsDb{"logs"};
  */
 void RunServer()
 {
-    mongocxx::instance inst{}; // This should be done only once.
-    mongocxx::client client{mongocxx::uri{getEnv("MAESTRO_MONGO_URL")}};
-    if (!client)
-        throw std::runtime_error("Could not access mongo database");
+    // Mongo
+    MongoCXX::Mongo mongo;
 
-    mongocxx::database fileDatabase = client[fileDb];
-    mongocxx::database statsDatabase = client[statsDb];
-
-    if (!fileDatabase)
-        throw std::runtime_error("Could not access '" + fileDb + "' database");
-    if (!statsDatabase)
-        throw std::runtime_error("Could not access '" + statsDb + "' database");
+    // Events
+    EventsManager events;
 
     // Clients
     GrpcClients clients = {
         .santaclaus = SantaclausClient(grpc::CreateChannel(getEnv("MAESTRO_SANTACLAUS_URI"), grpc::InsecureChannelCredentials())),
-        .hardwareMalin =
-            HardwareMalinClient(grpc::CreateChannel(getEnv("MAESTRO_HARDWARE_MALIN_URI"), grpc::InsecureChannelCredentials())),
+        .hardwareMalin = HardwareMalinClient(
+            grpc::CreateChannel(getEnv("MAESTRO_HARDWARE_MALIN_URI"), grpc::InsecureChannelCredentials()), events
+        ),
         .vault = VaultClient(grpc::CreateChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials()))};
 
     // Services
-    UsersBackService usersBackService(fileDatabase, statsDatabase, clients);
+    FilesSchemas filesSchemas = mongo.getFilesSchemas();
+    StatsSchemas statsDatabase = mongo.getStatsSchemas();
+    UsersBackService usersBackService(filesSchemas, statsDatabase, clients);
 
     // gRPC
     const char *address = getenv("MAESTRO_ADDRESS");
@@ -60,6 +53,12 @@ void RunServer()
     builder.RegisterService(&usersBackService);
     std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
     std::cout << "Server listening on " << serverAddress << std::endl;
+
+    // CRON
+    ManagerCron managerCron;
+
+    managerCron.add("* * 3 * * ?", FileUploadCron(filesSchemas, clients, events));
+
     server->Wait();
 }
 

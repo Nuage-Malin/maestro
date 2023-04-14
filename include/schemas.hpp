@@ -9,10 +9,16 @@
 #define MAESTRO_SCHEMAS_HPP
 
 #include "Schemas/Files/UploadQueue/UploadQueueSchema.hpp"
+#include "Schemas/Stats/UserDiskInfo/StatsUserDiskInfoSchema.hpp"
 
 struct FilesSchemas
 {
-    UploadQueueSchema uploadQueue;
+    FilesUploadQueueSchema uploadQueue;
+};
+
+struct StatsSchemas
+{
+    StatsUserDiskInfoSchema userDiskInfo;
 };
 
 #endif

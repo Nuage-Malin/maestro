@@ -179,6 +179,31 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
     return grpc::Status::OK;
 }
 
+::grpc::Status FileServer::fileRemove(::grpc::ServerContext *context,
+    const ::UsersBack_Maestro::FileRemoveRequest *request, ::UsersBack_Maestro::FileRemoveStatus *response)
+{
+}
+
+::grpc::Status FileServer::fileMove(::grpc::ServerContext *context, const ::UsersBack_Maestro::FileMoveRequest *request,
+    ::UsersBack_Maestro::FileMoveStatus *response)
+{
+}
+
+::grpc::Status FileServer::dirMake(::grpc::ServerContext *context, const ::UsersBack_Maestro::DirMakeRequest *request,
+    ::UsersBack_Maestro::DirMakeStatus *response)
+{
+}
+
+::grpc::Status FileServer::dirRemove(::grpc::ServerContext *context,
+    const ::UsersBack_Maestro::DirRemoveRequest *request, ::UsersBack_Maestro::DirRemoveStatus *response)
+{
+}
+
+::grpc::Status FileServer::dirMove(::grpc::ServerContext *context, const ::UsersBack_Maestro::DirMoveRequest *request,
+    ::UsersBack_Maestro::DirMoveStatus *response)
+{
+}
+
 /**
  * @brief Know if a file is downloadable in a certain time, available for download or none
  * @return Duration, in seconds, in which the file will be available

@@ -5,14 +5,12 @@
  * @copyright Nuage Malin
  */
 
+#include "schemas.hpp"
 #include "UsersBackService.hpp"
 #include "Exceptions/RequestFailure/RequestFailureException.hpp"
 
-UsersBackService::UsersBackService(
-    const mongocxx::database &filesDatabase, const mongocxx::database &statsDatabase, const GrpcClients &clients
-)
-    : _filesSchemas({.uploadQueue = UploadQueueSchema(filesDatabase)}),
-      _statsUserDiskInfoSchema(StatsUserDiskInfoSchema(statsDatabase)), _clients(clients)
+UsersBackService::UsersBackService(FilesSchemas &filesSchemas, StatsSchemas &statsSchemas, const GrpcClients &clients)
+    : _filesSchemas(filesSchemas), _statsSchemas(statsSchemas), _clients(clients)
 {
 }
 
@@ -37,12 +35,14 @@ grpc::Status UsersBackService::fileUpload(
             } catch (const RequestFailureException &error) {
                 // If the upload failed, add it to the queue database
                 this->_filesSchemas.uploadQueue.uploadFile(
-                    addFileStatus.fileid(), addFileStatus.diskid(), request->file().content()
+                    addFileStatus.fileid(), request->file().metadata().userid(), addFileStatus.diskid(), request->file().content()
                 );
             }
         } else {
             // If the disk is offline, add it to the queue database
-            this->_filesSchemas.uploadQueue.uploadFile(addFileStatus.fileid(), addFileStatus.diskid(), request->file().content());
+            this->_filesSchemas.uploadQueue.uploadFile(
+                addFileStatus.fileid(), request->file().metadata().userid(), addFileStatus.diskid(), request->file().content()
+            );
         }
         return grpc::Status::OK;
     });
@@ -54,7 +54,7 @@ grpc::Status UsersBackService::getUserConsumption(
 )
 {
     return this->_procedureRunner([this, request, response]() {
-        const uint64 consumption = this->_statsUserDiskInfoSchema.getUserConsumption(
+        const uint64 consumption = this->_statsSchemas.userDiskInfo.getUserConsumption(
             request->userid(), Date(request->startdate()), Date(request->enddate())
         );
 

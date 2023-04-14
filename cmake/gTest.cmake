@@ -30,18 +30,26 @@ FetchContent_Declare(
         googletest
         URL https://github.com/google/googletest/archive/e2239ee6043f73722e7aa812a459f54a28552929.zip
 )
-FetchContent_MakeAvailable(googletest)
+FetchContent_MakeAvailable(googletest) # TODO make this non-fatal so that the entire build doesn't fail when no connection
 
 include(GoogleTest)
 # gRPC
 include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
 #
 add_executable(${TEST_EXEC_NAME}
-               ${TEST_SRC_DIR}/Utils/Date/Date.cpp
-               ${TEST_SRC_DIR}/UsersBack/UsersBackClient.cpp
-               ${TEST_SRC_DIR}/UsersBack/UsersBackTest.cpp)
+    ${SRCS}
+    ${TEST_SRC_DIR}/Schemas/UploadQueueTest.cpp
+    ${TEST_SRC_DIR}/UsersBack/UsersBackClient.cpp
+    ${TEST_SRC_DIR}/UsersBack/UsersBackTest.cpp)
 
-target_include_directories(${TEST_EXEC_NAME} PUBLIC ${INCL_DIR} ${TEST_SRC_DIR})
+# Mongo
+target_link_libraries(${TEST_EXEC_NAME} ${LIBBSONCXX_LIBRARIES})
+target_link_libraries(${TEST_EXEC_NAME} ${LIBMONGOCXX_LIBRARIES})
+
+# Libcron
+target_link_libraries(${TEST_EXEC_NAME} ${LIBCRON_LIBRARIES})
+
+target_include_directories(${TEST_EXEC_NAME} PUBLIC ${INCL_DIR} ${SRC_DIR} ${TEST_SRC_DIR} ${my_protos_include_dir})
 target_link_libraries(${TEST_EXEC_NAME} gtest_main)
 
 

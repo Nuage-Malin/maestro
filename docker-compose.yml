@@ -13,6 +13,7 @@ services:
         networks:
             - big-brain
             - users-back:maestro
+            - chouf:maestro
         depends_on:
             - big-brain
         restart: always
@@ -52,9 +53,10 @@ services:
             - 50051:80
 
 networks:
-    big-brain:
-        external: true
+    big-brain: null
     users-back:maestro:
+        external: true
+    chouf:maestro:
         external: true
 
 volumes:
