@@ -15,7 +15,7 @@ FilesDownloadedStackSchema::FilesDownloadedStackSchema(const mongocxx::database 
 
 void FilesDownloadedStackSchema::pushFile(const string &fileId, const Date &expirationDate, const string &content)
 {
-    std::istringstream ss(content);
+    const std::istringstream ss(content);
     std::istream fileStream(ss.rdbuf());
     mongocxx::v_noabi::options::gridfs::upload options;
 
@@ -26,10 +26,11 @@ void FilesDownloadedStackSchema::pushFile(const string &fileId, const Date &expi
 
 NODISCARD string FilesDownloadedStackSchema::downloadFile(const string &fileId)
 {
-    std::ostringstream oss("");
+    const std::ostringstream oss("");
     std::ostream ostream(oss.rdbuf());
+    mongocxx::cursor cursor = this->_fileBucket.find(makeDocument(makeField("filename", fileId)).view());
 
-    this->_fileBucket.download_to_stream(bsoncxx::types::bson_value::value(fileId), &ostream);
+    this->_fileBucket.download_to_stream((*cursor.begin())["_id"].get_value(), &ostream);
     return oss.str();
 }
 
@@ -37,9 +38,8 @@ void FilesDownloadedStackSchema::deleteExpiredFiles(const Date &expirationDate)
 {
     const bsoncxx::document::value filter =
         makeDocument(makeField("metadata.expirationDate", makeDocument(makeField("$lt", expirationDate.toBSON()))));
-    mongocxx::options::find options;
 
-    mongocxx::cursor cursor = this->_fileBucket.find(filter.view(), options);
+    mongocxx::cursor cursor = this->_fileBucket.find(filter.view());
 
     for (const auto &file : cursor) {
         this->_events.emit<const string &, const Date &>(
