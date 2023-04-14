@@ -49,7 +49,7 @@ class ManagerCron {
 template <typename T> void ManagerCron::add(const string &schedule, const T &cronJob)
 {
     for (auto &job : this->_jobs)
-        if (job->getName() == job->getName())
+        if (cronJob.getName() == job->getName())
             throw std::runtime_error("CronManager job " + job->getName() + " already exists");
     this->_jobs.push_back(std::make_shared<T>(cronJob));
 
