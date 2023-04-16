@@ -32,7 +32,7 @@ template <class Client> Client &getCommonFileClient()
     return client;
 }
 
-MongoCXX::Mongo &getCommonMongo()
+inline MongoCXX::Mongo &getCommonMongo()
 {
     static MongoCXX::Mongo mongo(events);
 
