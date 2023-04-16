@@ -43,6 +43,11 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         grpc::ServerContext *context, const UsersBack_Maestro::FileDownloadRequest *request, File::File *response
     ) override;
 
+    grpc::Status getFilesIndex(
+        grpc::ServerContext *context, const UsersBack_Maestro::GetFilesIndexRequest *request,
+        UsersBack_Maestro::GetFilesIndexStatus *response
+    ) override;
+
   private:
     FilesSchemas &_filesSchemas;
     StatsSchemas &_statsSchemas;

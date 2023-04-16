@@ -92,13 +92,13 @@ grpc::Status UsersBackService::askFileDownload(
             if (this->_clients.hardwareMalin.diskStatus(file.diskid())) {
                 // If the disk is online, download the file from the filesystem and upload it to the database
                 const string fileContent =
-                    this->_clients.vault.downloadFile(request->fileid(), file.file().userid(), file.diskid());
+                    this->_clients.vault.downloadFile(request->fileid(), file.file().approxmetadata().userid(), file.diskid());
 
                 this->_filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, fileContent);
                 response->set_allocated_waitingtime(expirationDate.toAllocatedDuration()); // TODO: Edit waiting time
             } else {
                 // If the disk is offline, add the file to the queue database
-                this->_filesSchemas.downloadQueue.add(request->fileid(), file.file().userid(), file.diskid());
+                this->_filesSchemas.downloadQueue.add(request->fileid(), file.file().approxmetadata().userid(), file.diskid());
 
                 response->set_allocated_waitingtime(expirationDate.toAllocatedDuration());
             }
@@ -112,17 +112,38 @@ grpc::Status UsersBackService::fileDownload(
 )
 {
     return this->_procedureRunner([this, request, response]() {
-        File::FileApproxMetadata approxMetadata = this->_clients.santaclaus.getFile(request->fileid()).file();
-        File::FileMetadata metadata;
+        File::FileMetadata metadata = this->_clients.santaclaus.getFile(request->fileid()).file();
 
-        metadata.set_fileid(request->fileid());
         metadata.set_isdownloadable(true);
 
         File::File file;
         file.set_content(this->_filesSchemas.downloadedStack.downloadFile(request->fileid()));
-        metadata.set_allocated_approxmetadata(new File::FileApproxMetadata(approxMetadata));
         file.set_allocated_metadata(new File::FileMetadata(metadata));
 
+        return grpc::Status::OK;
+    });
+}
+
+grpc::Status UsersBackService::getFilesIndex(
+    UNUSED grpc::ServerContext *context, const UsersBack_Maestro::GetFilesIndexRequest *request,
+    UsersBack_Maestro::GetFilesIndexStatus *response
+)
+{
+    return this->_procedureRunner([this, request, response]() {
+        Maestro_Santaclaus::GetDirectoryStatus subFiles = this->_clients.santaclaus.getDirectory(
+            request->userid(), request->has_dirid() ? std::optional(request->dirid()) : std::nullopt, request->isrecursive()
+        );
+        File::FilesIndex filesIndex;
+
+        filesIndex.CopyFrom(subFiles.subfiles());
+        filesIndex.clear_fileindex();
+        for (const File::FileMetadata &file : subFiles.subfiles().fileindex()) {
+            File::FileMetadata *fileIndex = filesIndex.add_fileindex();
+
+            fileIndex->CopyFrom(file);
+            fileIndex->set_isdownloadable(this->_filesSchemas.downloadedStack.doesFileExist(file.fileid()));
+        }
+        response->set_allocated_subfiles(new File::FilesIndex(filesIndex));
         return grpc::Status::OK;
     });
 }

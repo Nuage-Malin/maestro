@@ -47,3 +47,21 @@ NODISCARD Maestro_Santaclaus::GetFileStatus SantaclausClient::getFile(const stri
         throw RequestFailureException(status);
     return response;
 }
+
+NODISCARD Maestro_Santaclaus::GetDirectoryStatus
+SantaclausClient::getDirectory(const string &userId, const std::optional<string> &dirId, bool isRecursive) const
+{
+    grpc::ClientContext context;
+    Maestro_Santaclaus::GetDirectoryRequest request;
+    Maestro_Santaclaus::GetDirectoryStatus response;
+
+    request.set_userid(userId);
+    if (dirId.has_value())
+        request.set_dirid(dirId.value());
+    request.set_isrecursive(isRecursive);
+    grpc::Status status = this->_stub->getDirectory(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status);
+    return response;
+}
