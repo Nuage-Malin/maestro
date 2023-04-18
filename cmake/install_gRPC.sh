@@ -120,7 +120,7 @@ if [ "$GRPC_FULL_INSTALL" == "true" ]; then
     ## TODO put that into $HOME/.zshrc or $HOME/.bashrc if it is not already there
     ##  with one of these command lines
     ZSH=$( ( echo $SHELL | grep zsh) )
-    if [ $ZSH && ! (cat $HOME/.zshrc | grep "$INSTALL_DIR/bin:$PATH") ]; then
+    if [ $ZSH ] && [ ! (cat $HOME/.zshrc | grep "$INSTALL_DIR/bin:$PATH") ]; then
         echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.zshrc
     elif [ ! (cat $HOME/.bashrc | grep "$INSTALL_DIR/bin:$PATH") ]; then
         echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.bashrc
