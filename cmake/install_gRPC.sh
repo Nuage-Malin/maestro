@@ -117,13 +117,13 @@ if [ "$GRPC_FULL_INSTALL" == "true" ]; then
 
     export PATH="$INSTALL_DIR/bin:$PATH"
 
-    ## TODO put that into $HOME/.zshrc or $HOME/.bashrc if it is not already there
-    ##  with one of these command lines
     ZSH=$( ( echo $SHELL | grep zsh) )
-    if ! [[ -z $ZSH ]] && (! cat $HOME/.zshrc | grep "$INSTALL_DIR/bin:$PATH"); then
+    if ! [[ -z $ZSH ]] && (! cat $HOME/.zshrc | grep PATH | grep "$INSTALL_DIR/bin"); then
         echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.zshrc
-    elif (! cat $HOME/.bashrc | grep "$INSTALL_DIR/bin:$PATH"); then
+    elif (! cat $HOME/.bashrc | grep PATH | grep "$INSTALL_DIR/bin"); then
         echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.bashrc
+    else
+        echo "gRPC path already added to PATH"
     fi
 
     nbr_cpu=`nproc`
