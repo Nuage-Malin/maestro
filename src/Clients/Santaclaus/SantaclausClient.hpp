@@ -21,6 +21,7 @@ class SantaclausClient {
     ~SantaclausClient() = default;
 
     NODISCARD Maestro_Santaclaus::AddFileStatus addFile(const File::FileApproxMetadata &file, const uint64 &fileSize) const;
+    NODISCARD Maestro_Santaclaus::GetFileStatus getFile(const string &fileId) const;
 
   private:
     std::unique_ptr<Maestro_Santaclaus::Maestro_Santaclaus_Service::Stub> _stub;

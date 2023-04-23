@@ -17,7 +17,7 @@
 #include "clients.hpp"
 #include "schemas.hpp"
 #include "Services/Template/TemplateService.hpp"
-#include "Schemas/Stats/UserDiskInfo/StatsUserDiskInfoSchema.hpp"
+#include "Schemas/Stats/UserDiskInfo/UserDiskInfoSchema.hpp"
 
 class UsersBackService : public TemplateService, public UsersBack_Maestro::UsersBack_Maestro_Service::Service {
   public:
@@ -32,6 +32,15 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
     grpc::Status getUserConsumption(
         grpc::ServerContext *context, const UsersBack_Maestro::GetUserConsumptionRequest *request,
         UsersBack_Maestro::GetUserConsumptionStatus *response
+    ) override;
+
+    grpc::Status askFileDownload(
+        grpc::ServerContext *context, const UsersBack_Maestro::AskFileDownloadRequest *request,
+        UsersBack_Maestro::AskFileDownloadStatus *response
+    ) override;
+
+    grpc::Status fileDownload(
+        grpc::ServerContext *context, const UsersBack_Maestro::FileDownloadRequest *request, File::File *response
     ) override;
 
   private:

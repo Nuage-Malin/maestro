@@ -43,13 +43,18 @@ set(SRCS
     ${SRC_DIR}/Cron/Manager/ManagerCron.cpp
     ${SRC_DIR}/Cron/Template/TemplateCron.cpp
     ${SRC_DIR}/Cron/FileUpload/FileUploadCron.cpp
+    ${SRC_DIR}/Cron/ExpiredDownloadedFiles/ExpiredDownloadedFilesCron.cpp
+    ${SRC_DIR}/Cron/DownloadFiles/DownloadFilesCron.cpp
     ${SRC_DIR}/Exceptions/RequestFailure/RequestFailureException.cpp
+    ${SRC_DIR}/Exceptions/NotFound/NotFoundException.cpp
     ${SRC_DIR}/Schemas/Mongo/Mongo.cpp
     ${SRC_DIR}/Schemas/Templates/Schema/TemplateSchema.cpp
     ${SRC_DIR}/Schemas/Templates/FileBucket/TemplateFileBucket.cpp
     ${SRC_DIR}/Schemas/Files/UploadQueue/UploadQueueSchema.cpp
-    ${SRC_DIR}/Schemas/Stats/DiskWakeup/StatsDiskWakeupSchema.cpp
-    ${SRC_DIR}/Schemas/Stats/UserDiskInfo/StatsUserDiskInfoSchema.cpp
+    ${SRC_DIR}/Schemas/Files/DownloadedStack/DownloadedStackSchema.cpp
+    ${SRC_DIR}/Schemas/Files/DownloadQueue/DownloadQueueSchema.cpp
+    ${SRC_DIR}/Schemas/Stats/DiskWakeup/DiskWakeupSchema.cpp
+    ${SRC_DIR}/Schemas/Stats/UserDiskInfo/UserDiskInfoSchema.cpp
     ${SRC_DIR}/Services/Template/TemplateService.cpp
     ${SRC_DIR}/Services/UsersBack/UsersBackService.cpp
     ${SRC_DIR}/Clients/Santaclaus/SantaclausClient.cpp

@@ -34,11 +34,91 @@ Date::Date(const google::protobuf::Timestamp &date)
 {
 }
 
+NODISCARD const std::chrono::system_clock::time_point &Date::operator*() const
+{
+    return this->toChrono();
+}
+
 Date &Date::operator=(const Date &date)
 {
     this->_date = date.toChrono();
 
     return *this;
+}
+
+bool Date::operator==(const Date &date) const
+{
+    return this->_date == date.toChrono();
+}
+
+bool Date::operator!=(const Date &date) const
+{
+    return this->_date != date.toChrono();
+}
+
+bool Date::operator<(const Date &date) const
+{
+    return this->_date < date.toChrono();
+}
+
+bool Date::operator>(const Date &date) const
+{
+    return this->_date > date.toChrono();
+}
+
+bool Date::operator<=(const Date &date) const
+{
+    return this->_date <= date.toChrono();
+}
+
+bool Date::operator>=(const Date &date) const
+{
+    return this->_date >= date.toChrono();
+}
+
+Date Date::operator+(const std::chrono::seconds &seconds) const
+{
+    return Date(this->_date + seconds);
+}
+
+Date Date::operator+(const std::chrono::minutes &minutes) const
+{
+    return Date(this->_date + minutes);
+}
+
+Date Date::operator+(const std::chrono::hours &hours) const
+{
+    return Date(this->_date + hours);
+}
+
+Date Date::operator+(const std::chrono::days &days) const
+{
+    return Date(this->_date + days);
+}
+
+Date Date::operator-(const std::chrono::seconds &seconds) const
+{
+    return Date(this->_date - seconds);
+}
+
+Date Date::operator-(const std::chrono::minutes &minutes) const
+{
+    return Date(this->_date - minutes);
+}
+
+Date Date::operator-(const std::chrono::hours &hours) const
+{
+    return Date(this->_date - hours);
+}
+
+Date Date::operator-(const std::chrono::days &days) const
+{
+    return Date(this->_date - days);
+}
+
+NODISCARD const std::chrono::system_clock::time_point &Date::toChrono() const
+{
+    return this->_date;
 }
 
 NODISCARD bsoncxx::v_noabi::types::b_date Date::toBSON() const
@@ -48,12 +128,9 @@ NODISCARD bsoncxx::v_noabi::types::b_date Date::toBSON() const
 
 NODISCARD google::protobuf::Timestamp Date::toProtobuf() const
 {
-    const auto &time = this->_date.time_since_epoch();
-
     google::protobuf::Timestamp timestamp;
-    const auto &seconds = std::chrono::duration_cast<std::chrono::seconds>(time);
-    timestamp.set_seconds(seconds.count());
-    timestamp.set_nanos(static_cast<int32_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(time - seconds).count()));
+
+    this->_toProtobuf(timestamp);
     return timestamp;
 }
 
@@ -65,9 +142,20 @@ NODISCARD google::protobuf::Timestamp *Date::toAllocatedProtobuf() const
     return timestamp;
 }
 
-NODISCARD std::chrono::system_clock::time_point Date::toChrono() const
+NODISCARD google::protobuf::Duration Date::toDuration(const Date &from) const
 {
-    return this->_date;
+    google::protobuf::Duration duration;
+
+    this->_toDuration(duration, from);
+    return duration;
+}
+
+NODISCARD google::protobuf::Duration *Date::toAllocatedDuration(const Date &from) const
+{
+    google::protobuf::Duration *duration = new google::protobuf::Duration();
+
+    this->_toDuration(*duration, from);
+    return duration;
 }
 
 void Date::_toProtobuf(google::protobuf::Timestamp &timestamp) const
@@ -77,6 +165,15 @@ void Date::_toProtobuf(google::protobuf::Timestamp &timestamp) const
 
     timestamp.set_seconds(seconds.count());
     timestamp.set_nanos(static_cast<int32_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(time - seconds).count()));
+}
+
+void Date::_toDuration(google::protobuf::Duration &duration, const Date &from) const
+{
+    const auto &difference = this->_date > from.toChrono() ? this->_date - from.toChrono() : from.toChrono() - this->_date;
+    const auto &seconds = std::chrono::duration_cast<std::chrono::seconds>(difference);
+
+    duration.set_seconds(seconds.count());
+    duration.set_nanos(static_cast<int32_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(difference - seconds).count()));
 }
 
 std::ostream &operator<<(std::ostream &stream, const Date &date)

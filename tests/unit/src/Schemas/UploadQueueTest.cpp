@@ -7,13 +7,11 @@
 
 #include <gtest/gtest.h>
 
-#include "Schemas/Mongo/Mongo.hpp"
-
-MongoCXX::Mongo mongo;
-FilesSchemas filesSchemas = mongo.getFilesSchemas();
+#include "Utils/UtilsTest.hpp"
 
 TEST(UploadQueue, getFilesDisk)
 {
+    FilesSchemas filesSchemas = getCommonMongo().getFilesSchemas();
     filesSchemas.uploadQueue.uploadFile("fileIdTest", "userIdTest", "diskIdTest", "contentTest");
     std::unordered_set<string> diskIds = filesSchemas.uploadQueue.getFilesDisk();
 
@@ -23,6 +21,7 @@ TEST(UploadQueue, getFilesDisk)
 
 TEST(UploadQueue, getDiskFiles)
 {
+    FilesSchemas filesSchemas = getCommonMongo().getFilesSchemas();
     const std::pair<std::vector<MongoCXX::ValueView>, Maestro_Vault::UploadFilesRequest> &files =
         filesSchemas.uploadQueue.getDiskFiles("diskIdTest");
 
@@ -35,6 +34,7 @@ TEST(UploadQueue, getDiskFiles)
 
 TEST(UploadQueue, deleteFiles)
 {
+    FilesSchemas filesSchemas = getCommonMongo().getFilesSchemas();
     std::pair<std::vector<MongoCXX::ValueView>, Maestro_Vault::UploadFilesRequest> files =
         filesSchemas.uploadQueue.getDiskFiles("diskIdTest");
 
