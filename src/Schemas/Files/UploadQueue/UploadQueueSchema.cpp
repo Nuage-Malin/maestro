@@ -5,6 +5,8 @@
  * @copyright Nuage Malin
  */
 
+#include <sstream>
+
 #include "schemas.hpp"
 #include "UploadQueueSchema.hpp"
 #include "Utils/Date/Date.hpp"
