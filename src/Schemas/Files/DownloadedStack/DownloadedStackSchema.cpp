@@ -5,6 +5,8 @@
  * @copyright Nuage Malin
  */
 
+#include <sstream>
+
 #include "DownloadedStackSchema.hpp"
 #include "Exceptions/NotFound/NotFoundException.hpp"
 
