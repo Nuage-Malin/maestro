@@ -52,6 +52,9 @@ jobs:
       - name: Build project
         run: make -C build
 
+      - name: Build Mongo loader
+        run: docker build -t mongo-loader -f ./datasets/Dockerfile.big-brain-loader datasets
+
       - name: Run MongoDB & maestro & unit tests
         run: |
           docker run -d -p 27017:27017 -e MONGO_INITDB_DATABASE=maestro -e MONGO_INITDB_ROOT_USERNAME=maestro_admin -e MONGO_INITDB_ROOT_PASSWORD=maestro_admin_password --name maestro-mongo mongo:6
@@ -68,6 +71,7 @@ jobs:
             sleep 1
           done
           echo "MongoDB is ready"
+          docker run --rm --network host -e MONGO_LOGS_NAME=logs -e MONGO_LOGS_URI=mongodb://maestro_admin:maestro_admin_password@localhost:27017/logs?authSource=admin mongo-loader
           echo "Waiting maestro to be ready..."
           while ! nc -z localhost 8080; do
             if ! ps -p $MAESTRO_PID > /dev/null; then
