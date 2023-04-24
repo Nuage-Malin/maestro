@@ -117,14 +117,22 @@ if [ "$GRPC_FULL_INSTALL" == "true" ]; then
 
     export PATH="$INSTALL_DIR/bin:$PATH"
 
-    ## TODO put that into $HOME/.zshrc or $HOME/.bashrc if it is not already there
-    ##  with one of these command lines
+    echo "SHELL: $SHELL"
     ZSH=$( ( echo $SHELL | grep zsh) )
-    if ! [[ -z $ZSH ]] && (! cat $HOME/.zshrc | grep "$INSTALL_DIR/bin:$PATH"); then
+    if ! [[ -z $ZSH ]] && (! cat $HOME/.zshrc | grep PATH | grep "$INSTALL_DIR/bin"); then
         echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.zshrc
-    elif (! cat $HOME/.bashrc | grep "$INSTALL_DIR/bin:$PATH"); then
+        echo "zshrc:"
+        cat $HOME/.zshrc
+    elif (! cat $HOME/.bashrc | grep PATH | grep "$INSTALL_DIR/bin"); then
         echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.bashrc
+        echo "bashrc:"
+        cat $HOME/.bashrc
+    else
+        echo "gRPC path already added to PATH"
     fi
+    echo "Install directory : $INSTALL_DIR"
+    echo "PATH : $PATH"
+
 
     nbr_cpu=`nproc`
     check_exit_failure "Failed to get number of cpu"
