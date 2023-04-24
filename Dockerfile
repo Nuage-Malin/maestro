@@ -28,11 +28,11 @@ COPY CMakeLists.txt /app
 COPY include /app/include
 COPY src /app/src
 
+ENV GRPC_FULL_INSTALL="true"
+
 # Build
 RUN cmake -S . -B build
 RUN make -C build
 
 # Run
 CMD ./build/maestro
-
-# todo stage "unit_tests"
