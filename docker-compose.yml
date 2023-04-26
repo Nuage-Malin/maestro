@@ -2,14 +2,17 @@ version: '3.9'
 
 services:
     maestro:
+        profiles:
+            -   launch
         build: .
         container_name: maestro
+        # todo every service should be able to reach from santaclaus with this name (in respective docker compose)
         environment:
-            MAESTRO_ADDRESS: "[::]:8080"
-            MAESTRO_MONGO_URL: mongodb://admin:big_brain@big-brain:27017/maestro?authSource=admin
+            MAESTRO_ADDRESS: ${MAESTRO_ADDRESS}
+            MAESTRO_MONGO_URL: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@big-brain:${MONGO}/maestro?authSource=admin
             DOWNLOAD_WAITING_TIME: 86400 # 24 hours (seconds * minutes * hours)
         expose:
-            - 8080
+            - ${MAESTRO_PORT}
         networks:
             - big-brain
             - users-back:maestro
@@ -21,11 +24,13 @@ services:
     big-brain:
         image: mongo:6
         environment:
-            MONGO_INITDB_DATABASE: maestro
-            MONGO_INITDB_ROOT_USERNAME: admin
-            MONGO_INITDB_ROOT_PASSWORD: big_brain
+            MONGO_INITDB_DATABASE: ${MAESTRO_MONGO_DB}
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
         expose:
-            - 27017
+            - ${MONGO_PORT}
+        ports:
+            - ${MONGO_PORT}:${MONGO_PORT}
         networks:
             - big-brain
         volumes:
@@ -38,7 +43,7 @@ services:
             dockerfile: Dockerfile.big-brain-loader
         environment:
             MONGO_LOGS_NAME: logs
-            MONGO_LOGS_URI: mongodb://admin:big_brain@big-brain:27017/logs?authSource=admin
+            MONGO_LOGS_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@big-brain:${MAESTRO_PORT}/logs?authSource=admin
         networks:
             - big-brain
         depends_on:
@@ -46,6 +51,8 @@ services:
         restart: on-failure
 
     documentation:
+        profiles:
+            -   documentation # todo change this in github actions
         build:
             context: .
             dockerfile: Dockerfile.documentation
