@@ -37,13 +37,29 @@ get_filename_component(SRC_DIR "${CMAKE_HOME_DIRECTORY}/src/" ABSOLUTE)
 get_filename_component(DOCS_DIR "${CMAKE_HOME_DIRECTORY}/docs/" ABSOLUTE)
 get_filename_component(TEST_DIR "${CMAKE_HOME_DIRECTORY}/tests/" ABSOLUTE)
 
-set(SRCS ${SRC_DIR}/main.cpp
+set(SRCS
     ${SRC_DIR}/Utils/Date/Date.cpp
-    ${SRC_DIR}/Schemas/Template/TemplateSchema.cpp
-    ${SRC_DIR}/Schemas/Stats/DiskWakeup/StatsDiskWakeupSchema.cpp
-    ${SRC_DIR}/Schemas/Stats/UserDiskInfo/StatsUserDiskInfoSchema.cpp
+    ${SRC_DIR}/Utils/GrpcStatus/GrpcStatus.cpp
+    ${SRC_DIR}/Cron/Manager/ManagerCron.cpp
+    ${SRC_DIR}/Cron/Template/TemplateCron.cpp
+    ${SRC_DIR}/Cron/FileUpload/FileUploadCron.cpp
+    ${SRC_DIR}/Cron/ExpiredDownloadedFiles/ExpiredDownloadedFilesCron.cpp
+    ${SRC_DIR}/Cron/DownloadFiles/DownloadFilesCron.cpp
+    ${SRC_DIR}/Exceptions/RequestFailure/RequestFailureException.cpp
+    ${SRC_DIR}/Exceptions/NotFound/NotFoundException.cpp
+    ${SRC_DIR}/Schemas/Mongo/Mongo.cpp
+    ${SRC_DIR}/Schemas/Templates/Schema/TemplateSchema.cpp
+    ${SRC_DIR}/Schemas/Templates/FileBucket/TemplateFileBucket.cpp
+    ${SRC_DIR}/Schemas/Files/UploadQueue/UploadQueueSchema.cpp
+    ${SRC_DIR}/Schemas/Files/DownloadedStack/DownloadedStackSchema.cpp
+    ${SRC_DIR}/Schemas/Files/DownloadQueue/DownloadQueueSchema.cpp
+    ${SRC_DIR}/Schemas/Stats/DiskWakeup/DiskWakeupSchema.cpp
+    ${SRC_DIR}/Schemas/Stats/UserDiskInfo/UserDiskInfoSchema.cpp
     ${SRC_DIR}/Services/Template/TemplateService.cpp
-    ${SRC_DIR}/Services/UsersBack/UsersBackService.cpp)
+    ${SRC_DIR}/Services/UsersBack/UsersBackService.cpp
+    ${SRC_DIR}/Clients/Santaclaus/SantaclausClient.cpp
+    ${SRC_DIR}/Clients/HardwareMalin/HardwareMalinClient.cpp
+    ${SRC_DIR}/Clients/Vault/VaultClient.cpp)
 
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY})
 
@@ -53,7 +69,7 @@ if (NOT DEFINED doxygen)
     include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
 
 
-    add_executable(${EXECUTABLE_NAME} ${SRCS})
+    add_executable(${EXECUTABLE_NAME} ${SRC_DIR}/main.cpp ${SRCS})
     set_property(TARGET ${EXECUTABLE_NAME} PROPERTY CXX_STANDARD 20)
     target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCL_DIR} ${SRC_DIR} ${my_protos_include_dir})
 
@@ -63,6 +79,9 @@ if (NOT DEFINED doxygen)
 
     # MongoDB
     include(${CMAKE_MODULES_DIR}/mongodb.cmake)
+
+    # LibCron
+    include(${CMAKE_MODULES_DIR}/libcron.cmake)
 
     target_compile_options(${EXECUTABLE_NAME} PRIVATE -Wall -Wextra -Wno-missing-field-initializers)
 endif ()

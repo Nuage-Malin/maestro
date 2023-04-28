@@ -1,5 +1,5 @@
 /**
- * @file StatsUserDiskInfoSchema.hpp
+ * @file UserDiskInfoSchema.hpp
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 18/02/2023
  * @copyright Nuage Malin
@@ -12,7 +12,7 @@
 #include <mongocxx/database.hpp>
 
 #include "Utils/Date/Date.hpp"
-#include "Schemas/Template/TemplateSchema.hpp"
+#include "Schemas/Templates/Schema/TemplateSchema.hpp"
 
 class StatsDiskWakeupSchema : public TemplateSchema {
   public:

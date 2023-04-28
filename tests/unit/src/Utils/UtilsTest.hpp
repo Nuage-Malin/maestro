@@ -10,6 +10,9 @@
 #define TEST_UTILS_HPP
 
 #include "utils.hpp"
+#include "Schemas/Mongo/Mongo.hpp"
+
+static const EventsManager events;
 
 /**
  * @brief Get a client to interact with a gRPC stub
@@ -27,6 +30,13 @@ template <class Client> Client &getCommonFileClient()
     static Client client(host + string(":") + port);
 
     return client;
+}
+
+inline MongoCXX::Mongo &getCommonMongo()
+{
+    static MongoCXX::Mongo mongo(events);
+
+    return mongo;
 }
 
 #endif

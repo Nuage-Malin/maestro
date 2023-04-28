@@ -13,6 +13,7 @@
 
 #include <bsoncxx/types.hpp>
 #include <google/protobuf/timestamp.pb.h>
+#include <google/protobuf/duration.pb.h>
 
 #include "utils.hpp"
 
@@ -23,15 +24,40 @@ class Date {
     Date(const bsoncxx::v_noabi::types::b_date &date);
     Date(const google::protobuf::Timestamp &date);
 
+    NODISCARD const std::chrono::system_clock::time_point &operator*() const;
     Date &operator=(const Date &date);
+    bool operator==(const Date &date) const;
+    bool operator!=(const Date &date) const;
+    bool operator<(const Date &date) const;
+    bool operator>(const Date &date) const;
+    bool operator<=(const Date &date) const;
+    bool operator>=(const Date &date) const;
+    Date operator+(const std::chrono::seconds &seconds) const;
+    Date operator+(const std::chrono::minutes &minutes) const;
+    Date operator+(const std::chrono::hours &hours) const;
+    Date operator+(const std::chrono::days &days) const;
+    Date operator-(const std::chrono::seconds &seconds) const;
+    Date operator-(const std::chrono::minutes &minutes) const;
+    Date operator-(const std::chrono::hours &hours) const;
+    Date operator-(const std::chrono::days &days) const;
 
+    NODISCARD const std::chrono::system_clock::time_point &toChrono() const;
     NODISCARD bsoncxx::v_noabi::types::b_date toBSON() const;
     NODISCARD google::protobuf::Timestamp toProtobuf() const;
     NODISCARD google::protobuf::Timestamp *toAllocatedProtobuf() const;
-    NODISCARD std::chrono::system_clock::time_point toChrono() const;
+    /**
+     * @brief Convert the date to a duration from a given date. This date can be in the past or in the future.
+     *
+     * @param from Optional date to convert from. If not given, the current date is used.
+     * @return google::protobuf::Duration
+     */
+    NODISCARD google::protobuf::Duration toDuration(const Date &from = Date()) const;
+    // Same as toDuration but allocates the duration on the heap
+    NODISCARD google::protobuf::Duration *toAllocatedDuration(const Date &from = Date()) const;
 
   private:
     void _toProtobuf(google::protobuf::Timestamp &timestamp) const;
+    void _toDuration(google::protobuf::Duration &duration, const Date &from) const;
 
   private:
     std::chrono::system_clock::time_point _date;

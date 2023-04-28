@@ -14,32 +14,49 @@
 #include "UsersBack_Maestro/UsersBack_Maestro.grpc.pb.h"
 
 #include "utils.hpp"
+#include "clients.hpp"
+#include "schemas.hpp"
 #include "Services/Template/TemplateService.hpp"
-#include "Schemas/Stats/UserDiskInfo/StatsUserDiskInfoSchema.hpp"
+#include "Schemas/Stats/UserDiskInfo/UserDiskInfoSchema.hpp"
 
 class UsersBackService : public TemplateService, public UsersBack_Maestro::UsersBack_Maestro_Service::Service {
   public:
-    UsersBackService(const mongocxx::database &fileDatabase, const mongocxx::database &statsDatabase);
+    UsersBackService(FilesSchemas &filesSchemas, StatsSchemas &statsSchemas, const GrpcClients &clients);
     ~UsersBackService() = default;
+
+    grpc::Status fileUpload(
+        grpc::ServerContext *context, const UsersBack_Maestro::FileUploadRequest *request,
+        UsersBack_Maestro::FileUploadStatus *response
+    ) override;
 
     grpc::Status getUserConsumption(
         grpc::ServerContext *context, const UsersBack_Maestro::GetUserConsumptionRequest *request,
         UsersBack_Maestro::GetUserConsumptionStatus *response
     ) override;
 
-  private:
-    /**
-     * @brief Set file bucket with if _fileDatabase is settled. Otherwise throw an error.
-     *
-     * @throw std::logic_error if _fileDatabase is not settled
-     */
-    // void _setFileBucket();
-    // NODISCARD int _isDownloadable(const string &fileId);
+    grpc::Status getUserDiskSpace(
+        grpc::ServerContext *context, const UsersBack_Maestro::GetUserDiskSpaceRequest *request,
+        UsersBack_Maestro::GetUserDiskSpaceStatus *response
+    ) override;
+
+    grpc::Status askFileDownload(
+        grpc::ServerContext *context, const UsersBack_Maestro::AskFileDownloadRequest *request,
+        UsersBack_Maestro::AskFileDownloadStatus *response
+    ) override;
+
+    grpc::Status fileDownload(
+        grpc::ServerContext *context, const UsersBack_Maestro::FileDownloadRequest *request, File::File *response
+    ) override;
+
+    grpc::Status getFilesIndex(
+        grpc::ServerContext *context, const UsersBack_Maestro::GetFilesIndexRequest *request,
+        UsersBack_Maestro::GetFilesIndexStatus *response
+    ) override;
 
   private:
-    // mongocxx::gridfs::bucket _fileBucket;
-
-    StatsUserDiskInfoSchema _statsUserDiskInfoSchema;
+    FilesSchemas &_filesSchemas;
+    StatsSchemas &_statsSchemas;
+    const GrpcClients &_clients;
 };
 
-#endif /* MAESTRO_FILESERVER_HPP */
+#endif

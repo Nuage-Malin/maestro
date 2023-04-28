@@ -15,6 +15,8 @@ grpc::Status TemplateService::_procedureRunner(std::function<grpc::Status()> cal
 
     try {
         return callback();
+    } catch (const RequestFailureException &error) {
+        return _manageErrors(error, location);
     } catch (const mongocxx::query_exception &error) {
         return _manageErrors(error, location);
     } catch (const std::out_of_range &error) {
@@ -24,6 +26,13 @@ grpc::Status TemplateService::_procedureRunner(std::function<grpc::Status()> cal
     } catch (const std::exception &error) {
         return _manageErrors(error, location);
     }
+}
+
+grpc::Status TemplateService::_manageErrors(const RequestFailureException &error, const std::source_location &location)
+{
+    std::cerr << "[" << this->_getErrorCaller(location) << "] RequestFailureException: " << error.what() << std::endl;
+
+    return grpc::Status(grpc::StatusCode::ABORTED, "Query exception", error.what());
 }
 
 grpc::Status TemplateService::_manageErrors(const mongocxx::query_exception &error, const std::source_location &location)

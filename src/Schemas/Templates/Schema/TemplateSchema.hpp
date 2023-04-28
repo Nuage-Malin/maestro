@@ -9,13 +9,17 @@
 #ifndef MAESTRO_TEMPLATE_SCHEMA_HPP
 #define MAESTRO_TEMPLATE_SCHEMA_HPP
 
+#include <optional>
+
 #include <mongocxx/database.hpp>
 
 #include "utils.hpp"
 
 class TemplateSchema {
   public:
-    TemplateSchema(const mongocxx::database &database, const string &collectionName);
+    TemplateSchema(
+        const mongocxx::database &database, const string &collectionName
+    );
     ~TemplateSchema() = default;
 
   protected:

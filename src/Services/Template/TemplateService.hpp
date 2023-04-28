@@ -15,6 +15,7 @@
 #include <mongocxx/exception/query_exception.hpp>
 
 #include "utils.hpp"
+#include "Exceptions/RequestFailure/RequestFailureException.hpp"
 
 class TemplateService {
   protected:
@@ -27,6 +28,8 @@ class TemplateService {
     );
 
   private:
+    grpc::Status
+    _manageErrors(const RequestFailureException &error, const std::source_location &location = std::source_location::current());
     grpc::Status
     _manageErrors(const mongocxx::query_exception &error, const std::source_location &location = std::source_location::current());
     grpc::Status
