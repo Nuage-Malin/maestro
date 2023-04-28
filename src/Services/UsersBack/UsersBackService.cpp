@@ -65,6 +65,19 @@ grpc::Status UsersBackService::getUserConsumption(
     });
 }
 
+grpc::Status UsersBackService::getUserDiskSpace(
+    UNUSED grpc::ServerContext *context, const UsersBack_Maestro::GetUserDiskSpaceRequest *request,
+    UsersBack_Maestro::GetUserDiskSpaceStatus *response
+)
+{
+    return this->_procedureRunner([this, request, response]() {
+        const uint64 &diskSpace = this->_statsSchemas.userDiskInfo.getUserDiskSpace(request->userid(), Date(request->date()));
+
+        response->set_useddiskspace(diskSpace);
+        return grpc::Status::OK;
+    });
+}
+
 grpc::Status UsersBackService::askFileDownload(
     UNUSED grpc::ServerContext *context, const UsersBack_Maestro::AskFileDownloadRequest *request,
     UsersBack_Maestro::AskFileDownloadStatus *response

@@ -34,6 +34,11 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         UsersBack_Maestro::GetUserConsumptionStatus *response
     ) override;
 
+    grpc::Status getUserDiskSpace(
+        grpc::ServerContext *context, const UsersBack_Maestro::GetUserDiskSpaceRequest *request,
+        UsersBack_Maestro::GetUserDiskSpaceStatus *response
+    ) override;
+
     grpc::Status askFileDownload(
         grpc::ServerContext *context, const UsersBack_Maestro::AskFileDownloadRequest *request,
         UsersBack_Maestro::AskFileDownloadStatus *response
