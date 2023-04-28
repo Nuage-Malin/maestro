@@ -3,7 +3,9 @@ name: Unit tests
 on:
   workflow_run:
     workflows: [ "Check compilation" ]
-    branches: [ main, develop ]
+    branches:
+      - main
+      - develop
     types:
       - completed
 
@@ -43,53 +45,8 @@ jobs:
           token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
           # secret containing a token allowing access to private repo (protobuf-interface submodule)
 
-      - name: Generate Makefile
-        run: cmake -D unit_tests=true -S . -B build
-
-      - name: Build tests
-        run: make -C build unit_tests
-
-      - name: Build project
-        run: make -C build
-
-      - name: Build Mongo loader
-        run: docker build -t mongo-loader -f ./datasets/Dockerfile.big-brain-loader datasets
-
       - name: Run MongoDB & maestro & unit tests
-        run: |
-          docker run -d -p 27017:27017 -e MONGO_INITDB_DATABASE=maestro -e MONGO_INITDB_ROOT_USERNAME=maestro_admin -e MONGO_INITDB_ROOT_PASSWORD=maestro_admin_password --name maestro-mongo mongo:6
-          ./build/maestro &
-          export MAESTRO_PID=$!
-          sleep 3
-          echo "Waiting MongoDB to be ready..."
-          until $(curl --output /dev/null --silent --fail http://localhost:27017); do
-            if [ "$( docker container inspect -f '{{.State.Status}}' maestro-mongo )" != "running" ]; then
-              echo "::error::MongoDB exited unexpectedly"
-              exit 1
-            fi
-            printf '.'
-            sleep 1
-          done
-          echo "MongoDB is ready"
-          docker run --rm --network host -e MONGO_LOGS_NAME=logs -e MONGO_LOGS_URI=mongodb://maestro_admin:maestro_admin_password@localhost:27017/logs?authSource=admin mongo-loader
-          echo "Waiting maestro to be ready..."
-          while ! nc -z localhost 8080; do
-            if ! ps -p $MAESTRO_PID > /dev/null; then
-              echo "::error file=./build/maestro::Maestro exited unexpectedly"
-              exit 1
-            fi
-            printf '.'
-            sleep 1
-          done
-          echo "Maestro is ready"
-          echo "Run unit tests"
-          ./build/unit_tests > /tmp/unit_tests.log
-        env:
-          MAESTRO_ADDRESS: "[::]:8080"
-          MAESTRO_MONGO_URL: mongodb://maestro_admin:maestro_admin_password@localhost:27017/maestro?authSource=admin
-          DOWNLOAD_WAITING_TIME: 42
-          MAESTRO_TESTS_HOST: localhost
-          MAESTRO_TESTS_PORT: 8080
+        run: ./scripts/unit_tests.sh --local --mongo > /tmp/unit_tests.log
 
       - name: Result
         if: always()
