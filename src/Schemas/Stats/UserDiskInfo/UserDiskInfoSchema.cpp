@@ -1,13 +1,13 @@
 /**
- * @file StatsUserDiskInfoSchema.cpp
+ * @file UserDiskInfoSchema.cpp
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 18/02/2023
  * @copyright Nuage Malin
  */
 
 #include "schemas.hpp"
-#include "StatsUserDiskInfoSchema.hpp"
-#include "Schemas/Stats/DiskWakeup/StatsDiskWakeupSchema.hpp"
+#include "UserDiskInfoSchema.hpp"
+#include "Schemas/Stats/DiskWakeup/DiskWakeupSchema.hpp"
 
 StatsUserDiskInfoSchema::StatsUserDiskInfoSchema(const mongocxx::database &database) : TemplateSchema(database, "userDiskInfo")
 {

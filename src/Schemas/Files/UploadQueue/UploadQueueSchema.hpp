@@ -8,8 +8,6 @@
 #ifndef MAESTRO_FILES_UPLOADQUEUE_SCHEMA_HPP
 #define MAESTRO_FILES_UPLOADQUEUE_SCHEMA_HPP
 
-#include <mongocxx/database.hpp>
-
 #include "Maestro_Vault/Maestro_Vault.grpc.pb.h"
 
 #include "mongocxx.hpp"

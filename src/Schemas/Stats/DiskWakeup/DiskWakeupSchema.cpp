@@ -5,7 +5,7 @@
  * @copyright Nuage Malin
  */
 
-#include "StatsDiskWakeupSchema.hpp"
+#include "DiskWakeupSchema.hpp"
 
 StatsDiskWakeupSchema::StatsDiskWakeupSchema(const mongocxx::database &database) : TemplateSchema(database, "diskWakeup")
 {

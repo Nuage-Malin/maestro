@@ -16,7 +16,7 @@ namespace MongoCXX
 {
     class Mongo {
       public:
-        Mongo();
+        Mongo(const EventsManager &events);
         ~Mongo() = default;
 
         NODISCARD FilesSchemas getFilesSchemas() const;
@@ -24,6 +24,7 @@ namespace MongoCXX
 
       private:
         mongocxx::client _client;
+        const EventsManager &_events;
     };
 }; // namespace MongoCXX
 

@@ -5,6 +5,8 @@
  * @copyright Nuage Malin
  */
 
+#include <sstream>
+
 #include "schemas.hpp"
 #include "UploadQueueSchema.hpp"
 #include "Utils/Date/Date.hpp"
@@ -29,8 +31,7 @@ void FilesUploadQueueSchema::uploadFile(const string &fileId, const string &user
 std::pair<std::vector<MongoCXX::ValueView>, Maestro_Vault::UploadFilesRequest>
 FilesUploadQueueSchema::getDiskFiles(const string &diskId)
 {
-    const bsoncxx::document::value filter = makeDocument(makeField("metadata.diskId", diskId));
-    const mongocxx::options::find options;
+    const MongoCXX::Document filter = makeDocument(makeField("metadata.diskId", diskId));
     mongocxx::cursor cursor = this->_fileBucket.find(filter.view());
     Maestro_Vault::UploadFilesRequest result;
     std::vector<MongoCXX::ValueView> filesId;
@@ -56,7 +57,7 @@ FilesUploadQueueSchema::getDiskFiles(const string &diskId)
 
 std::unordered_set<string> FilesUploadQueueSchema::getFilesDisk()
 {
-    const bsoncxx::document::value filter = makeDocument();
+    const MongoCXX::Document filter = makeDocument();
     mongocxx::options::find options;
 
     options.projection(makeDocument(makeField("_id", false), makeField("metadata.diskId", true)));

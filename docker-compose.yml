@@ -2,50 +2,61 @@ version: '3.9'
 
 services:
     maestro:
+        profiles:
+            - launch
         build: .
         container_name: maestro
+        # todo every service should be able to reach from santaclaus with this name (in respective docker compose)
         environment:
-            MAESTRO_ADDRESS: "[::]:8080"
-            MAESTRO_MONGO_URL: mongodb://admin:big_brain@big-brain:27017/maestro?authSource=admin
+            MAESTRO_ADDRESS: ${MAESTRO_ADDRESS}
+            MAESTRO_MONGO_URL: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MONGO_PORT}/maestro?authSource=admin
             DOWNLOAD_WAITING_TIME: 86400 # 24 hours (seconds * minutes * hours)
         expose:
-            - 8080
+            - ${MAESTRO_PORT}
         networks:
-            - big-brain
+            - mongo
             - users-back:maestro
             - chouf:maestro
         depends_on:
-            - big-brain
+            - mongo
         restart: always
 
-    big-brain:
+    mongo:
+        profiles:
+            - launch
+            - mongo
         image: mongo:6
         environment:
-            MONGO_INITDB_DATABASE: maestro
-            MONGO_INITDB_ROOT_USERNAME: admin
-            MONGO_INITDB_ROOT_PASSWORD: big_brain
-        expose:
-            - 27017
+            MONGO_INITDB_DATABASE: ${MAESTRO_MONGO_DB}
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+        ports:
+            - ${MONGO_PORT}:${MONGO_PORT}
         networks:
-            - big-brain
+            - mongo
         volumes:
-            - big-brain:/data/db
+            - mongo:/data/db
         restart: always
 
-    big-brain-loader:
+    mongo-loader:
+        profiles:
+            - launch
+            - mongo
         build:
             context: datasets
-            dockerfile: Dockerfile.big-brain-loader
+            dockerfile: Dockerfile.mongo-loader
         environment:
             MONGO_LOGS_NAME: logs
-            MONGO_LOGS_URI: mongodb://admin:big_brain@big-brain:27017/logs?authSource=admin
+            MONGO_LOGS_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MAESTRO_PORT}/logs?authSource=admin
         networks:
-            - big-brain
+            - mongo
         depends_on:
-            - big-brain
+            - mongo
         restart: on-failure
 
     documentation:
+        profiles:
+            - documentation # todo change this in github actions
         build:
             context: .
             dockerfile: Dockerfile.documentation
@@ -53,11 +64,11 @@ services:
             - 50051:80
 
 networks:
-    big-brain: null
+    mongo: null
     users-back:maestro:
         external: true
     chouf:maestro:
         external: true
 
 volumes:
-    big-brain: null
+    mongo: null

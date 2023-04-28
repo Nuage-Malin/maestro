@@ -1,6 +1,15 @@
 #!/bin/bash
 # Installing gRPC according to official website : https://grpc.io/docs/languages/cpp/quickstart/
 
+check_exit_failure()
+{
+    if [ $? -ne 0 ]
+    then
+        echo "$1" 1>&2
+        exit 1
+    fi
+}
+
 if [ ! $INSTALL_DIR ]; then
     INSTALL_DIR=$HOME/.local
 fi
@@ -21,6 +30,7 @@ if [ $OS_DISTRIB = "ubuntu" ]; then
             autoconf        \
             libtool         \
             pkg-config
+        check_exit_failure "Failed to install gRPC dependencies"
     else
         apt-get install -y      \
             cmake           \
@@ -28,19 +38,23 @@ if [ $OS_DISTRIB = "ubuntu" ]; then
             autoconf        \
             libtool         \
             pkg-config
+        check_exit_failure "Failed to install gRPC dependencies"
     fi
 elif [ $OS_DISTRIB = "fedora" ]; then
     if ! dnf list installed | grep libtool; then
         if [ `command -v sudo` ]; then
             sudo dnf install    \
                 libtool
+            check_exit_failure "Failed to install gRPC dependencies"
         else
             dnf install \
                 libtool
+            check_exit_failure "Failed to install gRPC dependencies"
         fi
     fi
 else
     echo "Unknown OS distribution $OS_DISTRIB"
+    exit 1
 fi
 
 pushd $CLONE_DIR
@@ -49,22 +63,23 @@ if [ "$GRPC_CLONE_SUBMODULE" == "true" ]; then
 
     if [ $OS_DISTRIB = "ubuntu" ]; then
         if [ `command -v sudo` ]; then
-            ## install git
             sudo apt-get install -y git
+            check_exit_failure "Failed to install git"
         else
-            ## install git
             apt-get install -y git
+            check_exit_failure "Failed to install git"
         fi
     elif [ $OS_DISTRIB = "fedora" ]; then
         if [ `command -v sudo` ]; then
-            ## install git
             sudo dnf install git
+            check_exit_failure "Failed to install git"
         else
-            ## install git
             dnf install git
+            check_exit_failure "Failed to install git"
         fi
     else
         echo "Unknown OS distribution $OS_DISTRIB"
+        exit 1
     fi
 
     if [ ! -d grpc ]; then
@@ -78,10 +93,14 @@ fi
 if [ "$GRPC_CLONE_SUBMODULE" == "true" ] || [ "$GRPC_RECOMPILE" == "true"  ]; then
   ## compile gRPC
   cd grpc
+  check_exit_failure "Failed to go into grpc folder"
   mkdir -p cmake/build
   pushd cmake/build
+  check_exit_failure "Failed to go into grpc/cmake/build folder"
   cmake ../..
+  check_exit_failure "Failed to cmake grpc"
   make -j $((`nproc` - 1))
+  check_exit_failure "Failed to make grpc"
 fi
 
 if [ "$GRPC_FULL_INSTALL" == "true" ]; then
@@ -94,22 +113,33 @@ if [ "$GRPC_FULL_INSTALL" == "true" ]; then
             -DABSL_ENABLE_INSTALL=ON \
             ../..
             ## todo install on entire system is useless if used as submodule ?
+    check_exit_failure "Failed to cmake grpc (full install)"
 
     export PATH="$INSTALL_DIR/bin:$PATH"
 
-    ## TODO put that into $HOME/.zshrc or $HOME/.bashrc
-    ##  with one of these command lines
-    ZSH=$( ( env | grep SHELL | grep zsh) )
-    if [ $ZSH ]; then
+    echo "SHELL: $SHELL"
+    ZSH=$( ( echo $SHELL | grep zsh) )
+    if ! [[ -z $ZSH ]] && (! cat $HOME/.zshrc | grep PATH | grep "$INSTALL_DIR/bin"); then
         echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.zshrc
-    else
+        echo "zshrc:"
+        cat $HOME/.zshrc
+    elif (! cat $HOME/.bashrc | grep PATH | grep "$INSTALL_DIR/bin"); then
         echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.bashrc
-        ## todo add other possible shells
+        echo "bashrc:"
+        cat $HOME/.bashrc
+    else
+        echo "gRPC path already added to PATH"
     fi
+    echo "Install directory : $INSTALL_DIR"
+    echo "PATH : $PATH"
+
 
     nbr_cpu=`nproc`
+    check_exit_failure "Failed to get number of cpu"
     make -j $((`nproc` - 1))
+    check_exit_failure "Failed to make grpc (full install)"
     make install
+    check_exit_failure "Failed to install grpc (full install)"
     popd
     popd
 fi

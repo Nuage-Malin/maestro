@@ -1,5 +1,5 @@
 /**
- * @file StatsUserDiskInfoSchema.hpp
+ * @file UserDiskInfoSchema.hpp
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 18/02/2023
  * @copyright Nuage Malin
