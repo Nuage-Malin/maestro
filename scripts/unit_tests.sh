@@ -139,7 +139,7 @@ if $ARG_LOCAL; then
     set +e
 fi
 
-echo "Waiting MongoDB to be ready..."
+echo "Waiting for MongoDB to be ready..."
 
 until $(curl --output /dev/null --silent --fail http://localhost:27017); do
     if $ARG_DOCKER && [ "$( docker container inspect -f '{{.State.Status}}' maestro-mongo )" != "running" ]; then
@@ -151,19 +151,22 @@ until $(curl --output /dev/null --silent --fail http://localhost:27017); do
 done
 echo -e "\nMongoDB is ready"
 
-echo "Waiting maestro to be ready..."
-if $ARG_LOCAL && ! ps -p $LOCAL_PID > /dev/null; then
-    echo "Maestro exited unexpectedly"
-    exit_gracefully 1
+if $ARG_LOCAL ; then
+  echo "Waiting for maestro to be ready..."
+  if ! ps -p $LOCAL_PID > /dev/null; then
+      echo "Maestro exited unexpectedly"
+      exit_gracefully 1
+  fi
+  while ! nc -z localhost 8080; do
+      if ! ps -p $LOCAL_PID > /dev/null; then
+          echo "Maestro exited unexpectedly"
+          exit_gracefully 1
+      fi
+      printf '.'
+      sleep 1
+  done
 fi
-while ! nc -z localhost 8080; do
-    if $ARG_LOCAL && ! ps -p $LOCAL_PID > /dev/null; then
-        echo "Maestro exited unexpectedly"
-        exit_gracefully 1
-    fi
-    printf '.'
-    sleep 1
-done
+
 echo -e "\nMaestro is ready"
 
 ./build/unit_tests
