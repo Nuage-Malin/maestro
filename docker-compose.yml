@@ -7,8 +7,7 @@ services:
         build: .
         container_name: maestro
         env_file:
-            - ${MAESTRO_BUILD_ENV_FILE}
-            - ${MAESTRO_RUN_ENV_FILE}
+            - ${MAESTRO_ENV_FILE}
         environment:
             DOWNLOAD_WAITING_TIME: 86400 # 24 hours (seconds * minutes * hours)
         expose:

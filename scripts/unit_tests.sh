@@ -23,10 +23,10 @@ exit_gracefully()
     fi
 
     if $ARG_DOCKER; then
-        docker compose --env-file ./env/unit_tests_build.env --profile launch down
+        docker compose --env-file ./env/unit_tests.env --profile launch down
     fi
     if $ARG_MONGO; then
-        docker compose --env-file ./env/unit_tests_build.env --profile mongo down
+        docker compose --env-file ./env/unit_tests.env --profile mongo down
     fi
 
     exit $1
@@ -106,8 +106,7 @@ check_environments()
 check_environments
 
 set -o allexport
-source ./env/unit_tests_build.env
-source ./env/unit_tests_run.env
+source ./env/unit_tests.env
 set +o allexport
 
 if $ARG_CMAKE; then
@@ -122,19 +121,19 @@ make -C build unit_tests
 check_exit_failure "[Unit tests] compilation failed"
 
 if $ARG_DOCKER; then
-    docker compose --env-file ./env/unit_tests_build.env --profile launch build
+    docker compose --env-file ./env/unit_tests.env --profile launch build
     check_exit_failure "[Unit tests] docker build failed"
 fi
 if $ARG_MONGO; then
-    docker compose --env-file ./env/unit_tests_build.env --profile mongo build
+    docker compose --env-file ./env/unit_tests.env --profile mongo build
     check_exit_failure "[Unit tests] mongo build failed"
 fi
 if $ARG_DOCKER; then
-    docker compose --env-file ./env/unit_tests_build.env --profile launch up -d
+    docker compose --env-file ./env/unit_tests.env --profile launch up -d
     check_exit_failure "[Unit tests] docker build failed"
 fi
 if $ARG_MONGO; then
-    docker compose --env-file ./env/unit_tests_build.env --profile mongo up -d
+    docker compose --env-file ./env/unit_tests.env --profile mongo up -d
     check_exit_failure "[Unit tests] mongo build failed"
     sleep 3
 fi
