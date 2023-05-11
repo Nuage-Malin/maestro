@@ -141,7 +141,7 @@ fi
 
 echo "Waiting MongoDB to be ready..."
 
-until $(curl --output /dev/null --silent --fail http://localhost:27017); do
+until $(curl --output /dev/null --silent --fail http://localhost:$MONGO_PORT); do
     if $ARG_DOCKER && [ "$( docker container inspect -f '{{.State.Status}}' maestro-mongo )" != "running" ]; then
         echo "MongoDB exited unexpectedly" >&2
         exit_gracefully 1
