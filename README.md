@@ -16,7 +16,7 @@ make -C build
 
 ## Docker
 ```shell
-docker compose --env-file ./env/maestro_build.env --profile launch up --build
+docker compose --env-file ./env/maestro.env --profile launch up --build
 ```
 
 ## Test
