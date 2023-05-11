@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ARG_CMAKE=false # --cmake
+ARG_BUILD=false # --build (maestro)
 ARG_LOCAL=false # --local
 ARG_MONGO=false # --mongo
 ARG_DOCKER=false # --docker
@@ -9,7 +10,7 @@ LOCAL_PID=0
 
 usage()
 {
-    echo "Usage: $0 [--cmake] [--local] [--docker] [--mongo]" 1>&2
+    echo "Usage: $0 [--cmake] [--build] [--local] [--docker] [--mongo]" 1>&2
     exit 1
 }
 
@@ -22,10 +23,10 @@ exit_gracefully()
     fi
 
     if $ARG_DOCKER; then
-        docker compose --env-file ./env/unit_tests.env --profile launch down
+        docker compose --env-file ./env/unit_tests_build.env --profile launch down
     fi
     if $ARG_MONGO; then
-        docker compose --env-file ./env/unit_tests.env --profile mongo down
+        docker compose --env-file ./env/unit_tests_build.env --profile mongo down
     fi
 
     exit $1
@@ -47,6 +48,9 @@ for arg in "$@"; do
         ;;
         --cmake)
             ARG_CMAKE=true
+        ;;
+        --build)
+            ARG_BUILD=true
         ;;
         --local)
             ARG_LOCAL=true
@@ -102,31 +106,35 @@ check_environments()
 check_environments
 
 set -o allexport
-source ./env/unit_tests.env
-source ./env/local_unit_tests.env
+source ./env/unit_tests_build.env
+source ./env/unit_tests_run.env
 set +o allexport
 
 if $ARG_CMAKE; then
     cmake -D unit_tests=true -S . -B build
     check_exit_failure "[Unit tests] cmake failed"
 fi
+if $ARG_BUILD; then
+    make -C build maestro
+    check_exit_failure "[Unit tests] compilation failed"
+fi
 make -C build unit_tests
 check_exit_failure "[Unit tests] compilation failed"
 
 if $ARG_DOCKER; then
-    docker compose --env-file ./env/unit_tests.env --profile launch build
+    docker compose --env-file ./env/unit_tests_build.env --profile launch build
     check_exit_failure "[Unit tests] docker build failed"
 fi
 if $ARG_MONGO; then
-    docker compose --env-file ./env/unit_tests.env --profile mongo build
+    docker compose --env-file ./env/unit_tests_build.env --profile mongo build
     check_exit_failure "[Unit tests] mongo build failed"
 fi
 if $ARG_DOCKER; then
-    docker compose --env-file ./env/unit_tests.env --profile launch up -d
+    docker compose --env-file ./env/unit_tests_build.env --profile launch up -d
     check_exit_failure "[Unit tests] docker build failed"
 fi
 if $ARG_MONGO; then
-    docker compose --env-file ./env/unit_tests.env --profile mongo up -d
+    docker compose --env-file ./env/unit_tests_build.env --profile mongo up -d
     check_exit_failure "[Unit tests] mongo build failed"
     sleep 3
 fi
@@ -149,6 +157,7 @@ until $(curl --output /dev/null --silent --fail http://localhost:$MONGO_PORT); d
     printf '.'
     sleep 1
 done
+docker logs maestro-mongo-loader -f
 echo -e "\nMongoDB is ready"
 
 echo "Waiting maestro to be ready..."
@@ -168,3 +177,4 @@ echo -e "\nMaestro is ready"
 
 ./build/unit_tests
 check_exit_failure "[Unit tests] tests failed"
+exit_gracefully 0

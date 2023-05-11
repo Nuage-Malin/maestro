@@ -28,7 +28,7 @@ bool UsersBackClient::getUserConsumption(
     grpc::Status status = this->_client->getUserConsumption(&context, request, &response);
 
     if (!status.ok()) {
-        std::cerr << __FUNCTION__ << " request failed" << std::endl;
+        std::cerr << __FUNCTION__ << " request failed: " << status.error_message() << std::endl;
         return false;
     }
     return true;

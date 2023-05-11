@@ -6,10 +6,9 @@ services:
             - launch
         build: .
         container_name: maestro
-        # todo every service should be able to reach from santaclaus with this name (in respective docker compose)
+        env_file:
+            - ${MAESTRO_ENV_FILE}
         environment:
-            MAESTRO_ADDRESS: ${MAESTRO_ADDRESS}
-            MAESTRO_MONGO_URL: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MONGO_PORT}/maestro?authSource=admin
             DOWNLOAD_WAITING_TIME: 86400 # 24 hours (seconds * minutes * hours)
         expose:
             - ${MAESTRO_PORT}
@@ -31,7 +30,7 @@ services:
             MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
             MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
         ports:
-            - ${MONGO_PORT}:${MONGO_PORT}
+            - 27017:${MONGO_PORT}
         networks:
             - mongo
         volumes:
@@ -45,9 +44,10 @@ services:
         build:
             context: datasets
             dockerfile: Dockerfile.mongo-loader
+        container_name: maestro-mongo-loader
         environment:
             MONGO_LOGS_NAME: logs
-            MONGO_LOGS_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MAESTRO_PORT}/logs?authSource=admin
+            MONGO_LOGS_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MONGO_PORT}/logs?authSource=admin
         networks:
             - mongo
         depends_on:
