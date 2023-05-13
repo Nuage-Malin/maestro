@@ -13,7 +13,7 @@ TEST(UploadQueue, getFilesDisk)
 {
     FilesSchemas filesSchemas = getCommonMongo().getFilesSchemas();
     filesSchemas.uploadQueue.uploadFile("fileIdTest", "userIdTest", "diskIdTest", "contentTest");
-    std::unordered_set<string> diskIds = filesSchemas.uploadQueue.getFilesDisk();
+    const std::unordered_set<string> &diskIds = filesSchemas.uploadQueue.getFilesDisk();
 
     ASSERT_EQ(diskIds.size(), 1);
     ASSERT_EQ(diskIds.count("diskIdTest"), 1);

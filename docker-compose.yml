@@ -71,4 +71,5 @@ networks:
         external: true
 
 volumes:
-    mongo: null
+    mongo:
+        name: ${MONGO_VOLUME}

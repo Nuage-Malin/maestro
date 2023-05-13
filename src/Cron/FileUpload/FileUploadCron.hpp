@@ -12,7 +12,6 @@
 #include "clients.hpp"
 #include "EventsManager.hpp"
 #include "Cron/Template/TemplateCron.hpp"
-#include "Schemas/Files/UploadQueue/UploadQueueSchema.hpp"
 
 class FileUploadCron : public TemplateCron {
   public:

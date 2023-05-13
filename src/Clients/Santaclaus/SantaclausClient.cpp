@@ -65,3 +65,67 @@ SantaclausClient::getDirectory(const string &userId, const std::optional<string>
         throw RequestFailureException(status);
     return response;
 }
+
+Maestro_Santaclaus::MoveFileStatus
+SantaclausClient::moveFile(const string &fileId, const std::optional<string> &name, const std::optional<string> &dirId) const
+{
+    grpc::ClientContext context;
+    Maestro_Santaclaus::MoveFileStatus response;
+    Maestro_Santaclaus::MoveFileRequest request;
+
+    request.set_fileid(fileId);
+    if (name.has_value()) {
+        request.set_newfilename(name.value());
+    }
+    if (dirId.has_value()) {
+        request.set_dirid(dirId.value());
+    }
+    auto status = _stub->moveFile(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status);
+    return response;
+}
+
+Maestro_Santaclaus::RemoveFileStatus SantaclausClient::virtualRemoveFile(const string &fileId) const
+{
+    grpc::ClientContext context;
+    Maestro_Santaclaus::RemoveFileStatus response;
+    Maestro_Santaclaus::RemoveFileRequest request;
+
+    request.set_fileid(fileId);
+    auto status = _stub->virtualRemoveFile(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status);
+    return response;
+}
+
+// todo do same method for several files (present in Maestro_Santaclaus)
+Maestro_Santaclaus::RemoveFileStatus SantaclausClient::physicalRemoveFile(const string &fileId) const
+{
+    grpc::ClientContext context;
+    Maestro_Santaclaus::RemoveFileStatus response;
+    Maestro_Santaclaus::RemoveFileRequest request;
+
+    request.set_fileid(fileId);
+    auto status = _stub->physicalRemoveFile(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status);
+    return response;
+}
+
+Maestro_Santaclaus::RemoveDirectoryStatus SantaclausClient::removeDirectory(const string &dirId) const
+{
+    grpc::ClientContext context;
+    Maestro_Santaclaus::RemoveDirectoryRequest request;
+    Maestro_Santaclaus::RemoveDirectoryStatus response;
+
+    request.set_dirid(dirId);
+    auto status = _stub->removeDirectory(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status);
+    return response;
+}

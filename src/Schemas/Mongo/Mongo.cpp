@@ -33,7 +33,8 @@ FilesSchemas MongoCXX::Mongo::getFilesSchemas() const
     return {
         .uploadQueue = FilesUploadQueueSchema(filesDatabase),
         .downloadedStack = FilesDownloadedStackSchema(filesDatabase, this->_events),
-        .downloadQueue = FilesDownloadQueueSchema(filesDatabase)};
+        .downloadQueue = FilesDownloadQueueSchema(filesDatabase),
+        .removeQueue = FilesRemoveQueueSchema(filesDatabase)};
 }
 
 StatsSchemas MongoCXX::Mongo::getStatsSchemas() const

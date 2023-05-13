@@ -53,6 +53,30 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         UsersBack_Maestro::GetFilesIndexStatus *response
     ) override;
 
+    grpc::Status fileMove(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::FileMoveRequest *request,
+        ::UsersBack_Maestro::FileMoveStatus *response
+    ) override;
+
+    grpc::Status fileRemove(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::FileRemoveRequest *request,
+        ::UsersBack_Maestro::FileRemoveStatus *response
+    ) override;
+    grpc::Status filesRemove(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::FilesRemoveRequest *request,
+        ::UsersBack_Maestro::FilesRemoveStatus *response
+    ) override;
+
+    grpc::Status dirRemove(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::DirRemoveRequest *request,
+        ::UsersBack_Maestro::DirRemoveStatus *response
+    ) override;
+
+    grpc::Status dirMove(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::DirMoveRequest *request,
+        ::UsersBack_Maestro::DirMoveStatus *response
+    ) override;
+
   private:
     FilesSchemas &_filesSchemas;
     StatsSchemas &_statsSchemas;

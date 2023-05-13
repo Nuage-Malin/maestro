@@ -29,7 +29,7 @@ void VaultClient::uploadFile(const string &fileId, const string &userId, const s
     request.set_userid(userId);
     request.set_diskid(diskId);
     request.set_content(content);
-    grpc::Status status = this->_stub->uploadFile(&context, request, &response);
+    const grpc::Status status = this->_stub->uploadFile(&context, request, &response);
 
     if (!status.ok())
         throw RequestFailureException(status);
@@ -39,7 +39,7 @@ void VaultClient::uploadFiles(const Maestro_Vault::UploadFilesRequest &files) co
 {
     grpc::ClientContext context;
     Maestro_Vault::UploadFilesStatus response;
-    grpc::Status status = this->_stub->uploadFiles(&context, files, &response);
+    const grpc::Status status = this->_stub->uploadFiles(&context, files, &response);
 
     if (!status.ok())
         throw RequestFailureException(status);
@@ -54,7 +54,7 @@ string VaultClient::downloadFile(const string &fileId, const string &userId, con
     request.set_fileid(fileId);
     request.set_userid(userId);
     request.set_diskid(diskId);
-    grpc::Status status = this->_stub->downloadFile(&context, request, &response);
+    const grpc::Status status = this->_stub->downloadFile(&context, request, &response);
 
     if (!status.ok())
         throw RequestFailureException(status);
@@ -65,7 +65,29 @@ Maestro_Vault::DownloadFilesStatus VaultClient::downloadFiles(const Maestro_Vaul
 {
     grpc::ClientContext context;
     Maestro_Vault::DownloadFilesStatus response;
-    grpc::Status status = this->_stub->downloadFiles(&context, files, &response);
+    const grpc::Status status = this->_stub->downloadFiles(&context, files, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status);
+    return response;
+}
+
+Maestro_Vault::RemoveFileStatus VaultClient::removeFile(const Maestro_Vault::RemoveFileRequest &file) const
+{
+    grpc::ClientContext context;
+    Maestro_Vault::RemoveFileStatus response;
+    const grpc::Status status = this->_stub->removeFile(&context, file, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status);
+    return response;
+}
+
+Maestro_Vault::RemoveFilesStatus VaultClient::removeFiles(const Maestro_Vault::RemoveFilesRequest &files) const
+{
+    grpc::ClientContext context;
+    Maestro_Vault::RemoveFilesStatus response;
+    const grpc::Status status = this->_stub->removeFiles(&context, files, &response);
 
     if (!status.ok())
         throw RequestFailureException(status);

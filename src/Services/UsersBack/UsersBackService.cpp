@@ -160,3 +160,125 @@ grpc::Status UsersBackService::getFilesIndex(
         return grpc::Status::OK;
     });
 }
+
+grpc::Status UsersBackService::fileMove(
+    UNUSED grpc::ServerContext *, const ::UsersBack_Maestro::FileMoveRequest *request,
+    ::UsersBack_Maestro::FileMoveStatus *response
+)
+{
+    return this->_procedureRunner([this, request, response]() {
+        //        Maestro_Santaclaus::MoveFileRequest santaclausRequest;
+
+        //        santaclausRequest.set_fileid(request->fileid());
+        //        if (request->has_dirid())
+        //            santaclausRequest.set_dirid(request->dirid());
+        //        if (request->has_newfilename())
+        //            santaclausRequest.set_name(request->newfilename());
+
+        /* auto santaclausResponse = */ this->_clients.santaclaus.moveFile(
+            request->fileid(),
+            request->has_newfilename() ? std::optional(request->newfilename()) : std::nullopt,
+            request->has_dirid() ? std::optional(request->dirid()) : std::nullopt
+        );
+
+        return grpc::Status::OK;
+    });
+}
+
+grpc::Status UsersBackService::fileRemove(
+    UNUSED grpc::ServerContext *, const UsersBack_Maestro::FileRemoveRequest *request,
+    UsersBack_Maestro::FileRemoveStatus *response
+)
+{
+    return this->_procedureRunner([this, request, response]() {
+        auto file = this->_clients.santaclaus.getFile(request->fileid()); // get disk id from santaclaus
+
+        this->_clients.santaclaus.virtualRemoveFile(request->fileid());
+        if (this->_clients.hardwareMalin.diskStatus(file.diskid())) { // check if disk is turned on
+            Maestro_Vault::RemoveFileRequest my_request;
+
+            my_request.set_diskid(file.diskid());
+            my_request.set_fileid(request->fileid());
+            try {
+                const auto my_response = this->_clients.vault.removeFile(my_request);
+
+                this->_clients.santaclaus.physicalRemoveFile(request->fileid());
+            } catch (const RequestFailureException &e) { // if deletion in vault didn't succeed
+                this->_filesSchemas.removeQueue.add(file.diskid(), request->fileid());
+            }
+        } else { // if disk is turned off
+            this->_filesSchemas.removeQueue.add(file.diskid(), request->fileid());
+        }
+        return grpc::Status::OK;
+    });
+}
+
+grpc::Status UsersBackService::filesRemove(
+    UNUSED grpc::ServerContext *, const UsersBack_Maestro::FilesRemoveRequest *request,
+    UsersBack_Maestro::FilesRemoveStatus *response
+)
+{
+    return this->_procedureRunner([this, request, response]() {
+        std::unordered_map<string, std::unordered_set<string>> disksFiles;
+        // unordered_map with string as key, for diskId, unordered_set as value, to store each fileId corresponding to this diskId
+        string diskId;
+
+        for (const auto &fileId : request->fileid()) {
+            diskId = this->_clients.santaclaus.getFile(fileId).diskid();
+            disksFiles.find(diskId);
+            if (auto files = disksFiles.find(diskId); files != disksFiles.end()) {
+                files->second.insert(fileId); // todo is this iterator affecting the disksFiles (is it a reference) ?
+            } else {
+                std::unordered_set<string> newFiles;
+
+                newFiles.insert(fileId);
+                disksFiles.insert(std::make_pair(diskId, newFiles));
+            }
+        }
+
+        this->_clients.santaclaus.virtualRemoveFiles(request->fileid().begin(), request->fileid().end());
+        for (const auto &diskFiles : disksFiles) {
+            if (this->_clients.hardwareMalin.diskStatus(diskId)) { // check if disk is turned on
+                Maestro_Vault::RemoveFilesRequest my_request;
+                uint counter = 0;
+
+                my_request.set_diskid(diskId);
+                for (const auto &diskFile : diskFiles.second) {
+                    my_request.set_fileid(counter++, diskFile);
+                }
+                const auto my_response = this->_clients.vault.removeFiles(my_request);
+                try {
+                    this->_clients.santaclaus.physicalRemoveFiles(diskFiles.second.begin(), diskFiles.second.end());
+                } catch (const RequestFailureException &e) { // if deletion in vault didn't succeed
+                    this->_filesSchemas.removeQueue.add(diskId, diskFiles.second.begin(), diskFiles.second.end());
+                }
+            } else { // if disk is turned off
+                this->_filesSchemas.removeQueue.add(diskId, diskFiles.second.begin(), diskFiles.second.end());
+            }
+        }
+
+        return grpc::Status::OK;
+    });
+}
+
+grpc::Status UsersBackService::dirRemove(
+    UNUSED grpc::ServerContext *, const UsersBack_Maestro::DirRemoveRequest *request, UsersBack_Maestro::DirRemoveStatus *response
+)
+{
+    return this->_procedureRunner([this, request, response]() {
+        auto response = this->_clients.santaclaus.removeDirectory(request->dirid());
+
+        for (auto fileIdToRm : response.fileidstoremove()) {
+            this->_clients.santaclaus.virtualRemoveFile(fileIdToRm);
+        }
+        return grpc::Status::OK;
+    });
+}
+grpc::Status UsersBackService::dirMove(
+    UNUSED grpc::ServerContext *, const UsersBack_Maestro::DirMoveRequest *request, UsersBack_Maestro::DirMoveStatus *response
+)
+{
+    return this->_procedureRunner([this, request, response]() {
+        return grpc::Status::OK;
+    });
+}
