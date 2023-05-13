@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ARG_CMAKE=false # --cmake
+ARG_BUILD=false # --build (maestro)
 ARG_LOCAL=false # --local
 ARG_MONGO=false # --mongo
 ARG_DOCKER=false # --docker
@@ -9,7 +10,7 @@ LOCAL_PID=0
 
 usage()
 {
-    echo "Usage: $0 [--cmake] [--local] [--docker] [--mongo]" 1>&2
+    echo "Usage: $0 [--cmake] [--build] [--local] [--docker] [--mongo]" 1>&2
     exit 1
 }
 
@@ -47,6 +48,9 @@ for arg in "$@"; do
         ;;
         --cmake)
             ARG_CMAKE=true
+        ;;
+        --build)
+            ARG_BUILD=true
         ;;
         --local)
             ARG_LOCAL=true
@@ -103,12 +107,15 @@ check_environments
 
 set -o allexport
 source ./env/unit_tests.env
-source ./env/local_unit_tests.env
 set +o allexport
 
 if $ARG_CMAKE; then
     cmake -D unit_tests=true -S . -B build
     check_exit_failure "[Unit tests] cmake failed"
+fi
+if $ARG_BUILD; then
+    make -C build maestro
+    check_exit_failure "[Unit tests] compilation failed"
 fi
 make -C build unit_tests
 check_exit_failure "[Unit tests] compilation failed"
@@ -142,7 +149,7 @@ fi
 
 echo "Waiting for MongoDB to be ready..."
 
-until $(curl --output /dev/null --silent --fail http://localhost:27017); do
+until $(curl --output /dev/null --silent --fail http://localhost:$MONGO_PORT); do
     if $ARG_DOCKER && [ "$( docker container inspect -f '{{.State.Status}}' maestro-mongo )" != "running" ]; then
         echo "MongoDB exited unexpectedly" >&2
         exit_gracefully 1
@@ -150,6 +157,7 @@ until $(curl --output /dev/null --silent --fail http://localhost:27017); do
     printf '.'
     sleep 1
 done
+docker logs maestro-mongo-loader -f
 echo -e "\nMongoDB is ready"
 
 if $ARG_LOCAL ; then
@@ -172,3 +180,4 @@ echo -e "\nMaestro is ready"
 
 ./build/unit_tests
 check_exit_failure "[Unit tests] tests failed"
+exit_gracefully 0

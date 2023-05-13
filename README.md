@@ -14,6 +14,11 @@ make -C build
 ./executable
 ```
 
+## Docker
+```shell
+docker compose --env-file ./env/maestro.env --profile launch up --build
+```
+
 ## Test
 
 ### Unit tests
