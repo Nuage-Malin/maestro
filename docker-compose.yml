@@ -33,6 +33,7 @@ services:
             - ${MONGO_PORT}:27017
         networks:
             - mongo
+            - chouf:maestro
         volumes:
             - mongo:/data/db
         restart: always
