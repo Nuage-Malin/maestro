@@ -48,6 +48,10 @@ class SantaclausClient {
         requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
     Maestro_Santaclaus::RemoveFilesStatus physicalRemoveFiles(StrIterator fileIdsBeg, const StrIterator &fileIdsEnd) const;
     Maestro_Santaclaus::RemoveDirectoryStatus removeDirectory(const string &dirId) const;
+    Maestro_Santaclaus::MoveDirectoryStatus moveDirectory(
+        const string &dirId, const std::optional<string> &name = std::nullopt,
+        const std::optional<string> &newLocationDirId = std::nullopt
+    ) const;
 
   private:
     std::unique_ptr<Maestro_Santaclaus::Maestro_Santaclaus_Service::Stub> _stub;
@@ -61,10 +65,9 @@ Maestro_Santaclaus::RemoveFilesStatus SantaclausClient::physicalRemoveFiles(StrI
     grpc::ClientContext context;
     Maestro_Santaclaus::RemoveFilesStatus response;
     Maestro_Santaclaus::RemoveFilesRequest request;
-    uint32_t index = 0;
 
     for (auto &fileId = fileIdsBeg; fileId != fileIdsEnd; fileId++) {
-        request.set_fileids(index++, fileId->data());
+        request.add_fileids(fileId->data());
     }
     auto status = this->_stub->physicalRemoveFiles(&context, request, &response);
 

@@ -129,3 +129,22 @@ Maestro_Santaclaus::RemoveDirectoryStatus SantaclausClient::removeDirectory(cons
         throw RequestFailureException(status);
     return response;
 }
+Maestro_Santaclaus::MoveDirectoryStatus SantaclausClient::moveDirectory(
+    const string &dirId, const std::optional<string> &name, const std::optional<string> &newLocationDirId
+) const
+{
+    grpc::ClientContext context;
+    Maestro_Santaclaus::MoveDirectoryRequest request;
+    Maestro_Santaclaus::MoveDirectoryStatus response;
+
+    request.set_dirid(dirId);
+    if (name.has_value())
+        request.set_name(name.value());
+    if (newLocationDirId.has_value())
+        request.set_newlocationdirid(newLocationDirId.value());
+    auto status = _stub->moveDirectory(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status);
+    return response;
+}

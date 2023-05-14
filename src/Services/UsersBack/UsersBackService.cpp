@@ -129,9 +129,8 @@ grpc::Status UsersBackService::fileDownload(
 
         metadata.set_isdownloadable(true);
 
-        File::File file;
-        file.set_content(this->_filesSchemas.downloadedStack.downloadFile(request->fileid()));
-        file.set_allocated_metadata(new File::FileMetadata(metadata));
+        response->set_content(this->_filesSchemas.downloadedStack.downloadFile(request->fileid()));
+        response->set_allocated_metadata(new File::FileMetadata(metadata));
 
         return grpc::Status::OK;
     });
@@ -161,20 +160,10 @@ grpc::Status UsersBackService::getFilesIndex(
     });
 }
 
-grpc::Status UsersBackService::fileMove(
-    UNUSED grpc::ServerContext *, const ::UsersBack_Maestro::FileMoveRequest *request,
-    ::UsersBack_Maestro::FileMoveStatus *response
-)
+grpc::Status UsersBackService::
+    fileMove(UNUSED grpc::ServerContext *, const ::UsersBack_Maestro::FileMoveRequest *request, UNUSED UsersBack_Maestro::FileMoveStatus *)
 {
-    return this->_procedureRunner([this, request, response]() {
-        //        Maestro_Santaclaus::MoveFileRequest santaclausRequest;
-
-        //        santaclausRequest.set_fileid(request->fileid());
-        //        if (request->has_dirid())
-        //            santaclausRequest.set_dirid(request->dirid());
-        //        if (request->has_newfilename())
-        //            santaclausRequest.set_name(request->newfilename());
-
+    return this->_procedureRunner([this, request]() {
         /* auto santaclausResponse = */ this->_clients.santaclaus.moveFile(
             request->fileid(),
             request->has_newfilename() ? std::optional(request->newfilename()) : std::nullopt,
@@ -185,12 +174,11 @@ grpc::Status UsersBackService::fileMove(
     });
 }
 
-grpc::Status UsersBackService::fileRemove(
-    UNUSED grpc::ServerContext *, const UsersBack_Maestro::FileRemoveRequest *request,
-    UsersBack_Maestro::FileRemoveStatus *response
-)
+// todo test
+grpc::Status UsersBackService::
+    fileRemove(UNUSED grpc::ServerContext *, const UsersBack_Maestro::FileRemoveRequest *request, UNUSED UsersBack_Maestro::FileRemoveStatus *)
 {
-    return this->_procedureRunner([this, request, response]() {
+    return this->_procedureRunner([this, request]() {
         auto file = this->_clients.santaclaus.getFile(request->fileid()); // get disk id from santaclaus
 
         this->_clients.santaclaus.virtualRemoveFile(request->fileid());
@@ -213,72 +201,40 @@ grpc::Status UsersBackService::fileRemove(
     });
 }
 
+// todo test
 grpc::Status UsersBackService::filesRemove(
     UNUSED grpc::ServerContext *, const UsersBack_Maestro::FilesRemoveRequest *request,
     UsersBack_Maestro::FilesRemoveStatus *response
 )
 {
     return this->_procedureRunner([this, request, response]() {
-        std::unordered_map<string, std::unordered_set<string>> disksFiles;
-        // unordered_map with string as key, for diskId, unordered_set as value, to store each fileId corresponding to this diskId
-        string diskId;
-
-        for (const auto &fileId : request->fileid()) {
-            diskId = this->_clients.santaclaus.getFile(fileId).diskid();
-            disksFiles.find(diskId);
-            if (auto files = disksFiles.find(diskId); files != disksFiles.end()) {
-                files->second.insert(fileId); // todo is this iterator affecting the disksFiles (is it a reference) ?
-            } else {
-                std::unordered_set<string> newFiles;
-
-                newFiles.insert(fileId);
-                disksFiles.insert(std::make_pair(diskId, newFiles));
-            }
-        }
-
-        this->_clients.santaclaus.virtualRemoveFiles(request->fileid().begin(), request->fileid().end());
-        for (const auto &diskFiles : disksFiles) {
-            if (this->_clients.hardwareMalin.diskStatus(diskId)) { // check if disk is turned on
-                Maestro_Vault::RemoveFilesRequest my_request;
-                uint counter = 0;
-
-                my_request.set_diskid(diskId);
-                for (const auto &diskFile : diskFiles.second) {
-                    my_request.set_fileid(counter++, diskFile);
-                }
-                const auto my_response = this->_clients.vault.removeFiles(my_request);
-                try {
-                    this->_clients.santaclaus.physicalRemoveFiles(diskFiles.second.begin(), diskFiles.second.end());
-                } catch (const RequestFailureException &e) { // if deletion in vault didn't succeed
-                    this->_filesSchemas.removeQueue.add(diskId, diskFiles.second.begin(), diskFiles.second.end());
-                }
-            } else { // if disk is turned off
-                this->_filesSchemas.removeQueue.add(diskId, diskFiles.second.begin(), diskFiles.second.end());
-            }
-        }
+        *response = this->actFilesRemove(request->fileid().begin(), request->fileid().end());
 
         return grpc::Status::OK;
     });
 }
 
-grpc::Status UsersBackService::dirRemove(
-    UNUSED grpc::ServerContext *, const UsersBack_Maestro::DirRemoveRequest *request, UsersBack_Maestro::DirRemoveStatus *response
-)
+grpc::Status UsersBackService::
+    dirRemove(UNUSED grpc::ServerContext *, const UsersBack_Maestro::DirRemoveRequest *request, UNUSED UsersBack_Maestro::DirRemoveStatus *)
 {
-    return this->_procedureRunner([this, request, response]() {
-        auto response = this->_clients.santaclaus.removeDirectory(request->dirid());
+    return this->_procedureRunner([this, request]() {
+        auto my_response = this->_clients.santaclaus.removeDirectory(request->dirid());
 
-        for (auto fileIdToRm : response.fileidstoremove()) {
-            this->_clients.santaclaus.virtualRemoveFile(fileIdToRm);
-        }
+        this->actFilesRemove(my_response.fileidstoremove().begin(), my_response.fileidstoremove().end());
+
         return grpc::Status::OK;
     });
 }
-grpc::Status UsersBackService::dirMove(
-    UNUSED grpc::ServerContext *, const UsersBack_Maestro::DirMoveRequest *request, UsersBack_Maestro::DirMoveStatus *response
-)
+grpc::Status UsersBackService::
+    dirMove(UNUSED grpc::ServerContext *, const UsersBack_Maestro::DirMoveRequest *request, UNUSED UsersBack_Maestro::DirMoveStatus *)
 {
-    return this->_procedureRunner([this, request, response]() {
+    return this->_procedureRunner([this, request]() {
+        this->_clients.santaclaus.moveDirectory(
+            request->dirid(),
+            request->has_name() ? std::optional(request->name()) : std::nullopt,
+            request->has_newlocationdirid() ? std::optional(request->newlocationdirid()) : std::nullopt
+        );
+
         return grpc::Status::OK;
     });
 }
