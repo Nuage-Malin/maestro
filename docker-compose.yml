@@ -16,6 +16,8 @@ services:
             - mongo
             - users-back:maestro
             - chouf:maestro
+            - maestro:santaclaus
+            - maestro:vault
         depends_on:
             - mongo
         restart: always
@@ -68,6 +70,10 @@ networks:
     users-back:maestro:
         external: true
     chouf:maestro:
+        external: true
+    maestro:santaclaus:
+        external: true
+    maestro:vault:
         external: true
 
 volumes:
