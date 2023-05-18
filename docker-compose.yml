@@ -38,7 +38,7 @@ services:
             - chouf:maestro
         volumes:
             - mongo:/data/db
-        restart: always
+        restart: unless-stopped
 
     mongo-loader:
         profiles:
@@ -50,7 +50,7 @@ services:
         container_name: maestro-mongo-loader
         environment:
             MONGO_LOGS_NAME: logs
-            MONGO_LOGS_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MONGO_PORT}/logs?authSource=admin
+            MONGO_LOGS_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:27017/logs?authSource=admin
         networks:
             - mongo
         depends_on:
