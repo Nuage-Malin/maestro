@@ -129,9 +129,8 @@ grpc::Status UsersBackService::fileDownload(
 
         metadata.set_isdownloadable(true);
 
-        File::File file;
-        file.set_content(this->_filesSchemas.downloadedStack.downloadFile(request->fileid()));
-        file.set_allocated_metadata(new File::FileMetadata(metadata));
+        response->set_content(this->_filesSchemas.downloadedStack.downloadFile(request->fileid()));
+        response->set_allocated_metadata(new File::FileMetadata(metadata));
 
         return grpc::Status::OK;
     });
@@ -157,6 +156,85 @@ grpc::Status UsersBackService::getFilesIndex(
             fileIndex->set_isdownloadable(this->_filesSchemas.downloadedStack.doesFileExist(file.fileid()));
         }
         response->set_allocated_subfiles(new File::FilesIndex(filesIndex));
+        return grpc::Status::OK;
+    });
+}
+
+grpc::Status UsersBackService::
+    fileMove(UNUSED grpc::ServerContext *, const ::UsersBack_Maestro::FileMoveRequest *request, UNUSED UsersBack_Maestro::FileMoveStatus *)
+{
+    return this->_procedureRunner([this, request]() {
+        /* auto santaclausResponse = */ this->_clients.santaclaus.moveFile(
+            request->fileid(),
+            request->has_newfilename() ? std::optional(request->newfilename()) : std::nullopt,
+            request->has_dirid() ? std::optional(request->dirid()) : std::nullopt
+        );
+
+        return grpc::Status::OK;
+    });
+}
+
+// todo test
+grpc::Status UsersBackService::
+    fileRemove(UNUSED grpc::ServerContext *, const UsersBack_Maestro::FileRemoveRequest *request, UNUSED UsersBack_Maestro::FileRemoveStatus *)
+{
+    return this->_procedureRunner([this, request]() {
+        auto file = this->_clients.santaclaus.getFile(request->fileid()); // get disk id from santaclaus
+
+        this->_clients.santaclaus.virtualRemoveFile(request->fileid());
+        if (!this->_clients.hardwareMalin.diskStatus(file.diskid())) { // check if disk is turned off
+            this->_filesSchemas.removeQueue.add(file.diskid(), request->fileid());
+        } else {                                                       // if disk is turned on
+            Maestro_Vault::RemoveFileRequest my_request;
+
+            my_request.set_diskid(file.diskid());
+            my_request.set_fileid(request->fileid());
+            try {
+                const auto my_response = this->_clients.vault.removeFile(my_request);
+
+                this->_clients.santaclaus.physicalRemoveFile(request->fileid());
+            } catch (const RequestFailureException &e) { // if deletion in vault didn't succeed
+                this->_filesSchemas.removeQueue.add(file.diskid(), request->fileid());
+            }
+        }
+        return grpc::Status::OK;
+    });
+}
+
+// todo test
+grpc::Status UsersBackService::filesRemove(
+    UNUSED grpc::ServerContext *, const UsersBack_Maestro::FilesRemoveRequest *request,
+    UsersBack_Maestro::FilesRemoveStatus *response
+)
+{
+    return this->_procedureRunner([this, request, response]() {
+        *response = this->actFilesRemove(request->fileid().begin(), request->fileid().end());
+
+        return grpc::Status::OK;
+    });
+}
+
+grpc::Status UsersBackService::
+    dirRemove(UNUSED grpc::ServerContext *, const UsersBack_Maestro::DirRemoveRequest *request, UNUSED UsersBack_Maestro::DirRemoveStatus *)
+{
+    return this->_procedureRunner([this, request]() {
+        auto my_response = this->_clients.santaclaus.removeDirectory(request->dirid());
+
+        this->actFilesRemove(my_response.fileidstoremove().begin(), my_response.fileidstoremove().end());
+
+        return grpc::Status::OK;
+    });
+}
+grpc::Status UsersBackService::
+    dirMove(UNUSED grpc::ServerContext *, const UsersBack_Maestro::DirMoveRequest *request, UNUSED UsersBack_Maestro::DirMoveStatus *)
+{
+    return this->_procedureRunner([this, request]() {
+        this->_clients.santaclaus.moveDirectory(
+            request->dirid(),
+            request->has_name() ? std::optional(request->name()) : std::nullopt,
+            request->has_newlocationdirid() ? std::optional(request->newlocationdirid()) : std::nullopt
+        );
+
         return grpc::Status::OK;
     });
 }

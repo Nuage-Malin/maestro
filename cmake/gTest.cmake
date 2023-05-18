@@ -37,13 +37,14 @@ include(GoogleTest)
 include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
 #
 add_executable(${TEST_EXEC_NAME}
-    ${SRCS}
-    ${TEST_SRC_DIR}/Schemas/UploadQueueTest.cpp
-    ${TEST_SRC_DIR}/Schemas/DownloadedStackTest.cpp
-    ${TEST_SRC_DIR}/Schemas/DownloadQueueTest.cpp
-    ${TEST_SRC_DIR}/UsersBack/UsersBackClient.cpp
-    ${TEST_SRC_DIR}/UsersBack/UsersBackTest.cpp
-)
+               ${SRCS}
+               ${TEST_SRC_DIR}/Schemas/UploadQueueTest.cpp
+               ${TEST_SRC_DIR}/Schemas/DownloadedStackTest.cpp
+               ${TEST_SRC_DIR}/Schemas/DownloadQueueTest.cpp
+               ${TEST_SRC_DIR}/Schemas/RemoveQueueTest.cpp
+               ${TEST_SRC_DIR}/UsersBack/UsersBackClient.cpp
+               ${TEST_SRC_DIR}/UsersBack/UsersBackTest.cpp
+               )
 
 # Mongo
 target_link_libraries(${TEST_EXEC_NAME} ${LIBBSONCXX_LIBRARIES})

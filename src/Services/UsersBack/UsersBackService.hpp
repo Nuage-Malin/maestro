@@ -53,10 +53,120 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         UsersBack_Maestro::GetFilesIndexStatus *response
     ) override;
 
+    grpc::Status fileMove(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::FileMoveRequest *request,
+        ::UsersBack_Maestro::FileMoveStatus *response
+    ) override;
+
+    grpc::Status fileRemove(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::FileRemoveRequest *request,
+        ::UsersBack_Maestro::FileRemoveStatus *response
+    ) override;
+    grpc::Status filesRemove(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::FilesRemoveRequest *request,
+        ::UsersBack_Maestro::FilesRemoveStatus *response
+    ) override;
+
+    grpc::Status dirRemove(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::DirRemoveRequest *request,
+        ::UsersBack_Maestro::DirRemoveStatus *response
+    ) override;
+
+    grpc::Status dirMove(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::DirMoveRequest *request,
+        ::UsersBack_Maestro::DirMoveStatus *response
+    ) override;
+
+  private:
+    /**
+     * @brief Find files' diskId and group them like it
+     * @tparam StrIterator Any iterator over a string
+     * @param fileIdsBeg First element of the iterator
+     * @param fileIdsEnd Last element of the iterator, will be compared to iterator to stop iterating
+     * @return Map with diskId as key and unordered_set of fileIds as value
+     */
+    template <typename StrIterator>
+        requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
+    std::unordered_map<string, std::unordered_set<string>>
+    getFilesDisk(const StrIterator &fileIdsBeg, const StrIterator &fileIdsEnd);
+
+    /**
+     * @brief Do the action of removing files (from santaclaus and vault)
+     *         with the help of removeQueue if disks are not currently available.
+     *         This method will be used by fileRemove, filesRemove and dirRemove to execute the same action.
+     * @tparam StrIterator Any iterator over a string
+     * @param fileIdsBeg First element of the iterator
+     * @param fileIdsEnd Last element of the iterator, will be compared to iterator to stop iterating
+     */
+    template <typename StrIterator>
+        requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
+    UsersBack_Maestro::FilesRemoveStatus actFilesRemove(StrIterator fileIdsBeg, const StrIterator &fileIdsEnd);
+
   private:
     FilesSchemas &_filesSchemas;
     StatsSchemas &_statsSchemas;
     const GrpcClients &_clients;
 };
+
+template <typename StrIterator>
+    requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
+std::unordered_map<string, std::unordered_set<string>>
+UsersBackService::getFilesDisk(const StrIterator &fileIdsBeg, const StrIterator &fileIdsEnd)
+{
+    // unordered_map with string as key, for diskId, unordered_set as value, to store each fileId corresponding to this diskId
+    std::unordered_map<string, std::unordered_set<string>> filesDisks;
+    string diskId;
+
+    for (auto fileId = fileIdsBeg; fileId != fileIdsEnd; fileId++) {
+        diskId = this->_clients.santaclaus.getFile(*fileId).diskid();
+        filesDisks.find(diskId);
+        if (auto files = filesDisks.find(diskId); files != filesDisks.end()) {
+            files->second.insert(*fileId); // todo is this iterator affecting the filesDisks (is it a reference) ?
+        } else {
+            std::unordered_set<string> newFiles;
+
+            newFiles.insert(*fileId);
+            filesDisks.insert(std::make_pair(diskId, newFiles));
+        }
+    }
+    return filesDisks;
+}
+
+template <typename StrIterator>
+    requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
+UsersBack_Maestro::FilesRemoveStatus UsersBackService::actFilesRemove(StrIterator fileIdsBeg, const StrIterator &fileIdsEnd)
+{
+    std::unordered_map<string, std::unordered_set<string>> filesDisks = getFilesDisk(fileIdsBeg, fileIdsEnd);
+    UsersBack_Maestro::FilesRemoveStatus response;
+
+    this->_clients.santaclaus.virtualRemoveFiles(fileIdsBeg, fileIdsEnd);
+    for (const auto &filesDisk : filesDisks) {
+        if (!this->_clients.hardwareMalin.diskStatus(filesDisk.first)) { // check if disk is turned off
+            this->_filesSchemas.removeQueue.add(filesDisk.first, filesDisk.second.begin(), filesDisk.second.end());
+        } else {                                                         // if disk is turned on
+            auto filesDiskRemoved = filesDisk.second;
+            Maestro_Vault::RemoveFilesRequest my_request;
+
+            my_request.set_diskid(filesDisk.first);
+            for (const auto &fileId : filesDisk.second) {
+                my_request.add_fileid(fileId);
+            }
+            const auto &vaultResponse = this->_clients.vault.removeFiles(my_request);
+            // todo check vaultResponse : file id failures not to send to santaclaus physical remove
+            for (const auto &fileIdFailure : vaultResponse.fileidfailures()) {
+                response.add_fileidfailures(fileIdFailure); // set response for UsersBack
+                filesDiskRemoved.erase(fileIdFailure);      // file has not been removed, it is yet to be removed
+            }
+            try {
+                this->_clients.santaclaus.physicalRemoveFiles(filesDiskRemoved.begin(), filesDiskRemoved.end());
+            } catch (const RequestFailureException &e) { // if deletion in vault didn't succeed
+                this->_filesSchemas.removeQueue.add(
+                    filesDisk.first, vaultResponse.fileidfailures().begin(), vaultResponse.fileidfailures().end()
+                );
+            }
+        }
+    }
+    return response;
+}
 
 #endif

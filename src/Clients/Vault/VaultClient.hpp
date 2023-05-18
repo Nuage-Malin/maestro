@@ -24,6 +24,8 @@ class VaultClient {
     void uploadFiles(const Maestro_Vault::UploadFilesRequest &files) const;
     string downloadFile(const string &fileId, const string &userId, const string &diskId) const;
     Maestro_Vault::DownloadFilesStatus downloadFiles(const Maestro_Vault::DownloadFilesRequest &files) const;
+    Maestro_Vault::RemoveFileStatus removeFile(const Maestro_Vault::RemoveFileRequest &file) const;
+    Maestro_Vault::RemoveFilesStatus removeFiles(const Maestro_Vault::RemoveFilesRequest &files) const;
 
   private:
     std::unique_ptr<Maestro_Vault::Maestro_Vault_Service::Stub> _stub;

@@ -3,6 +3,7 @@
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 12/04/2023
  * @copyright Nuage Malin
+ * @Stores Stores (temporarly) file metadata of files to be made available for downlaod
  */
 
 #ifndef MAESTRO_FILES_DOWNLOADQUEUE_SCHEMA_HPP

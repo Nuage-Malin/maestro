@@ -34,14 +34,14 @@ class TemplateCron {
     virtual void onAdd();    // Called when the task is added to the cron
     virtual void onRemove(); // Called when the task is removed from the cron
     NODISCARD const string &getName() const;
-    void wait(); // Wait is blocking for all tasks to finish (This method should be called before the destructor)
+    void wait();             // Wait is blocking for all tasks to finish (This method should be called before the destructor)
 
     // This methods should only be called by the cron manager
     // TODO: friend class CronManager;
     void resume(bool callEvent = true);
     void pause();
     // Return true if the job is paused.
-    // If the cron manager is paused, this method still depend on the job state, not the global one.
+    // If the cron manager is paused, this method still depends on the job state, not the global one.
     NODISCARD const bool &isPaused() const;
     void addRunningTask();
     NODISCARD std::vector<CronTask> &getRunningTasks();
@@ -50,7 +50,7 @@ class TemplateCron {
 
   protected:
     string _name;
-    bool _isPaused = false; // Reffer to isPaused() comment
+    bool _isPaused = false; // Refer to isPaused() comment
     std::vector<CronTask> _tasks;
 
   private:

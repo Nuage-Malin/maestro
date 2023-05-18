@@ -3,6 +3,7 @@
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 16/03/2023
  * @copyright Nuage Malin
+ * @brief Stores (temporarly) files to be uploaded on the main storage server (Vault)
  */
 
 #ifndef MAESTRO_FILES_UPLOADQUEUE_SCHEMA_HPP

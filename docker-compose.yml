@@ -20,7 +20,7 @@ services:
             - maestro:vault
         depends_on:
             - mongo
-        restart: always
+        restart: unless-stopped
 
     mongo:
         profiles:
@@ -77,4 +77,5 @@ networks:
         external: true
 
 volumes:
-    mongo: null
+    mongo:
+        name: ${MONGO_VOLUME}
