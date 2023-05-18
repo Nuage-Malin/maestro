@@ -3,6 +3,7 @@
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 11/04/2023
  * @copyright Nuage Malin
+ * @brief Stores files (temporarly) available for download
  */
 
 #ifndef MAESTRO_FILES_DOWNLOADEDSTACK_SCHEMA_HPP

@@ -70,8 +70,8 @@ std::unordered_set<string> FilesUploadQueueSchema::getFilesDisk()
     return disks;
 }
 
-// TODO: Does need to use thread to optimize it. Delete files asynchronously with threads and then join them to wait for the end
-// of the deletion
+// TODO: Does need to use thread to optimize it.
+//  Delete files asynchronously with threads and then join them to wait for the end of the deletion
 void FilesUploadQueueSchema::deleteFiles(const std::vector<MongoCXX::ValueView> &files)
 {
     for (const auto &file : files)

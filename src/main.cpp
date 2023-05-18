@@ -17,6 +17,7 @@
 #include "Cron/FileUpload/FileUploadCron.hpp"
 #include "Cron/ExpiredDownloadedFiles/ExpiredDownloadedFilesCron.hpp"
 #include "Cron/DownloadFiles/DownloadFilesCron.hpp"
+#include "Cron/RemoveFiles/RemoveFilesCron.hpp"
 
 /**
  * @brief Run the server
@@ -36,9 +37,8 @@ void RunServer()
     // Clients
     GrpcClients clients = {
         .santaclaus = SantaclausClient(grpc::CreateChannel(getEnv("MAESTRO_SANTACLAUS_URI"), grpc::InsecureChannelCredentials())),
-        .hardwareMalin = HardwareMalinClient(
-            grpc::CreateChannel(getEnv("MAESTRO_HARDWARE_MALIN_URI"), grpc::InsecureChannelCredentials()), events
-        ),
+        .hardwareMalin =
+            HardwareMalinClient(grpc::CreateChannel(getEnv("MAESTRO_BUGLE_URI"), grpc::InsecureChannelCredentials()), events),
         .vault = VaultClient(grpc::CreateChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials()))};
 
     // Services
@@ -62,6 +62,7 @@ void RunServer()
     managerCron.add("0 30 3 * * ?", ExpiredDownloadedFilesCron(filesSchemas));
     managerCron.add("0 0 3 * * ?", FileUploadCron(filesSchemas, clients, events));
     managerCron.add("0 0 3 * * ?", DownloadFilesCron(filesSchemas, clients, events));
+    managerCron.add("0 0 3 * * ?", RemoveFilesCron(filesSchemas, clients, events));
 
     server->Wait();
 }
