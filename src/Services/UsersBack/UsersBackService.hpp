@@ -141,7 +141,9 @@ UsersBack_Maestro::FilesRemoveStatus UsersBackService::actFilesRemove(StrIterato
 
     this->_clients.santaclaus.virtualRemoveFiles(fileIdsBeg, fileIdsEnd);
     for (const auto &filesDisk : filesDisks) {
-        if (this->_clients.hardwareMalin.diskStatus(filesDisk.first)) { // check if disk is turned on
+        if (!this->_clients.hardwareMalin.diskStatus(filesDisk.first)) { // check if disk is turned off
+            this->_filesSchemas.removeQueue.add(filesDisk.first, filesDisk.second.begin(), filesDisk.second.end());
+        } else {                                                         // if disk is turned on
             auto filesDiskRemoved = filesDisk.second;
             Maestro_Vault::RemoveFilesRequest my_request;
 
@@ -162,8 +164,6 @@ UsersBack_Maestro::FilesRemoveStatus UsersBackService::actFilesRemove(StrIterato
                     filesDisk.first, vaultResponse.fileidfailures().begin(), vaultResponse.fileidfailures().end()
                 );
             }
-        } else { // if disk is turned off
-            this->_filesSchemas.removeQueue.add(filesDisk.first, filesDisk.second.begin(), filesDisk.second.end());
         }
     }
     return response;

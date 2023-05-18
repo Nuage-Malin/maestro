@@ -182,7 +182,9 @@ grpc::Status UsersBackService::
         auto file = this->_clients.santaclaus.getFile(request->fileid()); // get disk id from santaclaus
 
         this->_clients.santaclaus.virtualRemoveFile(request->fileid());
-        if (this->_clients.hardwareMalin.diskStatus(file.diskid())) { // check if disk is turned on
+        if (!this->_clients.hardwareMalin.diskStatus(file.diskid())) { // check if disk is turned off
+            this->_filesSchemas.removeQueue.add(file.diskid(), request->fileid());
+        } else {                                                       // if disk is turned on
             Maestro_Vault::RemoveFileRequest my_request;
 
             my_request.set_diskid(file.diskid());
@@ -194,8 +196,6 @@ grpc::Status UsersBackService::
             } catch (const RequestFailureException &e) { // if deletion in vault didn't succeed
                 this->_filesSchemas.removeQueue.add(file.diskid(), request->fileid());
             }
-        } else { // if disk is turned off
-            this->_filesSchemas.removeQueue.add(file.diskid(), request->fileid());
         }
         return grpc::Status::OK;
     });

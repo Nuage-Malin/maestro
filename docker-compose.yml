@@ -18,7 +18,7 @@ services:
             - chouf:maestro
         depends_on:
             - mongo
-        restart: always
+        restart: unless-stopped
 
     mongo:
         profiles:
