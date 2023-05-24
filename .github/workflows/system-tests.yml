@@ -1,0 +1,20 @@
+name: System tests
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Call system-tests repository workflow
+      env:
+        SYSTEM_TESTS_REPO: Nuage-Malin/system-tests
+      run: |
+        curl -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Authorization: token ${{ secrets.SUBMODULES_TOKEN }}" \
+            --request POST \
+            https://api.github.com/repos/${{ env.SYSTEM_TESTS_REPO }}/dispatches
