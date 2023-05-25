@@ -45,6 +45,9 @@ for arg in "$@"; do
         --docker)
             ARG_DOCKER=true
         ;;
+        --dry-run)
+            ARG_DRY_RUN=true
+        ;;
         *)
             echo "Invalid option: $arg" >&2
             exit 1

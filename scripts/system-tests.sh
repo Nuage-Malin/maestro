@@ -70,6 +70,10 @@ if $ARG_RUN_SERVICE; then
 fi
 
 if $ARG_RUN_TESTS; then
+    set -o allexport
+    source $CURRENT_FILE_DIR/../env/system_tests.env
+    set +o allexport
+
     ./build/system_tests
     check_exit_failure "System tests failed"
 fi
