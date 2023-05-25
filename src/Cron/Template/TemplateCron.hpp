@@ -9,6 +9,7 @@
 #define MAESTRO_TEMPLATE_CRON_HPP
 
 #include <thread>
+#include <vector>
 
 #include "utils.hpp"
 
