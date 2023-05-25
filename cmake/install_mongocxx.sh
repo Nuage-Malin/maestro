@@ -11,7 +11,7 @@ check_exit_failure()
 
 echo starting install of mongo cxx
 if [ ! $MONGOCXX_VERSION ]; then
-  MONGOCXX_VERSION="3.7.0"
+  MONGOCXX_VERSION="3.7.1"
 fi
 
 if [ ! $INSTALL_DIR ]; then
@@ -35,9 +35,11 @@ if [ `command -v sudo` ]; then
         # sudo apt-get install libbson-1.0-0
         # sudo apt-get install libstdc++-10-dev
     elif [ $OS_DISTRIB = "fedora" ]; then
-        sudo dnf install    \
-            mongo-c-driver  \
-            libmongocrypt-devel
+        if ! rpm -q mongo-c-driver > /dev/null 2>&1 || ! rpm -q libmongocrypt-devel > /dev/null 2>&1; then
+            sudo dnf install -y \
+                mongo-c-driver  \
+                libmongocrypt-devel
+        fi
     else
         echo "Unknown OS distribution $OS_DISTRIB"
     fi
@@ -90,6 +92,7 @@ echo "Building mongo-cxx-driver-r$MONGOCXX_VERSION"
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/mongo -DCMAKE_INSTALL_RPATH=/opt/mongo
 check_exit_failure "Fail to cmake mongo-cxx-driver"
 if [ `command -v sudo` ]; then
+  echo "mongocxx should be installed with root privileges"
   sudo make -C build install
   check_exit_failure "Fail to build mongo-cxx-driver as root"
 else
