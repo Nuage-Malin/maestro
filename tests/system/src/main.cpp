@@ -8,12 +8,19 @@
 
 #include "utils.hpp"
 
-#include "clients/UsersBack/UsersBackClient.hpp"
+#include "UsersBack/tests/UsersBackTests.hpp"
 
 int main()
 {
-    const string maestroURI = getEnv("MAESTRO_TESTS_URI");
+    const string &maestroURI = getEnv("MAESTRO_TESTS_URI");
     UsersBackClient usersBackClient(maestroURI);
+    UsersBackTests usersBackTests(usersBackClient);
 
-    return 0;
+    usersBackTests.run();
+
+    std::cout << "Total tests: " << usersBackTests.getTotalTests() << std::endl;
+    std::cout << "Passed tests: " << usersBackTests.getPassedTests() << std::endl;
+    std::cout << "Failed tests: " << usersBackTests.getTotalTests() - usersBackTests.getPassedTests() << std::endl;
+
+    return usersBackTests.getTotalTests() != usersBackTests.getPassedTests();
 }

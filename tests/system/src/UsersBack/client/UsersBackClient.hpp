@@ -19,7 +19,14 @@ class UsersBackClient {
     UsersBackClient(const string &serverURI);
     ~UsersBackClient() = default;
 
+    std::optional<UsersBack_Maestro::GetFilesIndexStatus> getFilesIndex(UsersBack_Maestro::GetFilesIndexRequest &request) const;
+    std::optional<UsersBack_Maestro::FileUploadStatus> fileUpload(UsersBack_Maestro::FileUploadRequest &request) const;
+    std::optional<UsersBack_Maestro::AskFileDownloadStatus> askFileDownload(UsersBack_Maestro::AskFileDownloadRequest &request
+    ) const;
+
   private:
+    void _manageStatusError(const string &funcName, const grpc::Status &status) const;
+
     std::unique_ptr<UsersBack_Maestro::UsersBack_Maestro_Service::Stub> _client;
 };
 
