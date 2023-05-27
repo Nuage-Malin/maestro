@@ -30,9 +30,13 @@ void UsersBackTests::_manageResult(const string &name, const bool &result)
 
     if (result) {
         this->_passedTests++;
-        std::cout << name << " PASSED" << std::endl;
+        std::cout << name << "\033[32m"
+                  << " PASSED"
+                  << "\033[0m" << std::endl;
     } else
-        std::cout << name << " FAILED" << std::endl;
+        std::cout << name << "\033[31m"
+                  << " FAILED"
+                  << "\033[0m" << std::endl;
 }
 
 void UsersBackTests::run()
@@ -61,15 +65,15 @@ bool UsersBackTests::_getEmptyRootFilesIndex()
 bool UsersBackTests::_uploadFileInRootFolder()
 {
     UsersBack_Maestro::FileUploadRequest request;
-    File::NewFile file;
-    File::FileApproxMetadata metadata;
+    File::NewFile *file = new File::NewFile();
+    File::FileApproxMetadata *metadata = new File::FileApproxMetadata();
 
-    metadata.set_name("root_test.txt");
-    metadata.set_dirpath("/");
-    metadata.set_userid("userTest");
-    file.set_allocated_metadata(&metadata);
-    file.set_content("Hello World");
-    request.set_allocated_file(&file);
+    metadata->set_name("root_test.txt");
+    metadata->set_dirpath("/");
+    metadata->set_userid("userTest");
+    file->set_allocated_metadata(metadata);
+    file->set_content("Hello World");
+    request.set_allocated_file(file);
 
     const auto &response = this->_client.fileUpload(request);
 
