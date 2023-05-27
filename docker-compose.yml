@@ -18,6 +18,7 @@ services:
             - chouf:maestro
             - maestro:santaclaus
             - maestro:vault
+            - maestro:bugle
         depends_on:
             - mongo
         restart: unless-stopped
@@ -36,6 +37,7 @@ services:
         networks:
             - mongo
             - chouf:maestro
+            - maestro:bugle
         volumes:
             - mongo:/data/db
         restart: unless-stopped
@@ -75,6 +77,8 @@ networks:
     maestro:santaclaus:
         external: true
     maestro:vault:
+        external: true
+    maestro:bugle:
         external: true
 
 volumes:
