@@ -8,6 +8,12 @@
 #include "RequestFailureException.hpp"
 
 RequestFailureException::RequestFailureException(const GrpcStatus &status, string functionName)
-    : std::runtime_error(functionName + ": [" + status.error_name() + "] " + status.error_message())
+    : std::runtime_error(functionName + ": [" + status.error_name() + "] " + status.error_message()),
+      _details(status.error_details())
 {
+}
+
+NODISCARD const string &RequestFailureException::getDetails() const noexcept
+{
+    return this->_details;
 }

@@ -19,6 +19,11 @@ class RequestFailureException : public std::runtime_error {
   public:
     RequestFailureException(const GrpcStatus &status, string functionName = __FUNCTION__);
     ~RequestFailureException() = default;
+
+    NODISCARD const string &getDetails() const noexcept;
+
+  private:
+    const string _details;
 };
 
 #endif
