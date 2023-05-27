@@ -72,7 +72,7 @@ Maestro_Santaclaus::RemoveFilesStatus SantaclausClient::physicalRemoveFiles(StrI
     auto status = this->_stub->physicalRemoveFiles(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
 
@@ -92,7 +92,7 @@ Maestro_Santaclaus::RemoveFilesStatus SantaclausClient::virtualRemoveFiles(StrIt
     auto status = _stub->virtualRemoveFiles(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
 

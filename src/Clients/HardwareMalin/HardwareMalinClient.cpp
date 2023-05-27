@@ -16,7 +16,7 @@ HardwareMalinClient::HardwareMalinClient(const std::shared_ptr<grpc::ChannelInte
     : _stub(Maestro_HardwareMalin::Maestro_HardwareMalin_Service::NewStub(channel)), _events(events)
 {
     if (!this->_stub)
-        throw std::runtime_error(string(__FUNCTION__) + " could not create gRPC stub");
+        throw std::runtime_error(STR_FUNCTION + " could not create gRPC stub");
 }
 
 bool HardwareMalinClient::diskStatus(const string &diskId) const
@@ -29,7 +29,7 @@ bool HardwareMalinClient::diskStatus(const string &diskId) const
     grpc::Status status = this->_stub->diskStatus(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response.status();
 }
 
@@ -46,7 +46,7 @@ void HardwareMalinClient::setDiskState(const string &diskId, bool state) const
     grpc::Status status = this->_stub->setDiskState(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     if (state)
         this->_events.emit<const string &>(Event::DISK_STARTUP, diskId);
     else

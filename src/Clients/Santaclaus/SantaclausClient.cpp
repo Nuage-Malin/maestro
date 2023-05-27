@@ -16,7 +16,7 @@ SantaclausClient::SantaclausClient(const std::shared_ptr<grpc::ChannelInterface>
     : _stub(Maestro_Santaclaus::Maestro_Santaclaus_Service::NewStub(channel))
 {
     if (!this->_stub)
-        throw std::runtime_error(string(__FUNCTION__) + " could not create gRPC stub");
+        throw std::runtime_error(STR_FUNCTION + " could not create gRPC stub");
 }
 
 Maestro_Santaclaus::AddFileStatus SantaclausClient::addFile(const File::FileApproxMetadata &file, const uint64 &fileSize) const
@@ -30,7 +30,7 @@ Maestro_Santaclaus::AddFileStatus SantaclausClient::addFile(const File::FileAppr
     grpc::Status status = this->_stub->addFile(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
 
@@ -44,7 +44,7 @@ NODISCARD Maestro_Santaclaus::GetFileStatus SantaclausClient::getFile(const stri
     grpc::Status status = this->_stub->getFile(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
 
@@ -62,7 +62,7 @@ SantaclausClient::getDirectory(const string &userId, const std::optional<string>
     grpc::Status status = this->_stub->getDirectory(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
 
@@ -83,7 +83,7 @@ SantaclausClient::moveFile(const string &fileId, const std::optional<string> &na
     auto status = _stub->moveFile(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
 
@@ -97,7 +97,7 @@ Maestro_Santaclaus::RemoveFileStatus SantaclausClient::virtualRemoveFile(const s
     auto status = _stub->virtualRemoveFile(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
 
@@ -112,7 +112,7 @@ Maestro_Santaclaus::RemoveFileStatus SantaclausClient::physicalRemoveFile(const 
     auto status = _stub->physicalRemoveFile(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
 
@@ -126,7 +126,7 @@ Maestro_Santaclaus::RemoveDirectoryStatus SantaclausClient::removeDirectory(cons
     auto status = _stub->removeDirectory(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
 Maestro_Santaclaus::MoveDirectoryStatus SantaclausClient::moveDirectory(
@@ -145,6 +145,6 @@ Maestro_Santaclaus::MoveDirectoryStatus SantaclausClient::moveDirectory(
     auto status = _stub->moveDirectory(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
