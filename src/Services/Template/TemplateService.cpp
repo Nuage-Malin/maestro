@@ -30,8 +30,8 @@ grpc::Status TemplateService::_procedureRunner(std::function<grpc::Status()> cal
 
 grpc::Status TemplateService::_manageErrors(const RequestFailureException &error, const std::source_location &location)
 {
-    std::cerr << "[" << this->_getErrorCaller(location) << "] RequestFailureException: " << error.what() << std::endl
-              << "Details: " << error.getDetails() << std::endl;
+    std::cerr << "[" << this->_getErrorCaller(location) << "] RequestFailureException: " << error.what() << std::endl;
+    std::cerr << "Error details: " << error.getDetails() << std::endl;
 
     return grpc::Status(grpc::StatusCode::ABORTED, "Query exception", error.what());
 }
