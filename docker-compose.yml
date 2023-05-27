@@ -13,7 +13,7 @@ services:
         expose:
             - ${MAESTRO_PORT}
         networks:
-            - mongo
+            - maestro
             - users-back:maestro
             - chouf:maestro
             - maestro:santaclaus
@@ -35,7 +35,8 @@ services:
         ports:
             - ${MONGO_PORT}:27017
         networks:
-            - mongo
+            - maestro
+            - maestro:santaclaus
             - chouf:maestro
             - maestro:bugle
         volumes:
@@ -69,7 +70,7 @@ services:
             - 50051:80
 
 networks:
-    mongo: null
+    maestro: null
     users-back:maestro:
         external: true
     chouf:maestro:
