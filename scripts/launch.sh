@@ -29,7 +29,7 @@ check_exit_failure()
 {
     EXIT_STATUS=$?
     if [ $EXIT_STATUS -ne 0 ]; then
-        echo "$1" 1>&2
+        echo -e "\033[31m$1\033[0m" 1>&2
         exit_gracefully $EXIT_STATUS
     fi
 }
