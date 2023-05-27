@@ -74,5 +74,5 @@ source ./env/local.env
 set +o allexport
 
 if ! $ARG_DRY_RUN; then
-    ./build/maestro
+    exec ./build/maestro
 fi

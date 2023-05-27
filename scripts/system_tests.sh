@@ -65,7 +65,7 @@ if $ARG_BUILD_TESTS; then
 fi
 
 if $ARG_RUN_SERVICE; then
-    $CURRENT_FILE_DIR/launch.sh --docker
+    exec $CURRENT_FILE_DIR/launch.sh --docker
     check_exit_failure "Failed to run maestro"
 fi
 
