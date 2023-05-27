@@ -10,6 +10,8 @@
 #include "system_tests.hpp"
 #include "UsersBackTests.hpp"
 
+const string USER_ID = "6472315b91dcdcb3d3e49d1a";
+
 UsersBackTests::UsersBackTests(UsersBackClient &client) : _client(client)
 {
 }
@@ -51,7 +53,7 @@ bool UsersBackTests::_getEmptyRootFilesIndex()
 {
     UsersBack_Maestro::GetFilesIndexRequest request;
 
-    request.set_userid("userTest");
+    request.set_userid(USER_ID);
     request.set_isrecursive(true);
 
     const auto &response = this->_client.getFilesIndex(request);
@@ -70,7 +72,7 @@ bool UsersBackTests::_uploadFileInRootFolder()
 
     metadata->set_name("root_test.txt");
     metadata->set_dirpath("/");
-    metadata->set_userid("userTest");
+    metadata->set_userid(USER_ID);
     file->set_allocated_metadata(metadata);
     file->set_content("Hello World");
     request.set_allocated_file(file);
@@ -87,7 +89,7 @@ bool UsersBackTests::_getRootFilesIndex()
 {
     UsersBack_Maestro::GetFilesIndexRequest request;
 
-    request.set_userid("userTest");
+    request.set_userid(USER_ID);
     request.set_isrecursive(false);
 
     const auto &response = this->_client.getFilesIndex(request);
@@ -96,9 +98,9 @@ bool UsersBackTests::_getRootFilesIndex()
     ASSERT_EQ(response->subfiles().fileindex_size(), 1)
     ASSERT_EQ(response->subfiles().fileindex(0).approxmetadata().name(), "root_test.txt")
     ASSERT_EQ(response->subfiles().fileindex(0).approxmetadata().dirpath(), "/")
-    ASSERT_EQ(response->subfiles().fileindex(0).approxmetadata().userid(), "userTest")
+    ASSERT_EQ(response->subfiles().fileindex(0).approxmetadata().userid(), USER_ID)
     ASSERT_EQ(response->subfiles().fileindex(0).fileid(), this->_testRootFileId)
-    ASSERT_EQ(response->subfiles().fileindex(0).lasteditorid(), "userTest")
+    ASSERT_EQ(response->subfiles().fileindex(0).lasteditorid(), USER_ID)
     ASSERT_EQ(response->subfiles().dirindex_size(), 0)
     return true;
 }
