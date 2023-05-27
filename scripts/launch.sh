@@ -69,6 +69,7 @@ fi
 
 if $ARG_DOCKER; then
     docker compose --env-file ./env/local.env --profile mongo up --build -d
+    check_exit_failure "Failed to start maestro database"
 fi
 
 trap "exit_gracefully 1" SIGINT
