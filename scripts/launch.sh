@@ -16,7 +16,11 @@ usage()
 
 exit_gracefully()
 {
-    echo "Exiting gracefully..."
+    if [ $1 -ne 0 ]; then
+        echo -e "\033[31mExiting gracefully...\033[0m" 1>&2
+    else
+        echo "Exiting gracefully..."
+    fi
 
     if $ARG_DOCKER; then
         docker compose --env-file ./env/local.env --profile mongo down
