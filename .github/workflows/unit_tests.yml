@@ -42,11 +42,10 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
-          token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
-          # secret containing a token allowing access to private repo (protobuf-interface submodule)
+          token: ${{ secrets.SUBMODULES_TOKEN }}
 
       - name: Run MongoDB & maestro & unit tests
-        run: ./scripts/unit_tests.sh --local --mongo > /tmp/unit_tests.log
+        run: ./scripts/unit_tests.sh --cmake --build --local --mongo > /tmp/unit_tests.log
 
       - name: Result
         if: always()
