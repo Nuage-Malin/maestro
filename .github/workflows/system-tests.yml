@@ -1,10 +1,9 @@
 name: System tests
 
 on:
-  push:
+  pull_request:
     branches:
       - main
-      - develop
 
 jobs:
   notify:
