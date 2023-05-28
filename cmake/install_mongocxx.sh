@@ -11,7 +11,7 @@ check_exit_failure()
 
 echo starting install of mongo cxx
 if [ ! $MONGOCXX_VERSION ]; then
-  MONGOCXX_VERSION="3.7.1"
+  MONGOCXX_VERSION="3.7.0"
 fi
 
 if [ ! $INSTALL_DIR ]; then
