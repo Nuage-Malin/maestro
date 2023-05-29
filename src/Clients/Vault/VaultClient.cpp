@@ -32,7 +32,7 @@ void VaultClient::uploadFile(const string &fileId, const string &userId, const s
     const grpc::Status status = this->_stub->uploadFile(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
 }
 
 void VaultClient::uploadFiles(const Maestro_Vault::UploadFilesRequest &files) const
@@ -42,7 +42,7 @@ void VaultClient::uploadFiles(const Maestro_Vault::UploadFilesRequest &files) co
     const grpc::Status status = this->_stub->uploadFiles(&context, files, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
 }
 
 string VaultClient::downloadFile(const string &fileId, const string &userId, const string &diskId) const
@@ -57,7 +57,7 @@ string VaultClient::downloadFile(const string &fileId, const string &userId, con
     const grpc::Status status = this->_stub->downloadFile(&context, request, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response.content();
 }
 
@@ -68,7 +68,7 @@ Maestro_Vault::DownloadFilesStatus VaultClient::downloadFiles(const Maestro_Vaul
     const grpc::Status status = this->_stub->downloadFiles(&context, files, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
 
@@ -79,7 +79,7 @@ Maestro_Vault::RemoveFileStatus VaultClient::removeFile(const Maestro_Vault::Rem
     const grpc::Status status = this->_stub->removeFile(&context, file, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
 
@@ -90,6 +90,6 @@ Maestro_Vault::RemoveFilesStatus VaultClient::removeFiles(const Maestro_Vault::R
     const grpc::Status status = this->_stub->removeFiles(&context, files, &response);
 
     if (!status.ok())
-        throw RequestFailureException(status);
+        throw RequestFailureException(status, __FUNCTION__);
     return response;
 }

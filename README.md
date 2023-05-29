@@ -57,6 +57,12 @@ make -C build functional_tests
 ./functional_tests
 ```
 
+## Troubleshoot
+*Could not find a package configuration file provided by "Protobuf"*
+```shell
+GRPC_FULL_INSTALL=true cmake -S . -B build
+```
+
 ## Learn
 
 ### Documentation

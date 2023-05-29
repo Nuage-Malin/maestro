@@ -101,6 +101,10 @@ if (DEFINED unit_tests) ## todo build only unit_tests, not maestro ? for docker 
     include(${CMAKE_MODULES_DIR}/gTest.cmake)
 endif ()
 
+if (DEFINED system_tests) ## todo build only system_tests, not maestro ? for docker compose unit_tests
+    include(${CMAKE_MODULES_DIR}/system_tests.cmake)
+endif ()
+
 if (DEFINED doxygen)
     include(${CMAKE_MODULES_DIR}/doxygen.cmake)
 endif ()

@@ -11,10 +11,7 @@
 
 #include <cstdlib>
 #include <iostream>
-
-#include <bsoncxx/document/value.hpp>
-#include <bsoncxx/builder/basic/sub_document.hpp>
-#include <bsoncxx/builder/basic/array.hpp>
+#include <cstdint>
 
 typedef std::string string;
 typedef std::size_t size_t;
