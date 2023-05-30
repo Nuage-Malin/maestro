@@ -48,12 +48,12 @@ uint64 StatsUserDiskInfoSchema::getUserConsumption(const string &userId, const D
         throw std::runtime_error("Invalid consumption type");
 }
 
-uint64 StatsUserDiskInfoSchema::getUserDiskSpace(const string &userId, const Date $endDate)
+uint64 StatsUserDiskInfoSchema::getUserDiskSpace(const string &userId, const Date endDate)
 {
     mongocxx::pipeline pipeline;
 
     pipeline.match(
-        makeDocument(makeField("userId", userId), makeField("createdAt", makeDocument(makeField("$lte", $endDate.toBSON()))))
+        makeDocument(makeField("userId", userId), makeField("createdAt", makeDocument(makeField("$lte", endDate.toBSON()))))
     );
     pipeline.sort(makeDocument(makeField("diskId", 1), makeField("createdAt", -1)));
     pipeline.group(
