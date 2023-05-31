@@ -60,7 +60,7 @@ for arg in "$@"; do
 done
 
 if $ARG_BUILD; then
-    cmake -S . -B build
+    GRPC_FULL_INSTALL=true cmake -S . -B build
     check_exit_failure "Failed to cmake"
 
     make -C build

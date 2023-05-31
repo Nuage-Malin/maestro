@@ -110,7 +110,7 @@ source ./env/unit_tests.env
 set +o allexport
 
 if $ARG_CMAKE; then
-    cmake -D unit_tests=true -S . -B build
+    GRPC_FULL_INSTALL=true cmake -D unit_tests=true -S . -B build
     check_exit_failure "[Unit tests] cmake failed"
 fi
 if $ARG_BUILD; then
