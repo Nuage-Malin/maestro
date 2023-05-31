@@ -33,9 +33,7 @@ jobs:
       - name: Cache project
         uses: actions/cache@v3
         with:
-          path: |
-            /opt/mongo
-            ./
+          path: ./third_parties
           key: ${{ runner.os }}-unit_tests
 
       - name: Checkout code
