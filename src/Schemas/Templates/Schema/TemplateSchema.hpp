@@ -14,16 +14,15 @@
 #include <mongocxx/database.hpp>
 
 #include "utils.hpp"
+#include "Schemas/Templates/Model/MongoModel.hpp"
 
 class TemplateSchema {
   public:
-    TemplateSchema(
-        const mongocxx::database &database, const string &collectionName
-    );
+    TemplateSchema(const mongocxx::database &database, const string &collectionName);
     ~TemplateSchema() = default;
 
   protected:
-    mongocxx::collection _model;
+    MongoModel _model;
 };
 
 #endif
