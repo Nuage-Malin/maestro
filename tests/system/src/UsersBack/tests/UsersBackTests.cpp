@@ -60,7 +60,10 @@ bool UsersBackTests::_getEmptyRootFilesIndex()
 
     ASSERT_TRUE(response.has_value())
     ASSERT_EQ(response->subfiles().fileindex_size(), 0)
-    ASSERT_EQ(response->subfiles().dirindex_size(), 0)
+    ASSERT_EQ(response->subfiles().dirindex_size(), 1)
+    ASSERT_EQ(response->subfiles().dirindex(0).approxmetadata().name(), "/")
+    ASSERT_EQ(response->subfiles().dirindex(0).approxmetadata().dirpath(), "/")
+    ASSERT_EQ(response->subfiles().dirindex(0).approxmetadata().userid(), USER_ID)
     return true;
 }
 
