@@ -43,10 +43,4 @@ jobs:
           token: ${{ secrets.SUBMODULES_TOKEN }}
 
       - name: Run MongoDB & maestro & unit tests
-        run: ./scripts/unit_tests.sh --cmake --build --local --mongo > /tmp/unit_tests.log
-
-      - name: Result
-        if: always()
-        run: |
-          cat /tmp/unit_tests.log > $GITHUB_STEP_SUMMARY
-          cat /tmp/unit_tests.log
+        run: ./scripts/unit_tests.sh --cmake --build --local --mongo
