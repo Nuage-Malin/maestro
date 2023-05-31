@@ -36,6 +36,7 @@ services:
             - ${MONGO_PORT}:27017
         networks:
             - maestro
+            - users-back:maestro
             - maestro:santaclaus
             - chouf:maestro
             - maestro:bugle

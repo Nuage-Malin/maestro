@@ -9,7 +9,7 @@ usage()
     echo "Usage: $0 [--help] [--build] [--docker] [--dry-run]"
     echo -e "\t--help: Prints this message"
     echo -e "\t--build: Build maestro (cmake + make)"
-    echo -e "\t--docker: Launches the database in a docker container but the still runs maestro locally"
+    echo -e "\t--docker: Launches the database in a docker container but maestro still runs locally"
     echo -e "\t--dry-run: Builds maestro if --build is specified and start the database if --docker is specified but does not run maestro. It's useful to build without running maestro."
     exit 0
 }
