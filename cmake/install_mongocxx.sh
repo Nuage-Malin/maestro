@@ -10,13 +10,6 @@ check_exit_failure()
 }
 
 echo starting install of mongo cxx
-if [ ! $MONGOCXX_VERSION ]; then
-  MONGOCXX_VERSION="3.7.0"
-fi
-
-if [ ! $INSTALL_DIR ]; then
-  INSTALL_DIR="third_parties"
-fi
 
 ## Install C driver
 if [ ! $OS_DISTRIB ]; then
@@ -70,26 +63,12 @@ fi
 ### from https://github.com/mongodb/mongo-cxx-driver/releases
 ### then follow instructions from step 4 of https://mongocxx.org/mongocxx-v3/installation/linux/
 
-if [ ! -f $INSTALL_DIR/mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz ]; then
-  curl -OL https://github.com/mongodb/mongo-cxx-driver/releases/download/r$MONGOCXX_VERSION/mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz
-  check_exit_failure "Fail to download mongo-cxx-driver"
-  mv mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz $INSTALL_DIR/mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz
-  check_exit_failure "Fail to move mongo-cxx-driver"
-  echo "Downloaded mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz"
-fi
-
-cd $INSTALL_DIR/
-if [ ! -d mongo-cxx-driver-r$MONGOCXX_VERSION ]; then
-  tar -xzf mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz
-  check_exit_failure "Fail to extract mongo-cxx-driver"
-  echo "Extracted mongo-cxx-driver-r$MONGOCXX_VERSION.tar.gz"
-fi
-cd mongo-cxx-driver-r$MONGOCXX_VERSION/
+cd $MONGOCXX_DIR
 
 ## note that polyfill steps have been skipped
 
-echo "Building mongo-cxx-driver-r$MONGOCXX_VERSION"
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/mongo -DCMAKE_INSTALL_RPATH=/opt/mongo
+echo "Building mongo-cxx-driver"
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$MONGO_INSTALL_DIR -DCMAKE_INSTALL_RPATH=$MONGO_INSTALL_DIR -DBUILD_VERSION=3.7.0
 check_exit_failure "Fail to cmake mongo-cxx-driver"
 if [ `command -v sudo` ]; then
   echo "mongocxx should be installed with root privileges"

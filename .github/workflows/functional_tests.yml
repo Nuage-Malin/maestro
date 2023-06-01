@@ -15,9 +15,7 @@ jobs:
       - name: Cache project
         uses: actions/cache@v3
         with:
-          path: |
-            /opt/mongo
-            ./
+          path: ./third_parties
           key: ${{ runner.os }}-functional_tests
 
       - name: Checkout code
@@ -45,9 +43,7 @@ jobs:
         uses: actions/cache/restore@v3
         id: cache
         with:
-          path: |
-            /opt/mongo
-            ./
+          path: ./third_parties
           key: ${{ runner.os }}-functional_tests
 
       - name: Cache miss
