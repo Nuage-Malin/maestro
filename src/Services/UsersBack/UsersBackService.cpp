@@ -190,6 +190,7 @@ grpc::Status UsersBackService::
             Maestro_Vault::RemoveFileRequest my_request;
 
             my_request.set_diskid(file.diskid());
+            my_request.set_userid(file.file().approxmetadata().userid());
             my_request.set_fileid(request->fileid());
             try {
                 const auto my_response = this->_clients.vault.removeFile(my_request);
