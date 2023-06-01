@@ -42,5 +42,15 @@ jobs:
           submodules: recursive
           token: ${{ secrets.SUBMODULES_TOKEN }}
 
+      - name: Checkout eip-deploy
+        uses: actions/checkout@v3
+        with:
+          repository: Nuage-Malin/eip-deploy
+          path: eip-deploy
+          token: ${{ secrets.SUBMODULES_TOKEN }}
+
+      - name: Create docker networks
+        run: ./eip-deploy/jenkins/agent/docker-networks.sh
+
       - name: Run MongoDB & maestro & unit tests
         run: ./scripts/unit_tests.sh --cmake --build --local --mongo
