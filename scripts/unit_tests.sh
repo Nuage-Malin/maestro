@@ -126,6 +126,7 @@ if $ARG_DOCKER; then
 fi
 if $ARG_MONGO; then
     docker volume rm $MONGO_VOLUME
+    docker volume create $MONGO_VOLUME
     docker compose --env-file ./env/unit_tests.env --profile mongo build
     check_exit_failure "[Unit tests] mongo build failed"
 fi
