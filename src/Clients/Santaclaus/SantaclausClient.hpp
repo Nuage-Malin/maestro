@@ -47,6 +47,7 @@ class SantaclausClient {
     template <typename StrIterator>
         requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
     Maestro_Santaclaus::RemoveFilesStatus physicalRemoveFiles(StrIterator fileIdsBeg, const StrIterator &fileIdsEnd) const;
+    Maestro_Santaclaus::AddDirectoryStatus addDirectory(const File::FileApproxMetadata &directory) const;
     Maestro_Santaclaus::RemoveDirectoryStatus removeDirectory(const string &dirId) const;
     Maestro_Santaclaus::MoveDirectoryStatus moveDirectory(
         const string &dirId, const std::optional<string> &name = std::nullopt,

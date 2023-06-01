@@ -67,6 +67,11 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         ::UsersBack_Maestro::FilesRemoveStatus *response
     ) override;
 
+    grpc::Status dirMake(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::DirMakeRequest *request,
+        ::UsersBack_Maestro::DirMakeStatus *response
+    ) override;
+
     grpc::Status dirRemove(
         ::grpc::ServerContext *context, const ::UsersBack_Maestro::DirRemoveRequest *request,
         ::UsersBack_Maestro::DirRemoveStatus *response

@@ -116,6 +116,20 @@ Maestro_Santaclaus::RemoveFileStatus SantaclausClient::physicalRemoveFile(const 
     return response;
 }
 
+Maestro_Santaclaus::AddDirectoryStatus SantaclausClient::addDirectory(const File::FileApproxMetadata &directory) const
+{
+    grpc::ClientContext context;
+    Maestro_Santaclaus::AddDirectoryRequest request;
+    Maestro_Santaclaus::AddDirectoryStatus response;
+
+    request.set_allocated_directory(new File::FileApproxMetadata(directory));
+    auto status = this->_stub->addDirectory(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status, __FUNCTION__);
+    return response;
+}
+
 Maestro_Santaclaus::RemoveDirectoryStatus SantaclausClient::removeDirectory(const string &dirId) const
 {
     grpc::ClientContext context;

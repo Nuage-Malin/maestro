@@ -216,6 +216,17 @@ grpc::Status UsersBackService::filesRemove(
         return grpc::Status::OK;
     });
 }
+grpc::Status UsersBackService::dirMake(
+    ::grpc::ServerContext *context, const ::UsersBack_Maestro::DirMakeRequest *request,
+    ::UsersBack_Maestro::DirMakeStatus *response
+)
+{
+    return this->_procedureRunner([this, request, response]() {
+        this->_clients.santaclaus.addDirectory(request->directory());
+
+        return grpc::Status::OK;
+    });
+}
 
 grpc::Status UsersBackService::
     dirRemove(UNUSED grpc::ServerContext *, const UsersBack_Maestro::DirRemoveRequest *request, UNUSED UsersBack_Maestro::DirRemoveStatus *)
