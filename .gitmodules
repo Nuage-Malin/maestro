@@ -7,3 +7,6 @@
 [submodule "third_parties/libcron"]
 	path = third_parties/libcron
 	url = git@github.com:PerMalmberg/libcron.git
+[submodule "third_parties/mongo-cxx-driver"]
+	path = third_parties/mongo-cxx-driver
+	url = git@github.com:mongodb/mongo-cxx-driver.git
