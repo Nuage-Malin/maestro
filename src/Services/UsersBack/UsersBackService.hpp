@@ -146,7 +146,9 @@ UsersBack_Maestro::FilesRemoveStatus UsersBackService::actFilesRemove(StrIterato
         } else {                                                         // if disk is turned on
             auto filesDiskRemoved = filesDisk.second;
             Maestro_Vault::RemoveFilesRequest my_request;
+            auto sampleFile = this->_clients.santaclaus.getFile(*filesDisk.second.begin()); // get disk id from santaclaus
 
+            my_request.set_userid(sampleFile.file().approxmetadata().userid());
             my_request.set_diskid(filesDisk.first);
             for (const auto &fileId : filesDisk.second) {
                 my_request.add_fileid(fileId);

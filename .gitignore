@@ -5,6 +5,7 @@ TODO
 build
 cmake-build-debug
 cmake-build-unit-tests
+cmake-build-system-tests/
 Testing
 ## Executables
 executable
