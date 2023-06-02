@@ -134,11 +134,9 @@ if [ "$GRPC_FULL_INSTALL" == "true" ]; then
     echo "PATH : $PATH"
 
 
-    nbr_cpu=`nproc`
-    check_exit_failure "Failed to get number of cpu"
     make -j $((`nproc` - 1))
     check_exit_failure "Failed to make grpc (full install)"
-    make install
+    make install -j $((`nproc` - 1))
     check_exit_failure "Failed to install grpc (full install)"
     popd
     popd

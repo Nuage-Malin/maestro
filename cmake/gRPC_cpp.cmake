@@ -1,12 +1,5 @@
-if (NOT DEFINED GRPC_CPP_ONCE)
-    set(GRPC_CPP_ONCE true)
-
-    get_filename_component(GRPC_SUBMODULE_DIR "${THIRD_PARTIES_DIR}/grpc/" ABSOLUTE)
-    if (NOT EXISTS ${GRPC_SUBMODULE_DIR})
-        set(GRPC_CLONE_SUBMODULE true)
-    endif ()
-
-    include("${CMAKE_MODULES_DIR}/install_gRPC.cmake")
+if (NOT DEFINED GRPC_CPP_BUILD_ONCE)
+    set(GRPC_CPP_BUILD_ONCE true)
 
     # Proto file
     get_filename_component(my_protos_path

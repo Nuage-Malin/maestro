@@ -66,11 +66,19 @@ set(SRCS
 
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY})
 
-# Effectuer les règles gRPC et MongoDB seulement quand doxygen n'est pas activé
-if (NOT DEFINED doxygen)
+if (DEFINED install AND install STREQUAL "true")
     # gRPC
-    include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
+    include("${CMAKE_MODULES_DIR}/install_gRPC.cmake")
 
+    # MongoDB
+    include(${CMAKE_MODULES_DIR}/mongodb.cmake)
+
+    # LibCron
+    include(${CMAKE_MODULES_DIR}/libcron.cmake)
+endif ()
+
+if (DEFINED launch AND launch STREQUAL "true")
+    include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
 
     add_executable(${EXECUTABLE_NAME} ${SRC_DIR}/main.cpp ${SRCS})
     set_property(TARGET ${EXECUTABLE_NAME} PROPERTY CXX_STANDARD 20)
@@ -78,13 +86,14 @@ if (NOT DEFINED doxygen)
 
     # gRPC
     target_link_libraries(${EXECUTABLE_NAME} ${my_grpc_proto} ${_REFLECTION}
-                          ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
+                        ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
 
     # MongoDB
-    include(${CMAKE_MODULES_DIR}/mongodb.cmake)
+    target_link_libraries(${EXECUTABLE_NAME} ${LIBBSONCXX_LIBRARIES})
+    target_link_libraries(${EXECUTABLE_NAME} ${LIBMONGOCXX_LIBRARIES})
 
     # LibCron
-    include(${CMAKE_MODULES_DIR}/libcron.cmake)
+    target_link_libraries(${EXECUTABLE_NAME} ${LIBCRON_LIBRARIES})
 
     target_compile_options(${EXECUTABLE_NAME} PRIVATE -Wall -Wextra -Wno-missing-field-initializers)
 endif ()
