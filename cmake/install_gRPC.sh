@@ -90,18 +90,16 @@ if [ "$GRPC_CLONE_SUBMODULE" == "true" ]; then
     git submodule update --init --recursive # todo put that after going into the gRPC folder
 fi
 
-if [ "$GRPC_CLONE_SUBMODULE" == "true" ]; then
-  ## compile gRPC
-  cd grpc
-  check_exit_failure "Failed to go into grpc folder"
-  mkdir -p cmake/build
-  pushd cmake/build
-  check_exit_failure "Failed to go into grpc/cmake/build folder"
-  cmake ../..
-  check_exit_failure "Failed to cmake grpc"
-  make -j $((`nproc` - 1))
-  check_exit_failure "Failed to make grpc"
-fi
+## compile gRPC
+cd grpc
+check_exit_failure "Failed to go into grpc folder"
+mkdir -p cmake/build
+pushd cmake/build
+check_exit_failure "Failed to go into grpc/cmake/build folder"
+cmake ../..
+check_exit_failure "Failed to cmake grpc"
+make -j $((`nproc` - 1))
+check_exit_failure "Failed to make grpc"
 
 mkdir -p $INSTALL_DIR
 
