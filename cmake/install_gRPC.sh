@@ -90,7 +90,7 @@ if [ "$GRPC_CLONE_SUBMODULE" == "true" ]; then
     git submodule update --init --recursive # todo put that after going into the gRPC folder
 fi
 
-if [ "$GRPC_CLONE_SUBMODULE" == "true" ] || [ "$GRPC_RECOMPILE" == "true"  ]; then
+if [ "$GRPC_CLONE_SUBMODULE" == "true" ]; then
   ## compile gRPC
   cd grpc
   check_exit_failure "Failed to go into grpc folder"
@@ -103,41 +103,39 @@ if [ "$GRPC_CLONE_SUBMODULE" == "true" ] || [ "$GRPC_RECOMPILE" == "true"  ]; th
   check_exit_failure "Failed to make grpc"
 fi
 
-if [ "$GRPC_FULL_INSTALL" == "true" ]; then
-  mkdir -p $INSTALL_DIR
+mkdir -p $INSTALL_DIR
 
-    ## install gRPC from source
-    cmake -DgRPC_INSTALL=ON \
-            -DgRPC_BUILD_TESTS=OFF \
-            -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR \
-            -DABSL_ENABLE_INSTALL=ON \
-            ../..
-            ## todo install on entire system is useless if used as submodule ?
-    check_exit_failure "Failed to cmake grpc (full install)"
+## install gRPC from source
+cmake -DgRPC_INSTALL=ON \
+        -DgRPC_BUILD_TESTS=OFF \
+        -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR \
+        -DABSL_ENABLE_INSTALL=ON \
+        ../..
+        ## todo install on entire system is useless if used as submodule ?
+check_exit_failure "Failed to cmake grpc (full install)"
 
-    export PATH="$INSTALL_DIR/bin:$PATH"
+export PATH="$INSTALL_DIR/bin:$PATH"
 
-    echo "SHELL: $SHELL"
-    ZSH=$( ( echo $SHELL | grep zsh) )
-    if ! [[ -z $ZSH ]] && (! cat $HOME/.zshrc | grep PATH | grep "$INSTALL_DIR/bin"); then
-        echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.zshrc
-        echo "zshrc:"
-        cat $HOME/.zshrc
-    elif (! cat $HOME/.bashrc | grep PATH | grep "$INSTALL_DIR/bin"); then
-        echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.bashrc
-        echo "bashrc:"
-        cat $HOME/.bashrc
-    else
-        echo "gRPC path already added to PATH"
-    fi
-    echo "Install directory : $INSTALL_DIR"
-    echo "PATH : $PATH"
-
-
-    make -j $((`nproc` - 1))
-    check_exit_failure "Failed to make grpc (full install)"
-    make install -j $((`nproc` - 1))
-    check_exit_failure "Failed to install grpc (full install)"
-    popd
-    popd
+echo "SHELL: $SHELL"
+ZSH=$( ( echo $SHELL | grep zsh) )
+if ! [[ -z $ZSH ]] && (! cat $HOME/.zshrc | grep PATH | grep "$INSTALL_DIR/bin"); then
+    echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.zshrc
+    echo "zshrc:"
+    cat $HOME/.zshrc
+elif (! cat $HOME/.bashrc | grep PATH | grep "$INSTALL_DIR/bin"); then
+    echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.bashrc
+    echo "bashrc:"
+    cat $HOME/.bashrc
+else
+    echo "gRPC path already added to PATH"
 fi
+echo "Install directory : $INSTALL_DIR"
+echo "PATH : $PATH"
+
+
+make -j $((`nproc` - 1))
+check_exit_failure "Failed to make grpc (full install)"
+make install -j $((`nproc` - 1))
+check_exit_failure "Failed to install grpc (full install)"
+popd
+popd

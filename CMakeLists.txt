@@ -77,7 +77,7 @@ if (DEFINED install AND install STREQUAL "true")
     include(${CMAKE_MODULES_DIR}/libcron.cmake)
 endif ()
 
-if (DEFINED launch AND launch STREQUAL "true")
+if (DEFINED build AND build STREQUAL "true")
     include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
 
     add_executable(${EXECUTABLE_NAME} ${SRC_DIR}/main.cpp ${SRCS})
@@ -103,18 +103,20 @@ include(${CMAKE_MODULES_DIR}/clang-format.cmake)
 include(${CMAKE_MODULES_DIR}/clang-tidy.cmake)
 include(${CMAKE_MODULES_DIR}/cmake-format.cmake)
 
-if (DEFINED functional_tests)
+if (DEFINED functional_tests AND functional_tests STREQUAL "true")
     include(${CMAKE_MODULES_DIR}/functional_tests.cmake)
 endif ()
 
-if (DEFINED unit_tests) ## todo build only unit_tests, not maestro ? for docker compose unit_tests
+if (DEFINED unit_tests AND unit_tests STREQUAL "true") ## todo build only unit_tests, not maestro ? for docker compose unit_tests
     include(${CMAKE_MODULES_DIR}/gTest.cmake)
 endif ()
 
-if (DEFINED system_tests) ## todo build only system_tests, not maestro ? for docker compose unit_tests
+if (DEFINED system_tests AND system_tests STREQUAL "true") ## todo build only system_tests, not maestro ? for docker compose unit_tests
+    include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
+
     include(${CMAKE_MODULES_DIR}/system_tests.cmake)
 endif ()
 
-if (DEFINED doxygen)
+if (DEFINED doxygen AND doxygen STREQUAL "true")
     include(${CMAKE_MODULES_DIR}/doxygen.cmake)
 endif ()

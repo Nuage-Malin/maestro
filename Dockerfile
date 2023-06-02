@@ -22,8 +22,6 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # CMake installations
-ENV GRPC_FULL_INSTALL="true"
-
 COPY third_parties/grpc /app/third_parties/grpc
 COPY third_parties/mongo-cxx-driver /app/third_parties/mongo-cxx-driver
 COPY third_parties/libcron /app/third_parties/libcron
@@ -38,7 +36,7 @@ COPY third_parties/protobuf-interfaces /app/third_parties/protobuf-interfaces
 COPY include /app/include
 COPY src /app/src
 
-RUN cmake -D launch=true -S . -B build
+RUN cmake -D build=true -S . -B build
 RUN make -C build -j $((`nproc` - 1))
 
 # Run

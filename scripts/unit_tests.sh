@@ -110,14 +110,14 @@ source ./env/unit_tests.env
 set +o allexport
 
 if $ARG_CMAKE; then
-    GRPC_FULL_INSTALL=true cmake -D unit_tests=true -S . -B build
+    cmake -D install=true -D build=true -D unit_tests=true -S . -B build
     check_exit_failure "[Unit tests] cmake failed"
 fi
 if $ARG_BUILD; then
-    make -C build maestro
+    make -C build maestro -j $((`nproc` - 1))
     check_exit_failure "[Unit tests] compilation failed"
 fi
-make -C build unit_tests
+make -C build unit_tests -j $((`nproc` - 1))
 check_exit_failure "[Unit tests] compilation failed"
 
 if $ARG_DOCKER; then
