@@ -21,7 +21,7 @@ void RemoveFilesCron::run()
     std::unordered_set<string> disks = this->_filesSchemas.removeQueue.getFilesDisk();
 
     for (const auto &disk : disks)
-        this->_clients.hardwareMalin.setDiskState(disk, true);
+        this->_clients.bugle.setDiskState(disk, true);
 }
 
 void RemoveFilesCron::_removeDiskFiles(const string &diskId)

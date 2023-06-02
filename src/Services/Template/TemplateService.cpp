@@ -11,7 +11,14 @@
 
 grpc::Status TemplateService::_procedureRunner(std::function<grpc::Status()> callback, const std::source_location &location)
 {
-    std::cout << "[REQUEST] " << location.function_name() << std::endl;
+    this->_procedureRunner(callback, location.function_name());
+}
+
+grpc::Status TemplateService::_procedureRunner(
+    std::function<grpc::Status()> callback, const string &functionName, const std::source_location &location
+)
+{
+    std::cout << "[SERVICE] " << functionName << std::endl;
 
     try {
         return callback();

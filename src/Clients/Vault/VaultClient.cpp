@@ -93,3 +93,8 @@ Maestro_Vault::RemoveFilesStatus VaultClient::removeFiles(const Maestro_Vault::R
         throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
+
+void VaultClient::_callLogger(const string &functionName) const
+{
+    std::cout << "[CLIENT] " << functionName << std::endl;
+}

@@ -61,7 +61,7 @@ set(SRCS
     ${SRC_DIR}/Services/Template/TemplateService.cpp
     ${SRC_DIR}/Services/UsersBack/UsersBackService.cpp
     ${SRC_DIR}/Clients/Santaclaus/SantaclausClient.cpp
-    ${SRC_DIR}/Clients/HardwareMalin/HardwareMalinClient.cpp
+    ${SRC_DIR}/Clients/Bugle/BugleClient.cpp
     ${SRC_DIR}/Clients/Vault/VaultClient.cpp)
 
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY})
