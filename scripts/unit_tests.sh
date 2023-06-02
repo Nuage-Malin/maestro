@@ -10,7 +10,13 @@ LOCAL_PID=0
 
 usage()
 {
-    echo "Usage: $0 [--cmake] [--build] [--local] [--docker] [--mongo]" 1>&2
+    echo "Usage: $0 [--help] [--cmake] [--build] [--local] [--docker] [--mongo]"
+    echo -e "\t--help: Prints this message"
+    echo -e "\t--cmake: Run cmake with the install, build, and unit_tests options"
+    echo -e "\t--build: Build maestro (make)"
+    echo -e "\t--local: Launches maestro locally"
+    echo -e "\t--docker: Launches maestro and the database with docker"
+    echo -e "\t--mongo: Launches the database with docker"
     exit 1
 }
 
