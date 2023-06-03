@@ -1,17 +1,19 @@
 # Repository name
 
 ## Build
+cmake `install` argument install dependencies like gRPC and mongocxx.
+cmake `build` argument build the project with protobuf files.
 
 ```shell
 mkdir "build"
-cmake -S . -B build
+cmake -D install=true -D build=true -S . -B build
 make -C build
 ```
 
 ## Run
 
 ```shell
-./executable
+./build/maestro
 ```
 
 ## Docker
@@ -26,8 +28,7 @@ docker compose --env-file ./env/maestro.env --profile launch up --build
 #### Build
 
 ```shell
-mkdir "build"
-cmake -D unit_tests=true -S . -B build
+cmake -D install=true -D unit_tests=true -S . -B build
 make -C build unit_tests
 ```
 
@@ -35,10 +36,9 @@ make -C build unit_tests
 
 ```shell
 ## either :
-./unit_tests
+./build/unit_tests
 ## or :
-cd build
-ctest
+./build/ctest
 ```
 
 ### Functional tests
@@ -55,12 +55,6 @@ make -C build functional_tests
 
 ```shell
 ./functional_tests
-```
-
-## Troubleshoot
-*Could not find a package configuration file provided by "Protobuf"*
-```shell
-GRPC_FULL_INSTALL=true cmake -S . -B build
 ```
 
 ## Learn

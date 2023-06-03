@@ -9,8 +9,8 @@ usage()
     echo "Usage: $0 [--help] [--build] [--docker] [--dry-run]"
     echo -e "\t--help: Prints this message"
     echo -e "\t--build: Build maestro (cmake + make)"
-    echo -e "\t--docker: Launches the database in a docker container but maestro still runs locally"
-    echo -e "\t--dry-run: Builds maestro if --build is specified and start the database if --docker is specified but does not run maestro. It's useful to build without running maestro."
+    echo -e "\t--docker: Launches maestro and the database with docker"
+    echo -e "\t--dry-run: Build maestro if --build is specified, but don't launch it"
     exit 0
 }
 
@@ -23,6 +23,8 @@ exit_gracefully()
     fi
 
     if $ARG_DOCKER; then
+        docker compose --env-file ./env/maestro.env --profile launch down
+    else
         docker compose --env-file ./env/local.env --profile mongo down
     fi
 
@@ -60,24 +62,39 @@ for arg in "$@"; do
 done
 
 if $ARG_BUILD; then
-    GRPC_FULL_INSTALL=true cmake -S . -B build
-    check_exit_failure "Failed to cmake"
+    if $ARG_DOCKER; then
+        docker compose --env-file ./env/maestro.env --profile launch build
+        check_exit_failure "Failed to build with docker"
+    else
+        cmake -D install=true -S . -B build
+        check_exit_failure "Failed to install dependencies"
 
-    make -C build
-    check_exit_failure "Failed to make"
-fi
+        cmake -D build=true -S . -B build
+        check_exit_failure "Failed to cmake"
 
-if $ARG_DOCKER; then
-    docker compose --env-file ./env/local.env --profile mongo up --build -d
-    check_exit_failure "Failed to start maestro database"
+        make -C build
+        check_exit_failure "Failed to make"
+
+        docker compose --env-file ./env/local.env --profile mongo build
+        check_exit_failure "Failed to build database"
+    fi
 fi
 
 trap "exit_gracefully 1" SIGINT
 
-set -o allexport
-source ./env/local.env
-set +o allexport
-
 if ! $ARG_DRY_RUN; then
-    exec ./build/maestro
+    if $ARG_DOCKER; then
+        docker compose --env-file ./env/maestro.env --profile launch up
+        check_exit_failure "Failed to start maestro with docker"
+    else
+        docker compose --env-file ./env/local.env --profile mongo up -d
+        check_exit_failure "Failed to start maestro database"
+
+        set -o allexport
+        source ./env/local.env
+        set +o allexport
+
+        exec ./build/maestro
+        check_exit_failure "Failed to start maestro locally"
+    fi
 fi

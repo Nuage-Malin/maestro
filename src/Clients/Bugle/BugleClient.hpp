@@ -1,12 +1,12 @@
 /**
- * @file HardwareMalinClient.hpp
+ * @file BugleClient.hpp
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 15/03/2023
  * @copyright Nuage Malin
  */
 
-#ifndef MAESTRO_HARDWAREMALIN_CLIENT_HPP
-#define MAESTRO_HARDWAREMALIN_CLIENT_HPP
+#ifndef MAESTRO_BUGLE_CLIENT_HPP
+#define MAESTRO_BUGLE_CLIENT_HPP
 
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/channel.h>
@@ -16,13 +16,16 @@
 #include "utils.hpp"
 #include "EventsManager.hpp"
 
-class HardwareMalinClient {
+class BugleClient {
   public:
-    HardwareMalinClient(const std::shared_ptr<grpc::ChannelInterface> &channel, const EventsManager &events);
-    ~HardwareMalinClient() = default;
+    BugleClient(const std::shared_ptr<grpc::ChannelInterface> &channel, const EventsManager &events);
+    ~BugleClient() = default;
 
     NODISCARD bool diskStatus(const string &diskId) const;
     void setDiskState(const string &diskId, bool state) const;
+
+  private:
+    void _callLogger(const string &functionName) const;
 
   private:
     std::unique_ptr<Maestro_HardwareMalin::Maestro_HardwareMalin_Service::Stub> _stub;

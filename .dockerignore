@@ -18,6 +18,10 @@ docs/Doxygen/html
 docs/Doxygen/man
 docs/Doxygen/Doxyfile
 
+# Build cache
+third_parties/*/build/
+third_parties/*/install/
+
 # Others
 **/CMakeCache.txt
 functional_tests

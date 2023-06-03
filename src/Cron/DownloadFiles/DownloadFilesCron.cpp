@@ -21,7 +21,7 @@ void DownloadFilesCron::run()
     std::unordered_set<string> disks = this->_filesSchemas.downloadQueue.getFilesDisk();
 
     for (const auto &disk : disks)
-        this->_clients.hardwareMalin.setDiskState(disk, true);
+        this->_clients.bugle.setDiskState(disk, true);
 }
 
 void DownloadFilesCron::_downloadDiskFiles(const string &diskId)

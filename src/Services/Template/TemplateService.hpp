@@ -19,12 +19,12 @@
 
 class TemplateService {
   protected:
-    /**
-     * @param location should be overriden
-     * @param functionName should be overriden
-     */
     grpc::Status _procedureRunner(
         std::function<grpc::Status()> callback, const std::source_location &location = std::source_location::current()
+    );
+    grpc::Status _procedureRunner(
+        std::function<grpc::Status()> callback, const string &functionName,
+        const std::source_location &location = std::source_location::current()
     );
 
   private:

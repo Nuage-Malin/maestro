@@ -21,7 +21,7 @@ void FileUploadCron::run()
     std::unordered_set<string> disks = this->_filesSchemas.uploadQueue.getFilesDisk();
 
     for (const auto &disk : disks)
-        this->_clients.hardwareMalin.setDiskState(disk, true);
+        this->_clients.bugle.setDiskState(disk, true);
 }
 
 void FileUploadCron::_uploadFiles(const string &diskId)

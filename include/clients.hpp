@@ -9,13 +9,13 @@
 #define MAESTRO_CLIENTS_HPP
 
 #include "Clients/Santaclaus/SantaclausClient.hpp"
-#include "Clients/HardwareMalin/HardwareMalinClient.hpp"
+#include "Clients/Bugle/BugleClient.hpp"
 #include "Clients/Vault/VaultClient.hpp"
 
 struct GrpcClients
 {
     const SantaclausClient santaclaus;
-    const HardwareMalinClient hardwareMalin;
+    const BugleClient bugle;
     const VaultClient vault;
 };
 

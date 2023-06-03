@@ -28,6 +28,9 @@ class VaultClient {
     Maestro_Vault::RemoveFilesStatus removeFiles(const Maestro_Vault::RemoveFilesRequest &files) const;
 
   private:
+    void _callLogger(const string &functionName) const;
+
+  private:
     std::unique_ptr<Maestro_Vault::Maestro_Vault_Service::Stub> _stub;
 };
 

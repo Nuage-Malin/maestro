@@ -55,6 +55,9 @@ class SantaclausClient {
     ) const;
 
   private:
+    void _callLogger(const string &functionName) const;
+
+  private:
     std::unique_ptr<Maestro_Santaclaus::Maestro_Santaclaus_Service::Stub> _stub;
 };
 

@@ -10,7 +10,13 @@ LOCAL_PID=0
 
 usage()
 {
-    echo "Usage: $0 [--cmake] [--build] [--local] [--docker] [--mongo]" 1>&2
+    echo "Usage: $0 [--help] [--cmake] [--build] [--local] [--docker] [--mongo]"
+    echo -e "\t--help: Prints this message"
+    echo -e "\t--cmake: Run cmake with the install, build, and unit_tests options"
+    echo -e "\t--build: Build maestro (make)"
+    echo -e "\t--local: Launches maestro locally"
+    echo -e "\t--docker: Launches maestro and the database with docker"
+    echo -e "\t--mongo: Launches the database with docker"
     exit 1
 }
 
@@ -110,14 +116,14 @@ source ./env/unit_tests.env
 set +o allexport
 
 if $ARG_CMAKE; then
-    GRPC_FULL_INSTALL=true cmake -D unit_tests=true -S . -B build
+    cmake -D install=true -D build=true -D unit_tests=true -S . -B build
     check_exit_failure "[Unit tests] cmake failed"
 fi
 if $ARG_BUILD; then
-    make -C build maestro
+    make -C build maestro -j $((`nproc` - 1))
     check_exit_failure "[Unit tests] compilation failed"
 fi
-make -C build unit_tests
+make -C build unit_tests -j $((`nproc` - 1))
 check_exit_failure "[Unit tests] compilation failed"
 
 if $ARG_DOCKER; then

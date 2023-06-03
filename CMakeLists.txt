@@ -61,16 +61,24 @@ set(SRCS
     ${SRC_DIR}/Services/Template/TemplateService.cpp
     ${SRC_DIR}/Services/UsersBack/UsersBackService.cpp
     ${SRC_DIR}/Clients/Santaclaus/SantaclausClient.cpp
-    ${SRC_DIR}/Clients/HardwareMalin/HardwareMalinClient.cpp
+    ${SRC_DIR}/Clients/Bugle/BugleClient.cpp
     ${SRC_DIR}/Clients/Vault/VaultClient.cpp)
 
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY})
 
-# Effectuer les règles gRPC et MongoDB seulement quand doxygen n'est pas activé
-if (NOT DEFINED doxygen)
+if (DEFINED install AND install STREQUAL "true")
     # gRPC
-    include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
+    include("${CMAKE_MODULES_DIR}/install_gRPC.cmake")
 
+    # MongoDB
+    include(${CMAKE_MODULES_DIR}/mongodb.cmake)
+
+    # LibCron
+    include(${CMAKE_MODULES_DIR}/libcron.cmake)
+endif ()
+
+if (DEFINED build AND build STREQUAL "true")
+    include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
 
     add_executable(${EXECUTABLE_NAME} ${SRC_DIR}/main.cpp ${SRCS})
     set_property(TARGET ${EXECUTABLE_NAME} PROPERTY CXX_STANDARD 20)
@@ -78,13 +86,14 @@ if (NOT DEFINED doxygen)
 
     # gRPC
     target_link_libraries(${EXECUTABLE_NAME} ${my_grpc_proto} ${_REFLECTION}
-                          ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
+                        ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
 
     # MongoDB
-    include(${CMAKE_MODULES_DIR}/mongodb.cmake)
+    target_link_libraries(${EXECUTABLE_NAME} ${LIBBSONCXX_LIBRARIES})
+    target_link_libraries(${EXECUTABLE_NAME} ${LIBMONGOCXX_LIBRARIES})
 
     # LibCron
-    include(${CMAKE_MODULES_DIR}/libcron.cmake)
+    target_link_libraries(${EXECUTABLE_NAME} ${LIBCRON_LIBRARIES})
 
     target_compile_options(${EXECUTABLE_NAME} PRIVATE -Wall -Wextra -Wno-missing-field-initializers)
 endif ()
@@ -94,18 +103,20 @@ include(${CMAKE_MODULES_DIR}/clang-format.cmake)
 include(${CMAKE_MODULES_DIR}/clang-tidy.cmake)
 include(${CMAKE_MODULES_DIR}/cmake-format.cmake)
 
-if (DEFINED functional_tests)
+if (DEFINED functional_tests AND functional_tests STREQUAL "true")
     include(${CMAKE_MODULES_DIR}/functional_tests.cmake)
 endif ()
 
-if (DEFINED unit_tests) ## todo build only unit_tests, not maestro ? for docker compose unit_tests
+if (DEFINED unit_tests AND unit_tests STREQUAL "true") ## todo build only unit_tests, not maestro ? for docker compose unit_tests
     include(${CMAKE_MODULES_DIR}/gTest.cmake)
 endif ()
 
-if (DEFINED system_tests) ## todo build only system_tests, not maestro ? for docker compose unit_tests
+if (DEFINED system_tests AND system_tests STREQUAL "true") ## todo build only system_tests, not maestro ? for docker compose unit_tests
+    include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
+
     include(${CMAKE_MODULES_DIR}/system_tests.cmake)
 endif ()
 
-if (DEFINED doxygen)
+if (DEFINED doxygen AND doxygen STREQUAL "true")
     include(${CMAKE_MODULES_DIR}/doxygen.cmake)
 endif ()

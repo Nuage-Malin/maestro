@@ -107,6 +107,9 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
     UsersBack_Maestro::FilesRemoveStatus actFilesRemove(StrIterator fileIdsBeg, const StrIterator &fileIdsEnd);
 
+    void _fileUploadFailure(const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus);
+    void _askFileDownloadFailure(const string &fileId, const Maestro_Santaclaus::GetFileStatus &file, const Date &expirationDate, UsersBack_Maestro::AskFileDownloadStatus &response);
+
   private:
     FilesSchemas &_filesSchemas;
     StatsSchemas &_statsSchemas;
@@ -146,9 +149,9 @@ UsersBack_Maestro::FilesRemoveStatus UsersBackService::actFilesRemove(StrIterato
 
     this->_clients.santaclaus.virtualRemoveFiles(fileIdsBeg, fileIdsEnd);
     for (const auto &filesDisk : filesDisks) {
-        if (!this->_clients.hardwareMalin.diskStatus(filesDisk.first)) { // check if disk is turned off
+        if (!this->_clients.bugle.diskStatus(filesDisk.first)) { // check if disk is turned off
             this->_filesSchemas.removeQueue.add(filesDisk.first, filesDisk.second.begin(), filesDisk.second.end());
-        } else {                                                         // if disk is turned on
+        } else {                                                 // if disk is turned on
             auto filesDiskRemoved = filesDisk.second;
             Maestro_Vault::RemoveFilesRequest my_request;
             auto sampleFile = this->_clients.santaclaus.getFile(*filesDisk.second.begin()); // get disk id from santaclaus
