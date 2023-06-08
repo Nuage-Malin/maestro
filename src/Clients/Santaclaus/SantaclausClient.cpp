@@ -27,6 +27,7 @@ Maestro_Santaclaus::AddFileStatus SantaclausClient::addFile(const File::FileAppr
 
     request.set_filesize(fileSize);
     request.set_allocated_file(new File::FileApproxMetadata(file));
+    this->_callLogger(__FUNCTION__);
     grpc::Status status = this->_stub->addFile(&context, request, &response);
 
     if (!status.ok())
@@ -41,6 +42,7 @@ NODISCARD Maestro_Santaclaus::GetFileStatus SantaclausClient::getFile(const stri
     Maestro_Santaclaus::GetFileStatus response;
 
     request.set_fileid(fileId);
+    this->_callLogger(__FUNCTION__);
     grpc::Status status = this->_stub->getFile(&context, request, &response);
 
     if (!status.ok())
@@ -59,6 +61,7 @@ SantaclausClient::getDirectory(const string &userId, const std::optional<string>
     if (dirId.has_value())
         request.set_dirid(dirId.value());
     request.set_isrecursive(isRecursive);
+    this->_callLogger(__FUNCTION__);
     grpc::Status status = this->_stub->getDirectory(&context, request, &response);
 
     if (!status.ok())
@@ -74,12 +77,11 @@ SantaclausClient::moveFile(const string &fileId, const std::optional<string> &na
     Maestro_Santaclaus::MoveFileRequest request;
 
     request.set_fileid(fileId);
-    if (name.has_value()) {
+    if (name.has_value())
         request.set_newfilename(name.value());
-    }
-    if (dirId.has_value()) {
+    if (dirId.has_value())
         request.set_dirid(dirId.value());
-    }
+    this->_callLogger(__FUNCTION__);
     auto status = _stub->moveFile(&context, request, &response);
 
     if (!status.ok())
@@ -94,6 +96,7 @@ Maestro_Santaclaus::RemoveFileStatus SantaclausClient::virtualRemoveFile(const s
     Maestro_Santaclaus::RemoveFileRequest request;
 
     request.set_fileid(fileId);
+    this->_callLogger(__FUNCTION__);
     auto status = _stub->virtualRemoveFile(&context, request, &response);
 
     if (!status.ok())
@@ -109,6 +112,7 @@ Maestro_Santaclaus::RemoveFileStatus SantaclausClient::physicalRemoveFile(const 
     Maestro_Santaclaus::RemoveFileRequest request;
 
     request.set_fileid(fileId);
+    this->_callLogger(__FUNCTION__);
     auto status = _stub->physicalRemoveFile(&context, request, &response);
 
     if (!status.ok())
@@ -123,6 +127,7 @@ Maestro_Santaclaus::AddDirectoryStatus SantaclausClient::addDirectory(const File
     Maestro_Santaclaus::AddDirectoryStatus response;
 
     request.set_allocated_directory(new File::FileApproxMetadata(directory));
+    this->_callLogger(__FUNCTION__);
     auto status = this->_stub->addDirectory(&context, request, &response);
 
     if (!status.ok())
@@ -137,6 +142,7 @@ Maestro_Santaclaus::RemoveDirectoryStatus SantaclausClient::removeDirectory(cons
     Maestro_Santaclaus::RemoveDirectoryStatus response;
 
     request.set_dirid(dirId);
+    this->_callLogger(__FUNCTION__);
     auto status = _stub->removeDirectory(&context, request, &response);
 
     if (!status.ok())
@@ -156,6 +162,7 @@ Maestro_Santaclaus::MoveDirectoryStatus SantaclausClient::moveDirectory(
         request.set_name(name.value());
     if (newLocationDirId.has_value())
         request.set_newlocationdirid(newLocationDirId.value());
+    this->_callLogger(__FUNCTION__);
     auto status = _stub->moveDirectory(&context, request, &response);
 
     if (!status.ok())
