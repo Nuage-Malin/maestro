@@ -144,6 +144,9 @@ UsersBack_Maestro::FilesRemoveStatus UsersBackService::actFilesRemove(StrIterato
     std::unordered_map<string, std::unordered_set<string>> filesDisks = getFilesDisk(fileIdsBeg, fileIdsEnd);
     UsersBack_Maestro::FilesRemoveStatus response;
 
+    if (fileIdsBeg == fileIdsEnd)
+        throw std::logic_error("Calling remove files with no files to remove, in function " + STR_FUNCTION);
+
     this->_clients.santaclaus.virtualRemoveFiles(fileIdsBeg, fileIdsEnd);
     for (const auto &filesDisk : filesDisks) {
         if (!this->_clients.hardwareMalin.diskStatus(filesDisk.first)) { // check if disk is turned off

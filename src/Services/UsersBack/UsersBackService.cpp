@@ -234,7 +234,8 @@ grpc::Status UsersBackService::
     return this->_procedureRunner([this, request]() {
         auto my_response = this->_clients.santaclaus.removeDirectory(request->dirid());
 
-        this->actFilesRemove(my_response.fileidstoremove().begin(), my_response.fileidstoremove().end());
+        if (my_response.fileidstoremove().size())
+            this->actFilesRemove(my_response.fileidstoremove().begin(), my_response.fileidstoremove().end());
 
         return grpc::Status::OK;
     });
