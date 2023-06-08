@@ -110,38 +110,48 @@ grpc::Status UsersBackService::askFileDownload(
                 return grpc::Status::OK;
             }
 
-            const Maestro_Santaclaus::GetFileStatus file = this->_clients.santaclaus.getFile(request->fileid());
             const std::chrono::days expirationLimit(2);
+            const Date &expirationDate = Date() + expirationLimit;
 
             try {
-                // Check if the file is already in the database
-                const Date &requestedDate = this->_filesSchemas.downloadQueue.getRequestedDate(request->fileid(), file.diskid());
+                // Get file from UploadQueue if exist
+                const string &uploadQueueFile = this->_filesSchemas.uploadQueue.getFile(request->fileid());
 
-                response->set_allocated_waitingtime((requestedDate + expirationLimit).toAllocatedDuration());
+                this->_filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, uploadQueueFile);
+                response->set_allocated_waitingtime(new google::protobuf::Duration());
                 return grpc::Status::OK;
             } catch (const NotFoundException &error) {
-                const Date &expirationDate = Date() + expirationLimit;
+                const Maestro_Santaclaus::GetFileStatus file = this->_clients.santaclaus.getFile(request->fileid());
 
                 try {
-                    if (this->_clients.bugle.diskStatus(file.diskid())) {
-                        // If the disk is online, download the file from the filesystem and upload it to the database
-                        const string fileContent = this->_clients.vault.downloadFile(
-                            request->fileid(), file.file().approxmetadata().userid(), file.diskid()
-                        );
+                    // Check if the file is already in the database
+                    const Date &requestedDate =
+                        this->_filesSchemas.downloadQueue.getRequestedDate(request->fileid(), file.diskid());
 
-                        this->_filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, fileContent);
-                        response->set_allocated_waitingtime(expirationDate.toAllocatedDuration()); // TODO: Edit waiting time
-                    } else {
-                        // If the disk is offline, add the file to the queue database
+                    response->set_allocated_waitingtime((requestedDate + expirationLimit).toAllocatedDuration());
+                    return grpc::Status::OK;
+                } catch (const NotFoundException &error) {
+                    try {
+                        if (this->_clients.bugle.diskStatus(file.diskid())) {
+                            // If the disk is online, download the file from the filesystem and upload it to the database
+                            const string fileContent = this->_clients.vault.downloadFile(
+                                request->fileid(), file.file().approxmetadata().userid(), file.diskid()
+                            );
+
+                            this->_filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, fileContent);
+                            response->set_allocated_waitingtime(expirationDate.toAllocatedDuration()); // TODO: Edit waiting time
+                        } else {
+                            // If the disk is offline, add the file to the queue database
+                            this->_askFileDownloadFailure(request->fileid(), file, expirationDate, *response);
+                        }
+                    } catch (const RequestFailureException &error) {
+                        // If fail to call bugle or vault, add the file to the queue database
+                        std::cerr << "[WARNING] Fail to call bugle or vault, add the file to the queue DB : " << error.what()
+                                  << std::endl;
                         this->_askFileDownloadFailure(request->fileid(), file, expirationDate, *response);
                     }
-                } catch (const RequestFailureException &error) {
-                    // If fail to call bugle or vault, add the file to the queue database
-                    std::cerr << "[WARNING] Fail to call bugle or vault, add the file to the queue DB : " << error.what()
-                              << std::endl;
-                    this->_askFileDownloadFailure(request->fileid(), file, expirationDate, *response);
+                    return grpc::Status::OK;
                 }
-                return grpc::Status::OK;
             }
         },
         __FUNCTION__
@@ -281,7 +291,8 @@ grpc::Status UsersBackService::
         [this, request]() {
             auto my_response = this->_clients.santaclaus.removeDirectory(request->dirid());
 
-            this->actFilesRemove(my_response.fileidstoremove().begin(), my_response.fileidstoremove().end());
+            if (my_response.fileidstoremove().size())
+                this->actFilesRemove(my_response.fileidstoremove().begin(), my_response.fileidstoremove().end());
 
             return grpc::Status::OK;
         },

@@ -90,6 +90,9 @@ Maestro_Santaclaus::RemoveFilesStatus SantaclausClient::virtualRemoveFiles(StrIt
     Maestro_Santaclaus::RemoveFilesRequest request;
     uint index = 0;
 
+    if (fileIdsBeg == fileIdsEnd)
+        throw std::logic_error("Calling remove files with no files to remove, in function " + STR_FUNCTION);
+
     for (auto fileId = fileIdsBeg; fileId != fileIdsEnd; fileId++) {
         request.set_fileids(index++, fileId->data());
     }
