@@ -72,10 +72,10 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$MONGO_INS
 check_exit_failure "Fail to cmake mongo-cxx-driver"
 if [ `command -v sudo` ]; then
   echo "mongocxx should be installed with root privileges"
-  sudo make -C build install
+  sudo make -C build install -j $((`nproc` - 1))
   check_exit_failure "Fail to build mongo-cxx-driver as root"
 else
-  make -C build install
+  make -C build install -j $((`nproc` - 1))
   check_exit_failure "Fail to build mongo-cxx-driver"
 fi
 

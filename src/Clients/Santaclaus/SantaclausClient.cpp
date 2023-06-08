@@ -162,3 +162,8 @@ Maestro_Santaclaus::MoveDirectoryStatus SantaclausClient::moveDirectory(
         throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
+
+void SantaclausClient::_callLogger(const string &functionName) const
+{
+    std::cout << "[CLIENT] " << functionName << std::endl;
+}

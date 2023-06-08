@@ -57,12 +57,12 @@ for arg in "$@"; do
 done
 
 if $ARG_BUILD_SERVICE; then
-    $CURRENT_FILE_DIR/launch.sh --build --dry-run
+    $CURRENT_FILE_DIR/launch.sh --build --docker --dry-run
     check_exit_failure "Failed to build maestro"
 fi
 
 if $ARG_BUILD_TESTS; then
-    cmake -D system_tests=true -S . -B build
+    cmake -D install=true -D system_tests=true -S . -B build
     check_exit_failure "Failed to cmake system tests"
 
     make -C build system_tests
@@ -84,8 +84,8 @@ if $ARG_RUN_TESTS; then
 fi
 
 if $ARG_STOP; then
-    docker compose --env-file ./env/local.env --profile mongo down
-    check_exit_failure "Failed to stop maestro mongo"
+    docker compose --env-file ./env/maestro.env --profile launch down
+    check_exit_failure "Failed to stop maestro"
 fi
 
 exit 0

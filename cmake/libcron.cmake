@@ -25,5 +25,4 @@ if (NOT DEFINED LIBCRON_INSTALLED)
 
     include_directories(${THIRD_PARTIES_DIR}/libcron/install/include/)
     set(LIBCRON_LIBRARIES ${THIRD_PARTIES_DIR}/libcron/install/lib/liblibcron.a)
-    target_link_libraries(${EXECUTABLE_NAME} ${LIBCRON_LIBRARIES})
 endif ()

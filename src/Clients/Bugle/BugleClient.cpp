@@ -1,5 +1,5 @@
 /**
- * @file HardwareMalinClient.cpp
+ * @file BugleClient.cpp
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 15/03/2023
  * @copyright Nuage Malin
@@ -9,23 +9,24 @@
 
 #include <grpcpp/channel.h>
 
-#include "HardwareMalinClient.hpp"
+#include "BugleClient.hpp"
 #include "Exceptions/RequestFailure/RequestFailureException.hpp"
 
-HardwareMalinClient::HardwareMalinClient(const std::shared_ptr<grpc::ChannelInterface> &channel, const EventsManager &events)
+BugleClient::BugleClient(const std::shared_ptr<grpc::ChannelInterface> &channel, const EventsManager &events)
     : _stub(Maestro_HardwareMalin::Maestro_HardwareMalin_Service::NewStub(channel)), _events(events)
 {
     if (!this->_stub)
         throw std::runtime_error(STR_FUNCTION + " could not create gRPC stub");
 }
 
-bool HardwareMalinClient::diskStatus(const string &diskId) const
+bool BugleClient::diskStatus(const string &diskId) const
 {
     grpc::ClientContext context;
     Maestro_HardwareMalin::DiskStatusRequest request;
     Maestro_HardwareMalin::DiskStatusStatus response;
 
     request.set_diskid(diskId);
+    this->_callLogger(__FUNCTION__);
     grpc::Status status = this->_stub->diskStatus(&context, request, &response);
 
     if (!status.ok())
@@ -33,7 +34,7 @@ bool HardwareMalinClient::diskStatus(const string &diskId) const
     return response.status();
 }
 
-void HardwareMalinClient::setDiskState(const string &diskId, bool state) const
+void BugleClient::setDiskState(const string &diskId, bool state) const
 {
     if (!state)
         this->_events.emit<const string &>(Event::DISK_SHUTDOWN_BEFORE, diskId);
@@ -43,6 +44,7 @@ void HardwareMalinClient::setDiskState(const string &diskId, bool state) const
 
     request.set_diskid(diskId);
     request.set_state(state);
+    this->_callLogger(__FUNCTION__);
     grpc::Status status = this->_stub->setDiskState(&context, request, &response);
 
     if (!status.ok())
@@ -51,4 +53,9 @@ void HardwareMalinClient::setDiskState(const string &diskId, bool state) const
         this->_events.emit<const string &>(Event::DISK_STARTUP, diskId);
     else
         this->_events.emit<const string &>(Event::DISK_SHUTDOWN, diskId);
+}
+
+void BugleClient::_callLogger(const string &functionName) const
+{
+    std::cout << "[CLIENT] " << functionName << std::endl;
 }

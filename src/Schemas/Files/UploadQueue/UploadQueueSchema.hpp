@@ -22,6 +22,7 @@ class FilesUploadQueueSchema : public TemplateFileBucket {
     void uploadFile(const string &fileId, const string &userId, const string &diskId, const string &content);
     NODISCARD std::pair<std::vector<MongoCXX::ValueView>, Maestro_Vault::UploadFilesRequest> getDiskFiles(const string &diskId);
     NODISCARD std::unordered_set<string> getFilesDisk();
+    NODISCARD string getFile(const string &fileId);
     void deleteFiles(const std::vector<MongoCXX::ValueView> &filesId);
 };
 

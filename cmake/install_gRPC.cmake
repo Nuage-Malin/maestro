@@ -17,130 +17,132 @@
 # all-in-one cmake build that automatically builds all the dependencies before
 # building route_guide.
 
-cmake_minimum_required(VERSION 3.5.1)
+if (NOT DEFINED GRPC_CPP_INSTALL_ONCE)
+    set(GRPC_CPP_INSTALL_ONCE true)
 
-set(CMAKE_CXX_STANDARD 14)
+    get_filename_component(GRPC_SUBMODULE_DIR "${THIRD_PARTIES_DIR}/grpc/" ABSOLUTE)
+    if (NOT EXISTS ${GRPC_SUBMODULE_DIR})
+        set(GRPC_CLONE_SUBMODULE true)
+    endif ()
 
-if (MSVC)
-    add_definitions(-D_WIN32_WINNT=0x600)
-endif ()
+    cmake_minimum_required(VERSION 3.5.1)
 
-find_package(Threads REQUIRED)
+    set(CMAKE_CXX_STANDARD 14)
 
-set(ENV{THIRD_PARTIES_DIR} ${THIRD_PARTIES_DIR})
-if (DEFINED GRPC_CLONE_SUBMODULE)
-    set(ENV{GRPC_CLONE_SUBMODULE} true)
+    if (MSVC)
+        add_definitions(-D_WIN32_WINNT=0x600)
+    endif ()
+
+    find_package(Threads REQUIRED)
+
+    set(ENV{THIRD_PARTIES_DIR} ${THIRD_PARTIES_DIR})
+    if (DEFINED GRPC_CLONE_SUBMODULE)
+        set(ENV{GRPC_CLONE_SUBMODULE} true)
+    endif ()
     execute_process(COMMAND "${CMAKE_MODULES_DIR}/install_gRPC.sh")
-endif ()
-if (DEFINED ENV{GRPC_FULL_INSTALL})
-    if ($ENV{GRPC_FULL_INSTALL})
-        #        set(ENV{GRPC_FULL_INSTALL} true)
-        set(ENV{GRPC_RECOMPILE} true)
-        execute_process(COMMAND "${CMAKE_MODULES_DIR}/install_gRPC.sh")
-    endif ()
-endif ()
 
-if (DEFINED GRPC_AS_SUBMODULE)
+    if (DEFINED GRPC_AS_SUBMODULE)
 
-    # One way to build a projects that uses gRPC is to just include the entire
-    # gRPC project tree via "add_subdirectory". This approach is very simple to
-    # use, but the are some potential disadvantages: * it includes gRPC's
-    # CMakeLists.txt directly into your build script without and that can make
-    # gRPC's internal setting interfere with your own build. * depending on what's
-    # installed on your system, the contents of submodules in gRPC's third_party/*
-    # might need to be available (and there might be additional prerequisites
-    # required to build them). Consider using the gRPC_*_PROVIDER options to
-    # fine-tune the expected behavior.
-    #
-    # A more robust approach to add dependency on gRPC is using cmake's
-    # ExternalProject_Add (see cmake_externalproject/CMakeLists.txt).
+        # One way to build a projects that uses gRPC is to just include the entire
+        # gRPC project tree via "add_subdirectory". This approach is very simple to
+        # use, but the are some potential disadvantages: * it includes gRPC's
+        # CMakeLists.txt directly into your build script without and that can make
+        # gRPC's internal setting interfere with your own build. * depending on what's
+        # installed on your system, the contents of submodules in gRPC's third_party/*
+        # might need to be available (and there might be additional prerequisites
+        # required to build them). Consider using the gRPC_*_PROVIDER options to
+        # fine-tune the expected behavior.
+        #
+        # A more robust approach to add dependency on gRPC is using cmake's
+        # ExternalProject_Add (see cmake_externalproject/CMakeLists.txt).
 
-    # Include the gRPC's cmake build (normally grpc source code would live in a
-    # git submodule called "third_party/grpc", but this example lives in the same
-    # repository as gRPC sources, so we just look a few directories up)
-    add_subdirectory(${GRPC_SUBMODULE_DIR} ${GRPC_SUBMODULE_DIR}
-                     EXCLUDE_FROM_ALL) # TODO is this useless ?
-    message(STATUS "Using gRPC via add_subdirectory.")
+        # Include the gRPC's cmake build (normally grpc source code would live in a
+        # git submodule called "third_party/grpc", but this example lives in the same
+        # repository as gRPC sources, so we just look a few directories up)
+        add_subdirectory(${GRPC_SUBMODULE_DIR} ${GRPC_SUBMODULE_DIR}
+                        EXCLUDE_FROM_ALL) # TODO is this useless ?
+        message(STATUS "Using gRPC via add_subdirectory.")
 
-    # After using add_subdirectory, we can now use the grpc targets directly from
-    # this build.
-    set(_PROTOBUF_LIBPROTOBUF libprotobuf)
-    set(_REFLECTION grpc++_reflection)
-    if (CMAKE_CROSSCOMPILING)
-        find_program(_PROTOBUF_PROTOC protoc)
+        # After using add_subdirectory, we can now use the grpc targets directly from
+        # this build.
+        set(_PROTOBUF_LIBPROTOBUF libprotobuf)
+        set(_REFLECTION grpc++_reflection)
+        if (CMAKE_CROSSCOMPILING)
+            find_program(_PROTOBUF_PROTOC protoc)
+        else ()
+            set(_PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
+        endif ()
+        set(_GRPC_GRPCPP grpc++)
+        if (CMAKE_CROSSCOMPILING)
+            find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
+        else ()
+            set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:grpc_cpp_plugin>)
+        endif ()
+    elseif (GRPC_FETCHCONTENT)
+        # Another way is to use CMake's FetchContent module to clone gRPC at configure time.
+        # This makes gRPC's source code available to your project, similar to a git submodule.
+        message(STATUS "Using gRPC via add_subdirectory (FetchContent).")
+        include(FetchContent)
+        FetchContent_Declare(
+                grpc
+                GIT_REPOSITORY https://github.com/grpc/grpc.git
+                # when using gRPC, you will actually set this to an existing tag, such as
+                # v1.25.0, v1.26.0 etc.. For the purpose of testing, we override the tag
+                # used to the commit that's currently under test.
+                GIT_TAG v1.51.0)
+        FetchContent_MakeAvailable(grpc)
+
+        # Since FetchContent uses add_subdirectory under the hood, we can use the grpc
+        # targets directly from this build.
+        set(_PROTOBUF_LIBPROTOBUF libprotobuf)
+        set(_REFLECTION grpc++_reflection)
+        set(_PROTOBUF_PROTOC $<TARGET_FILE:protoc>)
+        set(_GRPC_GRPCPP grpc++)
+        if (CMAKE_CROSSCOMPILING)
+            find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
+        else ()
+            set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:grpc_cpp_plugin>)
+        endif ()
     else ()
-        set(_PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
-    endif ()
-    set(_GRPC_GRPCPP grpc++)
-    if (CMAKE_CROSSCOMPILING)
-        find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
-    else ()
-        set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:grpc_cpp_plugin>)
-    endif ()
-elseif (GRPC_FETCHCONTENT)
-    # Another way is to use CMake's FetchContent module to clone gRPC at configure time.
-    # This makes gRPC's source code available to your project, similar to a git submodule.
-    message(STATUS "Using gRPC via add_subdirectory (FetchContent).")
-    include(FetchContent)
-    FetchContent_Declare(
-            grpc
-            GIT_REPOSITORY https://github.com/grpc/grpc.git
-            # when using gRPC, you will actually set this to an existing tag, such as
-            # v1.25.0, v1.26.0 etc.. For the purpose of testing, we override the tag
-            # used to the commit that's currently under test.
-            GIT_TAG v1.51.0)
-    FetchContent_MakeAvailable(grpc)
+        # This branch assumes that gRPC and all its dependencies are already installed
+        # on this system, so they can be located by find_package().
 
-    # Since FetchContent uses add_subdirectory under the hood, we can use the grpc
-    # targets directly from this build.
-    set(_PROTOBUF_LIBPROTOBUF libprotobuf)
-    set(_REFLECTION grpc++_reflection)
-    set(_PROTOBUF_PROTOC $<TARGET_FILE:protoc>)
-    set(_GRPC_GRPCPP grpc++)
-    if (CMAKE_CROSSCOMPILING)
-        find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
-    else ()
-        set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:grpc_cpp_plugin>)
-    endif ()
-else ()
-    # This branch assumes that gRPC and all its dependencies are already installed
-    # on this system, so they can be located by find_package().
+        # Find Protobuf installation Looks for protobuf-config.cmake file installed by
+        # Protobuf's cmake installation.
+        set(protobuf_MODULE_COMPATIBLE TRUE)
+        find_package(Protobuf CONFIG REQUIRED
+                    PATHS
+                    /root/.local/lib/cmake/protobuf/
+                    $ENV{HOME}/.local/lib/cmake/protobuf/)
 
-    # Find Protobuf installation Looks for protobuf-config.cmake file installed by
-    # Protobuf's cmake installation.
-    set(protobuf_MODULE_COMPATIBLE TRUE)
-    find_package(Protobuf CONFIG REQUIRED
-                 PATHS
-                 /root/.local/lib/cmake/protobuf/
-                 $ENV{HOME}/.local/lib/cmake/protobuf/)
+        message(STATUS "Using protobuf ${Protobuf_VERSION}")
 
-    message(STATUS "Using protobuf ${Protobuf_VERSION}")
+        set(_PROTOBUF_LIBPROTOBUF protobuf::libprotobuf)
+        set(_REFLECTION gRPC::grpc++_reflection)
+        if (CMAKE_CROSSCOMPILING)
+            find_program(_PROTOBUF_PROTOC protoc)
+        else ()
+            set(_PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
+        endif ()
 
-    set(_PROTOBUF_LIBPROTOBUF protobuf::libprotobuf)
-    set(_REFLECTION gRPC::grpc++_reflection)
-    if (CMAKE_CROSSCOMPILING)
-        find_program(_PROTOBUF_PROTOC protoc)
-    else ()
-        set(_PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
-    endif ()
+        find_package(absl CONFIG REQUIRED
+                    PATHS
+                    /root/.local/lib/cmake/absl/
+                    $ENV{HOME}/.local/lib/cmake/absl/)
 
-    find_package(absl CONFIG REQUIRED
-                 PATHS
-                 /root/.local/lib/cmake/absl/
-                 $ENV{HOME}/.local/lib/cmake/absl/)
+        # Find gRPC installation Looks for gRPCConfig.cmake file installed by gRPC's
+        # cmake installation.
+        find_package(gRPC CONFIG REQUIRED
+                    PATHS
+                    /root/.local/lib/cmake/grpc/
+                    $ENV{HOME}/.local/lib/cmake/grpc/)
+        message(STATUS "Using gRPC ${gRPC_VERSION}")
 
-    # Find gRPC installation Looks for gRPCConfig.cmake file installed by gRPC's
-    # cmake installation.
-    find_package(gRPC CONFIG REQUIRED
-                 PATHS
-                 /root/.local/lib/cmake/grpc/
-                 $ENV{HOME}/.local/lib/cmake/grpc/)
-    message(STATUS "Using gRPC ${gRPC_VERSION}")
-
-    set(_GRPC_GRPCPP gRPC::grpc++)
-    if (CMAKE_CROSSCOMPILING)
-        find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
-    else ()
-        set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
+        set(_GRPC_GRPCPP gRPC::grpc++)
+        if (CMAKE_CROSSCOMPILING)
+            find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
+        else ()
+            set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
+        endif ()
     endif ()
 endif ()
