@@ -105,43 +105,57 @@ grpc::Status UsersBackService::askFileDownload(
     return this->_procedureRunner(
         [this, request, response]() {
             // Check if the file is already downloaded
+            std::cout << "[INFO] askFileDownload 1" << std::endl;
             if (this->_filesSchemas.downloadedStack.doesFileExist(request->fileid())) {
+                std::cout << "[INFO] askFileDownload 2" << std::endl;
                 response->set_allocated_waitingtime(new google::protobuf::Duration());
                 return grpc::Status::OK;
             }
+            std::cout << "[INFO] askFileDownload 3" << std::endl;
 
             const std::chrono::days expirationLimit(2);
             const Date &expirationDate = Date() + expirationLimit;
 
             try {
                 // Get file from UploadQueue if exist
+                std::cout << "[INFO] askFileDownload 4" << std::endl;
                 const string &uploadQueueFile = this->_filesSchemas.uploadQueue.getFile(request->fileid());
+                std::cout << "[INFO] askFileDownload 5" << std::endl;
 
                 this->_filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, uploadQueueFile);
+                std::cout << "[INFO] askFileDownload 6" << std::endl;
                 response->set_allocated_waitingtime(new google::protobuf::Duration());
                 return grpc::Status::OK;
             } catch (const NotFoundException &error) {
+                std::cout << "[INFO] askFileDownload 7" << std::endl;
                 const Maestro_Santaclaus::GetFileStatus file = this->_clients.santaclaus.getFile(request->fileid());
+                std::cout << "[INFO] askFileDownload 8" << std::endl;
 
                 try {
                     // Check if the file is already in the database
                     const Date &requestedDate =
                         this->_filesSchemas.downloadQueue.getRequestedDate(request->fileid(), file.diskid());
+                    std::cout << "[INFO] askFileDownload 9" << std::endl;
 
                     response->set_allocated_waitingtime((requestedDate + expirationLimit).toAllocatedDuration());
                     return grpc::Status::OK;
                 } catch (const NotFoundException &error) {
+                    std::cout << "[INFO] askFileDownload 10" << std::endl;
                     try {
                         if (this->_clients.bugle.diskStatus(file.diskid())) {
+                            std::cout << "[INFO] askFileDownload 11" << std::endl;
                             // If the disk is online, download the file from the filesystem and upload it to the database
                             const string fileContent = this->_clients.vault.downloadFile(
                                 request->fileid(), file.file().approxmetadata().userid(), file.diskid()
                             );
+                            std::cout << "[INFO] askFileDownload 12" << std::endl;
 
                             this->_filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, fileContent);
+                            std::cout << "[INFO] askFileDownload 13" << std::endl;
                             response->set_allocated_waitingtime(expirationDate.toAllocatedDuration()); // TODO: Edit waiting time
                         } else {
                             // If the disk is offline, add the file to the queue database
+                            std::cout << "[INFO] askFileDownload 14" << std::endl;
                             this->_askFileDownloadFailure(request->fileid(), file, expirationDate, *response);
                         }
                     } catch (const RequestFailureException &error) {
