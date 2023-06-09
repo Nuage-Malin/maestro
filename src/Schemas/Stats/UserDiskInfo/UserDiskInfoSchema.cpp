@@ -13,13 +13,18 @@ StatsUserDiskInfoSchema::StatsUserDiskInfoSchema(const mongocxx::database &datab
 {
 }
 
-uint64 StatsUserDiskInfoSchema::getUserConsumption(const string &userId, const Date &startDate, const Date &endDate)
+uint64
+StatsUserDiskInfoSchema::getUserConsumption(const string &userId, const std::optional<Date> &startDate, const Date &endDate)
 {
     mongocxx::pipeline pipeline;
 
     pipeline.match(makeDocument(
         makeField("userId", userId),
-        makeField("createdAt", makeDocument(makeField("$gte", startDate.toBSON()), makeField("$lte", endDate.toBSON())))
+        makeField(
+            "createdAt",
+            startDate.has_value() ? makeDocument(makeField("$gte", startDate->toBSON()), makeField("$lte", endDate.toBSON()))
+                                  : makeDocument(makeField("$lte", endDate.toBSON()))
+        )
     ));
     pipeline.lookup(makeDocument(
         makeField("from", "diskWakeup"),

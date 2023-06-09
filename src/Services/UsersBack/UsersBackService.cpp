@@ -69,7 +69,9 @@ grpc::Status UsersBackService::getUserConsumption(
     return this->_procedureRunner(
         [this, request, response]() {
             const uint64 consumption = this->_statsSchemas.userDiskInfo.getUserConsumption(
-                request->userid(), Date(request->startdate()), Date(request->enddate())
+                request->userid(),
+                request->has_startdate() ? std::optional(Date(request->startdate())) : std::nullopt,
+                request->has_enddate() ? Date(request->enddate()) : Date()
             );
 
             response->set_consumption(consumption);
