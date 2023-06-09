@@ -227,26 +227,37 @@ grpc::Status UsersBackService::
 {
     return this->_procedureRunner(
         [this, request]() {
-            auto file = this->_clients.santaclaus.getFile(request->fileid()); // get disk id from santaclaus
+            const auto &file = this->_clients.santaclaus.getFile(request->fileid()); // get disk id from santaclaus
 
             this->_clients.santaclaus.virtualRemoveFile(request->fileid());
-            if (!this->_clients.bugle.diskStatus(file.diskid())) { // check if disk is turned off
-                this->_filesSchemas.removeQueue.add(file.diskid(), request->fileid());
-            } else {                                               // if disk is turned on
-                Maestro_Vault::RemoveFileRequest my_request;
-
-                my_request.set_diskid(file.diskid());
-                my_request.set_userid(file.file().approxmetadata().userid());
-                my_request.set_fileid(request->fileid());
-                try {
-                    const auto my_response = this->_clients.vault.removeFile(my_request);
-
-                    this->_clients.santaclaus.physicalRemoveFile(request->fileid());
-                } catch (const RequestFailureException &error) { // if deletion in vault didn't succeed
-                    std::cerr << "[WARNING] Fail to remove file in vault, add the file to the remove queue DB : " << error.what()
+            try {
+                if (!this->_clients.bugle.diskStatus(file.diskid())) { // check if disk is turned off
+                    std::cout << "[INFO] Disk " << file.diskid() << " is turned off, add the file to the remove queue DB"
                               << std::endl;
-                    this->_filesSchemas.removeQueue.add(file.diskid(), request->fileid());
+                    this->_fileRemoveFailure(file.diskid(), request->fileid());
+                    return grpc::Status::OK;
                 }
+            } catch (const RequestFailureException &error) {
+                std::cerr << "[WARNING] Fail to get disk status, add the file to the remove queue DB : " << error.what()
+                          << std::endl;
+                this->_fileRemoveFailure(file.diskid(), request->fileid());
+                return grpc::Status::OK;
+            }
+
+            // if disk is turned on
+            Maestro_Vault::RemoveFileRequest removeFileRequest;
+
+            removeFileRequest.set_diskid(file.diskid());
+            removeFileRequest.set_userid(file.file().approxmetadata().userid());
+            removeFileRequest.set_fileid(request->fileid());
+            try {
+                this->_clients.vault.removeFile(removeFileRequest);
+
+                this->_clients.santaclaus.physicalRemoveFile(request->fileid());
+            } catch (const RequestFailureException &error) { // if deletion in vault didn't succeed
+                std::cerr << "[WARNING] Fail to remove file in vault, add the file to the remove queue DB : " << error.what()
+                          << std::endl;
+                this->_fileRemoveFailure(file.diskid(), request->fileid());
             }
             return grpc::Status::OK;
         },
@@ -331,4 +342,9 @@ void UsersBackService::_askFileDownloadFailure(
     this->_filesSchemas.downloadQueue.add(fileId, file.file().approxmetadata().userid(), file.diskid());
 
     response.set_allocated_waitingtime(expirationDate.toAllocatedDuration());
+}
+
+void UsersBackService::_fileRemoveFailure(const string &diskId, const string &fileId)
+{
+    this->_filesSchemas.removeQueue.add(diskId, fileId);
 }

@@ -108,7 +108,11 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
     UsersBack_Maestro::FilesRemoveStatus actFilesRemove(StrIterator fileIdsBeg, const StrIterator &fileIdsEnd);
 
     void _fileUploadFailure(const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus);
-    void _askFileDownloadFailure(const string &fileId, const Maestro_Santaclaus::GetFileStatus &file, const Date &expirationDate, UsersBack_Maestro::AskFileDownloadStatus &response);
+    void _askFileDownloadFailure(
+        const string &fileId, const Maestro_Santaclaus::GetFileStatus &file, const Date &expirationDate,
+        UsersBack_Maestro::AskFileDownloadStatus &response
+    );
+    void _fileRemoveFailure(const string &diskId, const string &fileId);
 
   private:
     FilesSchemas &_filesSchemas;
