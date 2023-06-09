@@ -72,10 +72,15 @@ std::unordered_set<string> FilesUploadQueueSchema::getFilesDisk()
 
 NODISCARD string FilesUploadQueueSchema::getFile(const string &fileId)
 {
+    const bsoncxx::document::value filter = makeDocument(makeField("filename", fileId));
+    mongocxx::options::find options;
+
+    options.projection(makeDocument(makeField("_id", true)));
+    mongocxx::cursor cursor = this->_fileBucket.find(filter.view(), options);
     std::ostringstream oss("");
     std::ostream ostream(oss.rdbuf());
 
-    this->_fileBucket.download_to_stream(bsoncxx::types::bson_value::view_or_value(bsoncxx::types::b_utf8{fileId}), &ostream);
+    this->_fileBucket.download_to_stream((*cursor.begin())["_id"].get_value(), &ostream);
     return oss.str();
 }
 
