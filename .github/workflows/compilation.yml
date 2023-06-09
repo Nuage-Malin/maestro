@@ -10,14 +10,37 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt-get install -y \
+            build-essential       \
+            autoconf              \
+            libtool               \
+            pkg-config            \
+            libssl-dev            \
+            libsasl2-dev          \
+            libmongoc-dev         \
+            libmongoc-doc         \
+            libstdc++-12-dev      \
+            libmongoc-1.0-0       \
+            libbson-1.0-0         \
+
+      - name: Cache project
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./third_parties
+            ./build
+          key: ${{ runner.os }}-compilation
+
       # Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           submodules: recursive
-          token: ${{ secrets.REPO_PROTOBUF_INTERFACES_TOKEN }}
-          # secret containing a token allowing access to private repo (protobuf-interface submodule)
+          token: ${{ secrets.SUBMODULES_TOKEN }}
 
       # Run
       - name: Build
-        run: docker build .
+        run: ./scripts/launch.sh --build --dry-run
