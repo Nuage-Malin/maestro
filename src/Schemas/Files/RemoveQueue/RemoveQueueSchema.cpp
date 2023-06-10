@@ -10,14 +10,13 @@
 
 #include "RemoveQueueSchema.hpp"
 
-FilesRemoveQueueSchema::FilesRemoveQueueSchema(const mongocxx::database &database) : TemplateSchema(database, "downloadQueue")
+FilesRemoveQueueSchema::FilesRemoveQueueSchema(const mongocxx::database &database) : TemplateSchema(database, "removeQueue")
 {
 }
 
-void FilesRemoveQueueSchema::add(const string &diskId /*, const string &userId*/, const string &fileId)
+void FilesRemoveQueueSchema::add(const string &diskId, const string &fileId)
 {
-    const MongoCXX::Document &fileMetadata =
-        makeDocument(makeField("fileId", fileId), /*makeField("userId", userId),*/ makeField("diskId", diskId));
+    const MongoCXX::Document &fileMetadata = makeDocument(makeField("fileId", fileId), makeField("diskId", diskId));
 
     this->_model.insert_one(fileMetadata.view());
 }
