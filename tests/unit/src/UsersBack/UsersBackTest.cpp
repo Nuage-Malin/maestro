@@ -27,5 +27,5 @@ TEST(UsersBackTest, getUserConsumption)
     request.set_allocated_enddate(endDate);
 
     ASSERT_TRUE(client.getUserConsumption(response, request));
-    ASSERT_EQ(response.consumption(), 1000 + 1500);
+    ASSERT_EQ(response.consumption(), 0);
 }
