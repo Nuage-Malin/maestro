@@ -13,12 +13,12 @@
 
 class ExpiredDownloadedFilesCron : public TemplateCron {
   public:
-    ExpiredDownloadedFilesCron(FilesSchemas &filesSchemas);
+    ExpiredDownloadedFilesCron(const EventsManager &events);
 
     void run() override;
 
   private:
-    FilesSchemas &_filesSchemas;
+    const EventsManager &_events;
 };
 
 #endif

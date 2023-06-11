@@ -15,8 +15,6 @@ static const string statsDb{"logs"};
 
 MongoCXX::Mongo::Mongo(const EventsManager &events) : _events(events)
 {
-    mongocxx::instance inst{}; // This should be done only once.
-
     this->_client = mongocxx::uri{getEnv("MAESTRO_MONGO_URI")};
     if (!this->_client)
         throw std::runtime_error("Could not access mongo database");

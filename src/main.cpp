@@ -7,6 +7,7 @@
 
 #include <exception>
 
+#include <mongocxx/instance.hpp>
 #include <grpcpp/server_builder.h>
 
 #include "utils.hpp"
@@ -28,11 +29,11 @@
  */
 void RunServer()
 {
+    // Mongo
+    mongocxx::instance mongoInstance{}; // This should be done only once.
+
     // Events
     EventsManager events;
-
-    // Mongo
-    MongoCXX::Mongo mongo(events);
 
     // Clients
     GrpcClients clients = {
@@ -41,9 +42,7 @@ void RunServer()
         .vault = VaultClient(grpc::CreateChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials()))};
 
     // Services
-    FilesSchemas filesSchemas = mongo.getFilesSchemas();
-    StatsSchemas statsDatabase = mongo.getStatsSchemas();
-    UsersBackService usersBackService(filesSchemas, statsDatabase, clients);
+    UsersBackService usersBackService(clients, events);
 
     // gRPC
     const char *address = getenv("MAESTRO_ADDRESS");
@@ -58,10 +57,10 @@ void RunServer()
     // CRON
     ManagerCron managerCron;
 
-    managerCron.add("0 30 3 * * ?", ExpiredDownloadedFilesCron(filesSchemas));
-    managerCron.add("0 0 3 * * ?", FileUploadCron(filesSchemas, clients, events));
-    managerCron.add("0 0 3 * * ?", DownloadFilesCron(filesSchemas, clients, events));
-    managerCron.add("0 0 3 * * ?", RemoveFilesCron(filesSchemas, clients, events));
+    managerCron.add("0 30 3 * * ?", ExpiredDownloadedFilesCron(events));
+    managerCron.add("0 0 3 * * ?", FileUploadCron(clients, events));
+    managerCron.add("0 0 3 * * ?", DownloadFilesCron(clients, events));
+    managerCron.add("0 0 3 * * ?", RemoveFilesCron(clients, events));
 
     server->Wait();
 }

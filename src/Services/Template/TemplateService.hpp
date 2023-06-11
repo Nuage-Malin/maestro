@@ -15,15 +15,21 @@
 #include <mongocxx/exception/query_exception.hpp>
 
 #include "utils.hpp"
+#include "Schemas/Mongo/Mongo.hpp"
 #include "Exceptions/RequestFailure/RequestFailureException.hpp"
 
 class TemplateService {
+  public:
+    TemplateService(const EventsManager &events);
+    ~TemplateService() = default;
+
   protected:
     grpc::Status _procedureRunner(
-        std::function<grpc::Status()> callback, const std::source_location &location = std::source_location::current()
+        std::function<grpc::Status(FilesSchemas &&, StatsSchemas &&)> callback,
+        const std::source_location &location = std::source_location::current()
     );
     grpc::Status _procedureRunner(
-        std::function<grpc::Status()> callback, const string &functionName,
+        std::function<grpc::Status(FilesSchemas &&, StatsSchemas &&)> callback, const string &functionName,
         const std::source_location &location = std::source_location::current()
     );
 
@@ -40,6 +46,8 @@ class TemplateService {
     _manageErrors(const std::exception &error, const std::source_location &location = std::source_location::current());
 
     NODISCARD string _getErrorCaller(const std::source_location &location);
+
+    const EventsManager &_events;
 };
 
 #endif

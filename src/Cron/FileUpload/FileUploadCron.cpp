@@ -5,11 +5,13 @@
  * @copyright Nuage Malin
  */
 
+#include "Schemas/Mongo/Mongo.hpp"
+
 #include "FileUploadCron.hpp"
 #include "Cron/Manager/ManagerCron.hpp"
 
-FileUploadCron::FileUploadCron(FilesSchemas &filesSchemas, GrpcClients &grpcClient, EventsManager &events)
-    : TemplateCron("FileUpload"), _filesSchemas(filesSchemas), _clients(grpcClient)
+FileUploadCron::FileUploadCron(GrpcClients &grpcClient, EventsManager &events)
+    : TemplateCron("FileUpload"), _events(events), _clients(grpcClient)
 {
     const std::function<void(const string &)> &callback = std::bind(&FileUploadCron::_uploadFiles, this, std::placeholders::_1);
 
@@ -18,7 +20,7 @@ FileUploadCron::FileUploadCron(FilesSchemas &filesSchemas, GrpcClients &grpcClie
 
 void FileUploadCron::run()
 {
-    std::unordered_set<string> disks = this->_filesSchemas.uploadQueue.getFilesDisk();
+    std::unordered_set<string> disks = MongoCXX::Mongo(this->_events).getFilesSchemas().uploadQueue.getFilesDisk();
 
     for (const auto &disk : disks)
         this->_clients.bugle.setDiskState(disk, true);
@@ -26,9 +28,10 @@ void FileUploadCron::run()
 
 void FileUploadCron::_uploadFiles(const string &diskId)
 {
+    FilesUploadQueueSchema uploadQueue = MongoCXX::Mongo(this->_events).getFilesSchemas().uploadQueue;
     const std::pair<std::vector<MongoCXX::ValueView>, Maestro_Vault::UploadFilesRequest> &files =
-        this->_filesSchemas.uploadQueue.getDiskFiles(diskId);
+        uploadQueue.getDiskFiles(diskId);
 
     this->_clients.vault.uploadFiles(files.second);
-    this->_filesSchemas.uploadQueue.deleteFiles(files.first);
+    uploadQueue.deleteFiles(files.first);
 }

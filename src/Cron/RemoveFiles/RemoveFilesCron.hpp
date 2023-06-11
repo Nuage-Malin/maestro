@@ -14,7 +14,7 @@
 
 class RemoveFilesCron : public TemplateCron {
   public:
-    RemoveFilesCron(FilesSchemas &filesSchemas, GrpcClients &grpcClient, EventsManager &events);
+    RemoveFilesCron(GrpcClients &grpcClient, EventsManager &events);
 
     /**
      * @brief Triggered by the cron timer,
@@ -30,7 +30,7 @@ class RemoveFilesCron : public TemplateCron {
     void _removeDiskFiles(const string &diskId);
 
   private:
-    FilesSchemas &_filesSchemas;
+    const EventsManager &_events;
     GrpcClients &_clients;
 };
 

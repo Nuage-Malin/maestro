@@ -21,7 +21,7 @@
 
 class UsersBackService : public TemplateService, public UsersBack_Maestro::UsersBack_Maestro_Service::Service {
   public:
-    UsersBackService(FilesSchemas &filesSchemas, StatsSchemas &statsSchemas, const GrpcClients &clients);
+    UsersBackService(const GrpcClients &clients, const EventsManager &events);
     ~UsersBackService() = default;
 
     grpc::Status fileUpload(
@@ -105,18 +105,19 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
      */
     template <typename StrIterator>
         requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
-    UsersBack_Maestro::FilesRemoveStatus actFilesRemove(StrIterator fileIdsBeg, const StrIterator &fileIdsEnd);
+    UsersBack_Maestro::FilesRemoveStatus
+    actFilesRemove(FilesSchemas &filesSchemas, StrIterator fileIdsBeg, const StrIterator &fileIdsEnd);
 
-    void _fileUploadFailure(const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus);
-    void _askFileDownloadFailure(
-        const string &fileId, const Maestro_Santaclaus::GetFileStatus &file, const Date &expirationDate,
-        UsersBack_Maestro::AskFileDownloadStatus &response
+    void _fileUploadFailure(
+        FilesSchemas &filesSchemas, const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus
     );
-    void _fileRemoveFailure(const string &diskId, const string &fileId);
+    void _askFileDownloadFailure(
+        FilesSchemas &filesSchemas, const string &fileId, const Maestro_Santaclaus::GetFileStatus &file,
+        const Date &expirationDate, UsersBack_Maestro::AskFileDownloadStatus &response
+    );
+    void _fileRemoveFailure(FilesSchemas &filesSchemas, const string &diskId, const string &fileId);
 
   private:
-    FilesSchemas &_filesSchemas;
-    StatsSchemas &_statsSchemas;
     const GrpcClients &_clients;
 };
 
@@ -146,7 +147,8 @@ UsersBackService::getFilesDisk(const StrIterator &fileIdsBeg, const StrIterator 
 
 template <typename StrIterator>
     requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
-UsersBack_Maestro::FilesRemoveStatus UsersBackService::actFilesRemove(StrIterator fileIdsBeg, const StrIterator &fileIdsEnd)
+UsersBack_Maestro::FilesRemoveStatus
+UsersBackService::actFilesRemove(FilesSchemas &filesSchemas, StrIterator fileIdsBeg, const StrIterator &fileIdsEnd)
 {
     std::unordered_map<string, std::unordered_set<string>> filesDisks = getFilesDisk(fileIdsBeg, fileIdsEnd);
     UsersBack_Maestro::FilesRemoveStatus response;
@@ -157,7 +159,7 @@ UsersBack_Maestro::FilesRemoveStatus UsersBackService::actFilesRemove(StrIterato
     this->_clients.santaclaus.virtualRemoveFiles(fileIdsBeg, fileIdsEnd);
     for (const auto &filesDisk : filesDisks) {
         if (!this->_clients.bugle.diskStatus(filesDisk.first)) { // check if disk is turned off
-            this->_filesSchemas.removeQueue.add(filesDisk.first, filesDisk.second.begin(), filesDisk.second.end());
+            filesSchemas.removeQueue.add(filesDisk.first, filesDisk.second.begin(), filesDisk.second.end());
         } else {                                                 // if disk is turned on
             auto filesDiskRemoved = filesDisk.second;
             Maestro_Vault::RemoveFilesRequest my_request;
@@ -177,7 +179,7 @@ UsersBack_Maestro::FilesRemoveStatus UsersBackService::actFilesRemove(StrIterato
             try {
                 this->_clients.santaclaus.physicalRemoveFiles(filesDiskRemoved.begin(), filesDiskRemoved.end());
             } catch (const RequestFailureException &e) { // if deletion in vault didn't succeed
-                this->_filesSchemas.removeQueue.add(
+                filesSchemas.removeQueue.add(
                     filesDisk.first, vaultResponse.fileidfailures().begin(), vaultResponse.fileidfailures().end()
                 );
             }

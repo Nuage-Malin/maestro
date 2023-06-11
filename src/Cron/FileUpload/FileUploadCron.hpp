@@ -15,7 +15,7 @@
 
 class FileUploadCron : public TemplateCron {
   public:
-    FileUploadCron(FilesSchemas &filesSchemas, GrpcClients &grpcClient, EventsManager &events);
+    FileUploadCron(GrpcClients &grpcClient, EventsManager &events);
 
     void run() override;
 
@@ -23,7 +23,7 @@ class FileUploadCron : public TemplateCron {
     void _uploadFiles(const string &diskId);
 
   private:
-    FilesSchemas &_filesSchemas;
+    const EventsManager &_events;
     GrpcClients &_clients;
 };
 

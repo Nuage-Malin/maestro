@@ -5,14 +5,16 @@
  * @copyright Nuage Malin
  */
 
+#include "Schemas/Mongo/Mongo.hpp"
+
 #include "ExpiredDownloadedFilesCron.hpp"
 
-ExpiredDownloadedFilesCron::ExpiredDownloadedFilesCron(FilesSchemas &filesSchemas)
-    : TemplateCron("ExpiredDownloadedFiles"), _filesSchemas(filesSchemas)
+ExpiredDownloadedFilesCron::ExpiredDownloadedFilesCron(const EventsManager &events)
+    : TemplateCron("ExpiredDownloadedFiles"), _events(events)
 {
 }
 
 void ExpiredDownloadedFilesCron::run()
 {
-    this->_filesSchemas.downloadedStack.deleteExpiredFiles();
+    MongoCXX::Mongo(this->_events).getFilesSchemas().downloadedStack.deleteExpiredFiles();
 }
