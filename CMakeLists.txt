@@ -59,6 +59,7 @@ set(SRCS
     ${SRC_DIR}/Schemas/Stats/UserDiskInfo/UserDiskInfoSchema.cpp
     ${SRC_DIR}/Services/Template/TemplateService.cpp
     ${SRC_DIR}/Services/UsersBack/UsersBackService.cpp
+    ${SRC_DIR}/Services/Chouf/ChoufService.cpp
     ${SRC_DIR}/Clients/Santaclaus/SantaclausClient.cpp
     ${SRC_DIR}/Clients/Bugle/BugleClient.cpp
     ${SRC_DIR}/Clients/Vault/VaultClient.cpp)
