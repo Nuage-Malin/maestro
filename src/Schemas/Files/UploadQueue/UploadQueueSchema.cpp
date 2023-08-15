@@ -32,6 +32,17 @@ void FilesUploadQueueSchema::uploadFile(const string &fileId, const string &user
 std::pair<std::vector<MongoCXX::ValueView>, Maestro_Vault::UploadFilesRequest>
 FilesUploadQueueSchema::getDiskFiles(const string &diskId)
 {
+    /*
+     * TODO when saving files on the file system:
+     * Create directories for upload, download, delete
+     * put files (filename as fileId) in directories named as diskId, to easily find all the files for a disk
+     * and
+     * set a symbolic link (filename as fileId) at the root to the file in the directory,
+     *  to easily find the location of a file, therefore its diskId
+     * and
+     * symbolic link in directory named after user ID
+     */
+
     const MongoCXX::Document filter = makeDocument(makeField("metadata.diskId", diskId));
     mongocxx::cursor cursor = this->_fileBucket.find(filter.view());
     Maestro_Vault::UploadFilesRequest result;
