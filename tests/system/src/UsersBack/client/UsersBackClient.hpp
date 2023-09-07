@@ -10,6 +10,8 @@
 
 #include <grpcpp/grpcpp.h>
 
+#include <optional>
+
 #include "UsersBack_Maestro/UsersBack_Maestro.grpc.pb.h"
 
 #include "utils.hpp"
