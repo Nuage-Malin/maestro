@@ -5,10 +5,12 @@
  * @copyright Nuage Malin
  */
 
+#include "Schemas/Mongo/Mongo.hpp"
+
 #include "DownloadFilesCron.hpp"
 
-DownloadFilesCron::DownloadFilesCron(FilesSchemas &filesSchemas, GrpcClients &clients, EventsManager &events)
-    : TemplateCron("DownloadFiles"), _filesSchemas(filesSchemas), _clients(clients)
+DownloadFilesCron::DownloadFilesCron(GrpcClients &clients, EventsManager &events)
+    : TemplateCron("DownloadFiles"), _events(events), _clients(clients)
 {
     const std::function<void(const string &)> &callback =
         std::bind(&DownloadFilesCron::_downloadDiskFiles, this, std::placeholders::_1);
@@ -18,7 +20,7 @@ DownloadFilesCron::DownloadFilesCron(FilesSchemas &filesSchemas, GrpcClients &cl
 
 void DownloadFilesCron::run()
 {
-    std::unordered_set<string> disks = this->_filesSchemas.downloadQueue.getFilesDisk();
+    std::unordered_set<string> disks = MongoCXX::Mongo(this->_events).getFilesSchemas().downloadQueue.getFilesDisk();
 
     for (const auto &disk : disks)
         this->_clients.bugle.setDiskState(disk, true);
@@ -26,11 +28,12 @@ void DownloadFilesCron::run()
 
 void DownloadFilesCron::_downloadDiskFiles(const string &diskId)
 {
-    const Maestro_Vault::DownloadFilesRequest &request = this->_filesSchemas.downloadQueue.getDiskFiles(diskId);
+    FilesSchemas filesSchemas = MongoCXX::Mongo(this->_events).getFilesSchemas();
+    const Maestro_Vault::DownloadFilesRequest &request = filesSchemas.downloadQueue.getDiskFiles(diskId);
     const Maestro_Vault::DownloadFilesStatus &files = this->_clients.vault.downloadFiles(request);
 
     for (const auto &file : files.files())
-        this->_filesSchemas.downloadedStack.pushFile(file.fileid(), Date() + std::chrono::days(2), file.content());
+        filesSchemas.downloadedStack.pushFile(file.fileid(), Date() + std::chrono::days(2), file.content());
 
-    this->_filesSchemas.downloadQueue.deleteDiskFiles(diskId);
+    filesSchemas.downloadQueue.deleteDiskFiles(diskId);
 }

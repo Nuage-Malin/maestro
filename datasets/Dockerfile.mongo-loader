@@ -1,8 +1,0 @@
-FROM mongo:6
-
-COPY db_logs /app/db_logs
-
-CMD mongoimport --uri "$MONGO_LOGS_URI" --db $MONGO_LOGS_NAME --collection diskInfo --file /app/db_logs/diskInfo.json --jsonArray --drop &&         \
-    mongoimport --uri "$MONGO_LOGS_URI" --db $MONGO_LOGS_NAME --collection diskWakeup --file /app/db_logs/diskWakeup.json --jsonArray --drop &&     \
-    mongoimport --uri "$MONGO_LOGS_URI" --db $MONGO_LOGS_NAME --collection userDiskInfo --file /app/db_logs/userDiskInfo.json --jsonArray --drop && \
-    mongoimport --uri "$MONGO_LOGS_URI" --db $MONGO_LOGS_NAME --collection userDiskUpdate --file /app/db_logs/userDiskUpdate.json --jsonArray --drop

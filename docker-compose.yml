@@ -10,8 +10,8 @@ services:
             - ${MAESTRO_ENV_FILE}
         environment:
             DOWNLOAD_WAITING_TIME: 86400 # 24 hours (seconds * minutes * hours)
-        expose:
-            - ${MAESTRO_PORT}
+        ports:
+            - ${MAESTRO_PORT}:${MAESTRO_PORT}
         networks:
             - maestro
             - users-back:maestro
@@ -43,23 +43,6 @@ services:
         volumes:
             - mongo:/data/db
         restart: unless-stopped
-
-    mongo-loader:
-        profiles:
-            - launch
-            - mongo
-        build:
-            context: datasets
-            dockerfile: Dockerfile.mongo-loader
-        container_name: maestro-mongo-loader
-        environment:
-            MONGO_LOGS_NAME: logs
-            MONGO_LOGS_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:27017/logs?authSource=admin
-        networks:
-            - maestro
-        depends_on:
-            - mongo
-        restart: on-failure
 
     documentation:
         profiles:

@@ -10,6 +10,7 @@
 #include "schemas.hpp"
 #include "UploadQueueSchema.hpp"
 #include "Utils/Date/Date.hpp"
+#include "Exceptions/NotFound/NotFoundException.hpp"
 
 FilesUploadQueueSchema::FilesUploadQueueSchema(const mongocxx::database &database) : TemplateFileBucket(database, "uploadQueue")
 {
@@ -72,10 +73,18 @@ std::unordered_set<string> FilesUploadQueueSchema::getFilesDisk()
 
 NODISCARD string FilesUploadQueueSchema::getFile(const string &fileId)
 {
+    const bsoncxx::document::value filter = makeDocument(makeField("filename", fileId));
+    mongocxx::options::find options;
+
+    options.projection(makeDocument(makeField("_id", true)));
+    mongocxx::cursor cursor = this->_fileBucket.find(filter.view(), options);
+
+    if (cursor.begin() == cursor.end())
+        throw NotFoundException("[FilesUploadQueueSchema::getFile] File not found: " + fileId);
     std::ostringstream oss("");
     std::ostream ostream(oss.rdbuf());
 
-    this->_fileBucket.download_to_stream(bsoncxx::types::bson_value::view_or_value(bsoncxx::types::b_utf8{fileId}), &ostream);
+    this->_fileBucket.download_to_stream((*cursor.begin())["_id"].get_value(), &ostream);
     return oss.str();
 }
 

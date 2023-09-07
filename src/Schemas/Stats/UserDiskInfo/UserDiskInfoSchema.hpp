@@ -19,7 +19,7 @@ class StatsUserDiskInfoSchema : public TemplateSchema {
     StatsUserDiskInfoSchema(const mongocxx::database &database);
     ~StatsUserDiskInfoSchema() = default;
 
-    uint64 getUserConsumption(const string &userId, const Date &startDate, const Date &endDate);
+    uint64 getUserConsumption(const string &userId, const std::optional<Date> &startDate, const Date &endDate);
     uint64 getUserDiskSpace(const string &userId, const Date endDate);
 };
 

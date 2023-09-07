@@ -36,13 +36,17 @@ void ManagerCron::run(const string &name)
 void ManagerCron::remove(const string &name)
 {
     this->_cron.remove_schedule(name);
-    const auto &it = std::find_if(this->_jobs.begin(), this->_jobs.end(), [&name](const std::shared_ptr<TemplateCron> &job) {
-        return job->getName() == name;
-    });
+    const auto &it = std::find_if(
+        this->_jobs.begin(),
+        this->_jobs.end(),
+        [&name](const std::pair<string, std::shared_ptr<TemplateCron>> &job) {
+            return job.second->getName() == name;
+        }
+    );
 
     if (it == this->_jobs.end())
         throw std::runtime_error("CronManager task " + name + " not found");
-    (*it)->onRemove();
+    it->second->onRemove();
     this->_jobs.erase(it);
 }
 
@@ -56,7 +60,7 @@ void ManagerCron::resume()
         this->_runner.join();
     this->_start();
     for (auto &job : this->_jobs)
-        job->onResume();
+        job.second->onResume();
 }
 
 void ManagerCron::resume(const string &name)
@@ -67,8 +71,8 @@ void ManagerCron::resume(const string &name)
 void ManagerCron::resumeAll()
 {
     for (auto &job : this->_jobs)
-        if (job->isPaused())
-            job->resume(false);
+        if (job.second->isPaused())
+            job.second->resume(false);
 
     if (this->_isPaused)
         this->resume();
@@ -81,7 +85,7 @@ void ManagerCron::pause()
 
     this->_isPaused = true;
     for (auto &job : this->_jobs)
-        job->onPause();
+        job.second->onPause();
 }
 
 void ManagerCron::pause(const string &name)
@@ -89,10 +93,15 @@ void ManagerCron::pause(const string &name)
     this->_getJob(name).pause();
 }
 
+NODISCARD const bool &ManagerCron::isPaused() const
+{
+    return this->_isPaused;
+}
+
 void ManagerCron::wait()
 {
     for (auto &job : this->_jobs)
-        job->wait();
+        job.second->wait();
 }
 
 void ManagerCron::wait(const string &name)
@@ -100,14 +109,34 @@ void ManagerCron::wait(const string &name)
     this->_getJob(name).wait();
 }
 
+NODISCARD size_t ManagerCron::getTotalJobsCount() const
+{
+    return this->_jobs.size();
+}
+
 NODISCARD size_t ManagerCron::getRunningTasksCount(const string &name) const
 {
-    return this->_getJob(name).getRunningTasks().size();
+    return this->getJob(name).second->getRunningTasks().size();
 }
 
 NODISCARD size_t ManagerCron::getTotalRunningTasksCount() const
 {
     return this->_cron.count();
+}
+
+NODISCARD const bool &ManagerCron::doesAllowMultipleInstances() const
+{
+    return this->_allowMultipleInstances;
+}
+
+void ManagerCron::setAllowMultipleInstances(const bool &allowMultipleInstances)
+{
+    this->_allowMultipleInstances = allowMultipleInstances;
+}
+
+NODISCARD const std::vector<std::pair<string, std::shared_ptr<TemplateCron>>> &ManagerCron::getJobs() const
+{
+    return this->_jobs;
 }
 
 void ManagerCron::_start()
@@ -126,23 +155,23 @@ void ManagerCron::_start()
 void ManagerCron::_checkStoppedTasks()
 {
     for (auto &job : this->_jobs)
-        job->checkStoppedTasks();
+        job.second->checkStoppedTasks();
 }
 
 NODISCARD TemplateCron &ManagerCron::_getJob(const string &name)
 {
-    for (auto &job : this->_jobs)
-        if (job->getName() == name)
-            return *job;
+    for (const auto &job : this->_jobs)
+        if (job.second->getName() == name)
+            return *job.second;
 
     throw std::runtime_error("CronManager task " + name + " not found");
 }
 
-const TemplateCron &ManagerCron::_getJob(const string &name) const
+const std::pair<string, std::shared_ptr<TemplateCron>> &ManagerCron::getJob(const string &name) const
 {
-    for (auto &job : this->_jobs)
-        if (job->getName() == name)
-            return *job;
+    for (const auto &job : this->_jobs)
+        if (job.second->getName() == name)
+            return job;
 
     throw std::runtime_error("CronManager task " + name + " not found");
 }

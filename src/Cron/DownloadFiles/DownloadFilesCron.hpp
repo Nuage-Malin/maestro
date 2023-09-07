@@ -14,7 +14,7 @@
 
 class DownloadFilesCron : public TemplateCron {
   public:
-    DownloadFilesCron(FilesSchemas &filesSchemas, GrpcClients &grpcClient, EventsManager &events);
+    DownloadFilesCron(GrpcClients &grpcClient, EventsManager &events);
 
     void run() override;
 
@@ -22,7 +22,7 @@ class DownloadFilesCron : public TemplateCron {
     void _downloadDiskFiles(const string &diskId);
 
   private:
-    FilesSchemas &_filesSchemas;
+    const EventsManager &_events;
     GrpcClients &_clients;
 };
 

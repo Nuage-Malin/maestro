@@ -9,19 +9,27 @@
 
 #include "TemplateService.hpp"
 
-grpc::Status TemplateService::_procedureRunner(std::function<grpc::Status()> callback, const std::source_location &location)
+TemplateService::TemplateService(const EventsManager &events) : _events(events)
+{
+}
+
+grpc::Status TemplateService::_procedureRunner(
+    std::function<grpc::Status(FilesSchemas &&, StatsSchemas &&)> callback, const std::source_location &location
+)
 {
     return this->_procedureRunner(callback, location.function_name());
 }
 
 grpc::Status TemplateService::_procedureRunner(
-    std::function<grpc::Status()> callback, const string &functionName, const std::source_location &location
+    std::function<grpc::Status(FilesSchemas &&, StatsSchemas &&)> callback, const string &functionName,
+    const std::source_location &location
 )
 {
     std::cout << "[SERVICE] " << functionName << std::endl;
+    MongoCXX::Mongo mongo(this->_events);
 
     try {
-        return callback();
+        return callback(mongo.getFilesSchemas(), mongo.getStatsSchemas());
     } catch (const RequestFailureException &error) {
         return _manageErrors(error, location);
     } catch (const mongocxx::query_exception &error) {

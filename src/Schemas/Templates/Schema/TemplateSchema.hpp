@@ -14,7 +14,6 @@
 #include <mongocxx/database.hpp>
 
 #include "utils.hpp"
-#include "Schemas/Templates/Model/MongoModel.hpp"
 
 class TemplateSchema {
   public:
@@ -22,7 +21,7 @@ class TemplateSchema {
     ~TemplateSchema() = default;
 
   protected:
-    MongoModel _model;
+    mongocxx::collection _model;
 };
 
 #endif

@@ -33,7 +33,9 @@ jobs:
       - name: Cache project
         uses: actions/cache@v3
         with:
-          path: ./third_parties
+          path: |
+            ./third_parties
+            ./build
           key: ${{ runner.os }}-unit_tests
 
       - name: Checkout code

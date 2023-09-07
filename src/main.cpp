@@ -7,13 +7,14 @@
 
 #include <exception>
 
+#include <mongocxx/instance.hpp>
 #include <grpcpp/server_builder.h>
 
 #include "utils.hpp"
 #include "clients.hpp"
 #include "Schemas/Mongo/Mongo.hpp"
 #include "Services/UsersBack/UsersBackService.hpp"
-#include "Cron/Manager/ManagerCron.hpp"
+#include "Services/Chouf/ChoufService.hpp"
 #include "Cron/FileUpload/FileUploadCron.hpp"
 #include "Cron/ExpiredDownloadedFiles/ExpiredDownloadedFilesCron.hpp"
 #include "Cron/DownloadFiles/DownloadFilesCron.hpp"
@@ -28,11 +29,11 @@
  */
 void RunServer()
 {
+    // Mongo
+    mongocxx::instance mongoInstance{}; // This should be done only once.
+
     // Events
     EventsManager events;
-
-    // Mongo
-    MongoCXX::Mongo mongo(events);
 
     // Clients
     GrpcClients clients = {
@@ -40,10 +41,17 @@ void RunServer()
         .bugle = BugleClient(grpc::CreateChannel(getEnv("MAESTRO_BUGLE_URI"), grpc::InsecureChannelCredentials()), events),
         .vault = VaultClient(grpc::CreateChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials()))};
 
+    // CRON
+    ManagerCron managerCron;
+
+    managerCron.add("0 30 3 * * ?", ExpiredDownloadedFilesCron(events));
+    managerCron.add("0 0 3 * * ?", FileUploadCron(clients, events));
+    managerCron.add("0 0 3 * * ?", DownloadFilesCron(clients, events));
+    managerCron.add("0 0 3 * * ?", RemoveFilesCron(clients, events));
+
     // Services
-    FilesSchemas filesSchemas = mongo.getFilesSchemas();
-    StatsSchemas statsDatabase = mongo.getStatsSchemas();
-    UsersBackService usersBackService(filesSchemas, statsDatabase, clients);
+    UsersBackService usersBackService(clients, events);
+    ChoufService choufService(clients, events, managerCron);
 
     // gRPC
     const char *address = getenv("MAESTRO_ADDRESS");
@@ -52,16 +60,9 @@ void RunServer()
 
     builder.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());
     builder.RegisterService(&usersBackService);
+    builder.RegisterService(&choufService);
     std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
     std::cout << "Server listening on " << serverAddress << std::endl;
-
-    // CRON
-    ManagerCron managerCron;
-
-    managerCron.add("0 30 3 * * ?", ExpiredDownloadedFilesCron(filesSchemas));
-    managerCron.add("0 0 3 * * ?", FileUploadCron(filesSchemas, clients, events));
-    managerCron.add("0 0 3 * * ?", DownloadFilesCron(filesSchemas, clients, events));
-    managerCron.add("0 0 3 * * ?", RemoveFilesCron(filesSchemas, clients, events));
 
     server->Wait();
 }
