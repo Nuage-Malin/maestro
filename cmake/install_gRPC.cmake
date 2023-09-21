@@ -39,7 +39,10 @@ if (NOT DEFINED GRPC_CPP_INSTALL_ONCE)
     if (DEFINED GRPC_CLONE_SUBMODULE)
         set(ENV{GRPC_CLONE_SUBMODULE} true)
     endif ()
-    execute_process(COMMAND "${CMAKE_MODULES_DIR}/install_gRPC.sh")
+    execute_process(COMMAND "${CMAKE_MODULES_DIR}/install_gRPC.sh" RESULT_VARIABLE ret)
+    if (NOT "${ret}" STREQUAL "0")
+        message(FATAL_ERROR "Could not install gRPC")
+    endif ()
 
     if (DEFINED GRPC_AS_SUBMODULE)
 
