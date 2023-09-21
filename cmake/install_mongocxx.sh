@@ -73,10 +73,10 @@ check_exit_failure "Fail to cmake mongo-cxx-driver"
 if [ `command -v sudo` ]; then
   echo "mongocxx should be installed with root privileges"
   sudo make -C build install -j $((`nproc` - 1))
-  check_exit_failure "Fail to build mongo-cxx-driver as root"
+  check_exit_failure "Fail to install mongo-cxx-driver as root"
 else
   make -C build install -j $((`nproc` - 1))
-  check_exit_failure "Fail to build mongo-cxx-driver"
+  check_exit_failure "Fail to install mongo-cxx-driver"
 fi
 
 echo ending install of mongo cxx
