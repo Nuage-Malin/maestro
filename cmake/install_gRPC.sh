@@ -96,8 +96,13 @@ check_exit_failure "Failed to go into grpc folder"
 mkdir -p cmake/build
 pushd cmake/build
 check_exit_failure "Failed to go into grpc/cmake/build folder"
-cmake ../..
-check_exit_failure "Failed to cmake grpc"
+if [ `command -v sudo` ]; then
+    sudo cmake ../..
+    check_exit_failure "Failed to cmake grpc as root"
+else
+    cmake ../..
+    check_exit_failure "Failed to cmake grpc"
+fi
 make -j $((`nproc` - 1))
 check_exit_failure "Failed to make grpc"
 
@@ -126,7 +131,12 @@ echo "Install directory : $INSTALL_DIR"
 
 make -j $((`nproc` - 1))
 check_exit_failure "Failed to make grpc (full install)"
-make install -j $((`nproc` - 1))
-check_exit_failure "Failed to install grpc (full install)"
+if [ `command -v sudo` ]; then
+    sudo make install -j $((`nproc` - 1))
+    check_exit_failure "Failed to install grpc (full install) as root"
+else
+    make install -j $((`nproc` - 1))
+    check_exit_failure "Failed to install grpc (full install)"
+fi
 popd
 popd
