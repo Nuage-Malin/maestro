@@ -68,7 +68,7 @@ cd $MONGOCXX_DIR
 ## note that polyfill steps have been skipped
 
 echo "Building mongo-cxx-driver"
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$MONGO_INSTALL_DIR -DCMAKE_INSTALL_RPATH=$MONGO_INSTALL_DIR -DBUILD_VERSION=3.7.0
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$MONGO_INSTALL_DIR -DCMAKE_INSTALL_RPATH=$MONGO_INSTALL_DIR -DBUILD_VERSION=3.8.0
 check_exit_failure "Fail to cmake mongo-cxx-driver"
 if [ `command -v sudo` ]; then
   echo "mongocxx should be installed with root privileges"
