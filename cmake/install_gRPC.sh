@@ -114,22 +114,15 @@ check_exit_failure "Failed to cmake grpc (full install)"
 
 export PATH="$INSTALL_DIR/bin:$PATH"
 
-echo "SHELL: $SHELL"
 ZSH=$( ( echo $SHELL | grep zsh) )
 if ! [[ -z $ZSH ]] && (! cat $HOME/.zshrc | grep PATH | grep "$INSTALL_DIR/bin"); then
     echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.zshrc
-    echo "zshrc:"
-    cat $HOME/.zshrc
 elif (! cat $HOME/.bashrc | grep PATH | grep "$INSTALL_DIR/bin"); then
     echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.bashrc
-    echo "bashrc:"
-    cat $HOME/.bashrc
 else
     echo "gRPC path already added to PATH"
 fi
 echo "Install directory : $INSTALL_DIR"
-echo "PATH : $PATH"
-
 
 make -j $((`nproc` - 1))
 check_exit_failure "Failed to make grpc (full install)"
