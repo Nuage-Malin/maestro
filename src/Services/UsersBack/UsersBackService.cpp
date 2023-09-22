@@ -87,10 +87,11 @@ grpc::Status UsersBackService::getUserDiskSpace(
 )
 {
     return this->_procedureRunner(
-        [this, request, response](FilesSchemas &&, StatsSchemas &&statsSchemas) {
+        [this, request, response](FilesSchemas &&filesSchemas, StatsSchemas &&statsSchemas) {
+            const Date &date = request->has_date() ? Date(request->date()) : Date();
             const uint64 &diskSpace = statsSchemas.userDiskInfo.getUserDiskSpace(
-                request->userid(), request->has_date() ? Date(request->date()) : Date()
-            );
+                request->userid(), date
+            ) + filesSchemas.uploadQueue.getUserQueueSpace(request->userid(), date);
 
             response->set_useddiskspace(diskSpace);
             return grpc::Status::OK;

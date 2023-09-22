@@ -53,7 +53,7 @@ StatsUserDiskInfoSchema::getUserConsumption(const string &userId, const std::opt
         throw std::runtime_error("Invalid consumption type");
 }
 
-uint64 StatsUserDiskInfoSchema::getUserDiskSpace(const string &userId, const Date endDate)
+uint64 StatsUserDiskInfoSchema::getUserDiskSpace(const string &userId, const Date &endDate)
 {
     mongocxx::pipeline pipeline;
 
