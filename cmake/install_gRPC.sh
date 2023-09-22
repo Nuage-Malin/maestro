@@ -99,12 +99,14 @@ check_exit_failure "Failed to go into grpc/cmake/build folder"
 if [ `command -v sudo` ]; then
     sudo cmake ../..
     check_exit_failure "Failed to cmake grpc as root"
+    sudo make -j $((`nproc` - 1))
+    check_exit_failure "Failed to make grpc as root"
 else
     cmake ../..
     check_exit_failure "Failed to cmake grpc"
+    make -j $((`nproc` - 1))
+    check_exit_failure "Failed to make grpc"
 fi
-make -j $((`nproc` - 1))
-check_exit_failure "Failed to make grpc"
 
 mkdir -p $INSTALL_DIR
 
