@@ -143,7 +143,6 @@ void ManagerCron::_start()
 {
     this->_runner = std::thread([this]() {
         while (!this->_isPaused) {
-            std::cout << "Check CRON" << std::endl;
             this->_checkStoppedTasks();
             this->_cron.tick();
 
