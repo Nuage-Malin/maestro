@@ -101,23 +101,30 @@ if [ `command -v sudo` ]; then
     check_exit_failure "Failed to cmake grpc as root"
     sudo make -j $((`nproc` - 1))
     check_exit_failure "Failed to make grpc as root"
+
+    sudo mkdir -p $INSTALL_DIR
+    ## install gRPC from source
+    sudo cmake -DgRPC_INSTALL=ON \
+            -DgRPC_BUILD_TESTS=OFF \
+            -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR \
+            -DABSL_ENABLE_INSTALL=ON \
+            ../..
+    check_exit_failure "Failed to cmake grpc (full install) as root"
 else
     cmake ../..
     check_exit_failure "Failed to cmake grpc"
     make -j $((`nproc` - 1))
     check_exit_failure "Failed to make grpc"
+
+    mkdir -p $INSTALL_DIR
+    ## install gRPC from source
+    cmake -DgRPC_INSTALL=ON \
+            -DgRPC_BUILD_TESTS=OFF \
+            -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR \
+            -DABSL_ENABLE_INSTALL=ON \
+            ../..
+    check_exit_failure "Failed to cmake grpc (full install)"
 fi
-
-mkdir -p $INSTALL_DIR
-
-## install gRPC from source
-cmake -DgRPC_INSTALL=ON \
-        -DgRPC_BUILD_TESTS=OFF \
-        -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR \
-        -DABSL_ENABLE_INSTALL=ON \
-        ../..
-        ## todo install on entire system is useless if used as submodule ?
-check_exit_failure "Failed to cmake grpc (full install)"
 
 export PATH="$INSTALL_DIR/bin:$PATH"
 
@@ -131,12 +138,16 @@ else
 fi
 echo "Install directory : $INSTALL_DIR"
 
-make -j $((`nproc` - 1))
-check_exit_failure "Failed to make grpc (full install)"
 if [ `command -v sudo` ]; then
+    sudo make -j $((`nproc` - 1))
+    check_exit_failure "Failed to make grpc (full install)"
+
     sudo make install -j $((`nproc` - 1))
     check_exit_failure "Failed to install grpc (full install) as root"
 else
+    make -j $((`nproc` - 1))
+    check_exit_failure "Failed to make grpc (full install)"
+
     make install -j $((`nproc` - 1))
     check_exit_failure "Failed to install grpc (full install)"
 fi
