@@ -1,9 +1,8 @@
 /**
- * @file UserDiskInfoSchema.hpp
+ * @file DiskInfoSchema.hpp
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
- * @date 18/02/2023
+ * @date 22/09/2023
  * @copyright Nuage Malin
- * @brief Schema who interact with the stats database
  */
 
 #ifndef MAESTRO_STATS_DISKWAKEUP_SCHEMA_HPP
@@ -14,10 +13,12 @@
 #include "Utils/Date/Date.hpp"
 #include "Schemas/Templates/Schema/TemplateSchema.hpp"
 
-class StatsDiskWakeupSchema : public TemplateSchema {
+class StatsDiskInfoSchema : public TemplateSchema {
   public:
-    StatsDiskWakeupSchema(const mongocxx::database &database);
-    ~StatsDiskWakeupSchema() = default;
+    StatsDiskInfoSchema(const mongocxx::database &database);
+    ~StatsDiskInfoSchema() = default;
+
+    uint64 getTotalDisksSpace(const Date &endDate);
 };
 
 #endif
