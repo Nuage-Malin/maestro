@@ -96,44 +96,60 @@ check_exit_failure "Failed to go into grpc folder"
 mkdir -p cmake/build
 pushd cmake/build
 check_exit_failure "Failed to go into grpc/cmake/build folder"
-cmake ../..
-check_exit_failure "Failed to cmake grpc"
-make -j $((`nproc` - 1))
-check_exit_failure "Failed to make grpc"
+if [ `command -v sudo` ]; then
+    sudo cmake ../..
+    check_exit_failure "Failed to cmake grpc as root"
+    sudo make -j $((`nproc` - 1))
+    check_exit_failure "Failed to make grpc as root"
 
-mkdir -p $INSTALL_DIR
+    sudo mkdir -p $INSTALL_DIR
+    ## install gRPC from source
+    sudo cmake -DgRPC_INSTALL=ON \
+            -DgRPC_BUILD_TESTS=OFF \
+            -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR \
+            -DABSL_ENABLE_INSTALL=ON \
+            ../..
+    check_exit_failure "Failed to cmake grpc (full install) as root"
+else
+    cmake ../..
+    check_exit_failure "Failed to cmake grpc"
+    make -j $((`nproc` - 1))
+    check_exit_failure "Failed to make grpc"
 
-## install gRPC from source
-cmake -DgRPC_INSTALL=ON \
-        -DgRPC_BUILD_TESTS=OFF \
-        -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR \
-        -DABSL_ENABLE_INSTALL=ON \
-        ../..
-        ## todo install on entire system is useless if used as submodule ?
-check_exit_failure "Failed to cmake grpc (full install)"
+    mkdir -p $INSTALL_DIR
+    ## install gRPC from source
+    cmake -DgRPC_INSTALL=ON \
+            -DgRPC_BUILD_TESTS=OFF \
+            -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR \
+            -DABSL_ENABLE_INSTALL=ON \
+            ../..
+    check_exit_failure "Failed to cmake grpc (full install)"
+fi
 
 export PATH="$INSTALL_DIR/bin:$PATH"
 
-echo "SHELL: $SHELL"
 ZSH=$( ( echo $SHELL | grep zsh) )
 if ! [[ -z $ZSH ]] && (! cat $HOME/.zshrc | grep PATH | grep "$INSTALL_DIR/bin"); then
     echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.zshrc
-    echo "zshrc:"
-    cat $HOME/.zshrc
 elif (! cat $HOME/.bashrc | grep PATH | grep "$INSTALL_DIR/bin"); then
     echo "PATH=\"$INSTALL_DIR/bin:$PATH\"" >> $HOME/.bashrc
-    echo "bashrc:"
-    cat $HOME/.bashrc
 else
     echo "gRPC path already added to PATH"
 fi
 echo "Install directory : $INSTALL_DIR"
-echo "PATH : $PATH"
 
+if [ `command -v sudo` ]; then
+    sudo make -j $((`nproc` - 1))
+    check_exit_failure "Failed to make grpc (full install)"
 
-make -j $((`nproc` - 1))
-check_exit_failure "Failed to make grpc (full install)"
-make install -j $((`nproc` - 1))
-check_exit_failure "Failed to install grpc (full install)"
+    sudo make install -j $((`nproc` - 1))
+    check_exit_failure "Failed to install grpc (full install) as root"
+else
+    make -j $((`nproc` - 1))
+    check_exit_failure "Failed to make grpc (full install)"
+
+    make install -j $((`nproc` - 1))
+    check_exit_failure "Failed to install grpc (full install)"
+fi
 popd
 popd

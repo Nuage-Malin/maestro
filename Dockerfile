@@ -19,12 +19,33 @@ RUN apt-get update && apt-get install -y \
     libbson-1.0-0       \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+WORKDIR /app/third_parties
 
 # CMake installations
-COPY third_parties/grpc /app/third_parties/grpc
-COPY third_parties/mongo-cxx-driver /app/third_parties/mongo-cxx-driver
-COPY third_parties/libcron /app/third_parties/libcron
+COPY .git/modules/third_parties/grpc/HEAD /app/.git/modules/grpc
+RUN mkdir grpc && cd grpc \
+    && git init \
+    && git remote add origin https://github.com/grpc/grpc.git \
+    && git fetch origin $(head -n 1 /app/.git/modules/grpc | tr -d '\n') \
+    && git checkout FETCH_HEAD \
+    && git submodule update --init --recursive
+COPY .git/modules/third_parties/mongo-cxx-driver/HEAD /app/.git/modules/mongo-cxx-driver
+RUN mkdir mongo-cxx-driver && cd mongo-cxx-driver \
+    && git init \
+    && git remote add origin https://github.com/mongodb/mongo-cxx-driver.git \
+    && git fetch origin $(head -n 1 /app/.git/modules/mongo-cxx-driver | tr -d '\n') \
+    && git checkout FETCH_HEAD \
+    && git submodule update --init --recursive
+COPY .git/modules/third_parties/libcron/HEAD /app/.git/modules/libcron
+RUN mkdir libcron && cd libcron \
+    && git init \
+    && git remote add origin https://github.com/PerMalmberg/libcron.git \
+    && git fetch origin $(head -n 1 /app/.git/modules/libcron | tr -d '\n') \
+    && git checkout FETCH_HEAD \
+    && git submodule update --init --recursive
+
+WORKDIR /app
+
 COPY cmake /app/cmake
 COPY CMakeLists.txt /app
 

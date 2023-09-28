@@ -39,5 +39,5 @@ StatsSchemas MongoCXX::Mongo::getStatsSchemas() const
 {
     const mongocxx::database statsDatabase = this->_client[statsDb];
 
-    return {.userDiskInfo = StatsUserDiskInfoSchema(statsDatabase)};
+    return {.diskInfo = StatsDiskInfoSchema(statsDatabase), .userDiskInfo = StatsUserDiskInfoSchema(statsDatabase)};
 }

@@ -12,7 +12,7 @@
 #include "Utils/Date/Date.hpp"
 #include "Exceptions/NotFound/NotFoundException.hpp"
 
-FilesUploadQueueSchema::FilesUploadQueueSchema(const mongocxx::database &database) : TemplateFileBucket(database, "uploadQueue")
+FilesUploadQueueSchema::FilesUploadQueueSchema(const mongocxx::database &database) : TemplateFileBucket(database, "uploadQueue"), TemplateSchema(database, "uploadQueue.files")
 {
 }
 
@@ -86,6 +86,28 @@ NODISCARD string FilesUploadQueueSchema::getFile(const string &fileId)
 
     this->_fileBucket.download_to_stream((*cursor.begin())["_id"].get_value(), &ostream);
     return oss.str();
+}
+
+NODISCARD uint64 FilesUploadQueueSchema::getUserQueueSpace(const string & userId, const Date &endDate)
+{
+    mongocxx::pipeline pipeline;
+
+    pipeline.match(makeDocument(makeField("metadata.userId", userId), makeField("metadata.createdAt", makeDocument(makeField("$lte", endDate.toBSON())))));
+    pipeline.group(makeDocument(makeField("_id", MongoCXX::Null()), makeField("totalUserQueueSpace", makeDocument(makeField("$sum", "$length")))));
+
+    mongocxx::cursor cursor = this->_model.aggregate(pipeline);
+
+    if (cursor.begin() == cursor.end())
+        return 0;
+
+    const MongoCXX::DocumentElement &totalUserQueueSpace = (*cursor.begin())["totalUserQueueSpace"];
+
+    if (totalUserQueueSpace.type() == bsoncxx::type::k_int32)
+        return static_cast<uint64>(totalUserQueueSpace.get_int32().value);
+    else if (totalUserQueueSpace.type() == bsoncxx::type::k_int64)
+        return totalUserQueueSpace.get_int64().value;
+    else
+        throw std::runtime_error("Invalid totalUserQueueSpace type");
 }
 
 // TODO: Does need to use thread to optimize it.
