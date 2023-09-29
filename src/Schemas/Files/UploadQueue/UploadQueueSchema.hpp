@@ -25,6 +25,7 @@ class FilesUploadQueueSchema : public TemplateFileBucket, public TemplateSchema 
     NODISCARD std::pair<std::vector<MongoCXX::ValueView>, Maestro_Vault::UploadFilesRequest> getDiskFiles(const string &diskId);
     NODISCARD std::unordered_set<string> getFilesDisk();
     NODISCARD string getFile(const string &fileId);
+    NODISCARD bool doesFileExist(const string &fileId);
     NODISCARD uint64 getUserQueueSpace(const string &userId, const Date &endDate);
     void deleteFiles(const std::vector<MongoCXX::ValueView> &filesId);
 };

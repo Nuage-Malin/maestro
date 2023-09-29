@@ -199,7 +199,10 @@ grpc::Status UsersBackService::getFilesIndex(
                 File::FileMetadata *fileIndex = filesIndex.add_fileindex();
 
                 fileIndex->CopyFrom(file);
-                fileIndex->set_isdownloadable(filesSchemas.downloadedStack.doesFileExist(file.fileid()));
+                fileIndex->set_isdownloadable(
+                    filesSchemas.downloadedStack.doesFileExist(file.fileid()) ||
+                    filesSchemas.uploadQueue.doesFileExist(file.fileid())
+                );
             }
             response->set_allocated_subfiles(new File::FilesIndex(filesIndex));
             return grpc::Status::OK;
