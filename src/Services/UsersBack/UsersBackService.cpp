@@ -115,7 +115,7 @@ grpc::Status UsersBackService::askFileDownload(
                 return grpc::Status::OK;
             }
 
-            const std::chrono::days expirationLimit(2);
+            const std::chrono::minutes expirationLimit(5);
             const Date &expirationDate = Date() + expirationLimit;
 
             try {
