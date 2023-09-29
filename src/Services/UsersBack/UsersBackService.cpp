@@ -143,7 +143,7 @@ grpc::Status UsersBackService::askFileDownload(
                             );
 
                             filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, fileContent);
-                            response->set_allocated_waitingtime(expirationDate.toAllocatedDuration()); // TODO: Edit waiting time
+                            response->set_allocated_waitingtime(new google::protobuf::Duration());
                         } else {
                             // If the disk is offline, add the file to the queue database
                             this->_askFileDownloadFailure(filesSchemas, request->fileid(), file, expirationDate, *response);
