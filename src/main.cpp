@@ -20,6 +20,8 @@
 #include "Cron/DownloadFiles/DownloadFilesCron.hpp"
 #include "Cron/RemoveFiles/RemoveFilesCron.hpp"
 
+const int MAX_MESSAGE_SIZE = INT_MAX; // 2GB
+
 /**
  * @brief Run the server
  * @throw std::invalid_argument if MAESTRO_MONGO_URL environment variable not found
@@ -36,10 +38,14 @@ void RunServer()
     EventsManager events;
 
     // Clients
+    grpc::ChannelArguments channelArgs;
+
+    channelArgs.SetMaxReceiveMessageSize(MAX_MESSAGE_SIZE);
+    channelArgs.SetMaxSendMessageSize(MAX_MESSAGE_SIZE);
     GrpcClients clients = {
         .santaclaus = SantaclausClient(grpc::CreateChannel(getEnv("MAESTRO_SANTACLAUS_URI"), grpc::InsecureChannelCredentials())),
         .bugle = BugleClient(grpc::CreateChannel(getEnv("MAESTRO_BUGLE_URI"), grpc::InsecureChannelCredentials()), events),
-        .vault = VaultClient(grpc::CreateChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials()))};
+        .vault = VaultClient(grpc::CreateCustomChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials(), channelArgs))};
 
     // CRON
     ManagerCron managerCron;
@@ -60,6 +66,7 @@ void RunServer()
 
     builder.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());
     builder.RegisterService(&usersBackService);
+    builder.SetMaxMessageSize(MAX_MESSAGE_SIZE);
     builder.RegisterService(&choufService);
     std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
     std::cout << "Server listening on " << serverAddress << std::endl;
