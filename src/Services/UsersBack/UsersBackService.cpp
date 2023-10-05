@@ -162,6 +162,20 @@ grpc::Status UsersBackService::askFileDownload(
     );
 }
 
+grpc::Status UsersBackService::cancelFileDownload(
+    UNUSED grpc::ServerContext *context, const UsersBack_Maestro::CancelFileDownloadRequest *request, UsersBack_Maestro::CancelFileDownloadStatus *response
+)
+{
+    return this->_procedureRunner(
+        [this, request, response](FilesSchemas &&FilesSchemas, StatsSchemas &&) {
+            FilesSchemas.downloadQueue.deleteFile(request->fileid());
+
+            return grpc::Status::OK;
+        },
+        __FUNCTION__
+    );
+}
+
 grpc::Status UsersBackService::fileDownload(
     UNUSED grpc::ServerContext *context, const UsersBack_Maestro::FileDownloadRequest *request, File::File *response
 )
