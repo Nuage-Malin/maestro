@@ -44,6 +44,11 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         UsersBack_Maestro::AskFileDownloadStatus *response
     ) override;
 
+    grpc::Status cancelFileDownload(
+        grpc::ServerContext *context, const UsersBack_Maestro::CancelFileDownloadRequest *request,
+        UsersBack_Maestro::CancelFileDownloadStatus *response
+    ) override;
+
     grpc::Status fileDownload(
         grpc::ServerContext *context, const UsersBack_Maestro::FileDownloadRequest *request, File::File *response
     ) override;
