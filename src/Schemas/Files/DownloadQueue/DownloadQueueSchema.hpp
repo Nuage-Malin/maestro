@@ -25,6 +25,7 @@ class FilesDownloadQueueSchema : public TemplateSchema {
     Date getRequestedDate(const string &fileId, const string &diskId);
     NODISCARD Maestro_Vault::DownloadFilesRequest getDiskFiles(const string &diskId);
     NODISCARD std::unordered_set<string> getFilesDisk();
+    NODISCARD bool doesFileExist(const string &fileId);
 };
 
 #endif
