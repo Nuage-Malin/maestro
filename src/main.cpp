@@ -39,7 +39,9 @@ void RunServer()
     GrpcClients clients = {
         .santaclaus = SantaclausClient(grpc::CreateChannel(getEnv("MAESTRO_SANTACLAUS_URI"), grpc::InsecureChannelCredentials())),
         .bugle = BugleClient(grpc::CreateChannel(getEnv("MAESTRO_BUGLE_URI"), grpc::InsecureChannelCredentials()), events),
-        .vault = VaultClient(grpc::CreateChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials()))};
+        .vault = VaultClient(grpc::CreateChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials())),
+        .vaultcache =
+            VaultCacheClient(grpc::CreateChannel(getEnv("MAESTRO_VAULTCACHE_URI"), grpc::InsecureChannelCredentials()))};
 
     // Services
     UsersBackService usersBackService(clients, events);
@@ -57,7 +59,7 @@ void RunServer()
     // CRON
     ManagerCron managerCron;
 
-    managerCron.add("0 30 3 * * ?", ExpiredDownloadedFilesCron(events));
+    managerCron.add("0 30 3 * * ?", ExpiredDownloadedFilesCron(clients, events));
     managerCron.add("0 0 3 * * ?", FileUploadCron(clients, events));
     managerCron.add("0 0 3 * * ?", DownloadFilesCron(clients, events));
     managerCron.add("0 0 3 * * ?", RemoveFilesCron(clients, events));

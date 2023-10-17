@@ -149,6 +149,7 @@ Maestro_Santaclaus::RemoveDirectoryStatus SantaclausClient::removeDirectory(cons
         throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
+
 Maestro_Santaclaus::MoveDirectoryStatus SantaclausClient::moveDirectory(
     const string &dirId, const std::optional<string> &name, const std::optional<string> &newLocationDirId
 ) const

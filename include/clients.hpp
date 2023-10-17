@@ -11,12 +11,14 @@
 #include "Clients/Santaclaus/SantaclausClient.hpp"
 #include "Clients/Bugle/BugleClient.hpp"
 #include "Clients/Vault/VaultClient.hpp"
+#include "Clients/VaultCache/VaultCacheClient.hpp"
 
 struct GrpcClients
 {
     const SantaclausClient santaclaus;
     const BugleClient bugle;
     const VaultClient vault;
+    const VaultCacheClient vaultcache;
 };
 
 #endif

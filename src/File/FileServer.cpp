@@ -79,13 +79,16 @@ FileServer::FileServer(const mongocxx::database &file_database) : _fileDatabase(
 
             const char *envWaitingTime = getenv("DOWNLOAD_WAITING_TIME");
 
-            if (!envWaitingTime)
+            if (!envWaitingTime) {
                 availabilityCountdown->set_seconds(DEFAULT_WAITING_TIME);
-            else
+            } else {
                 availabilityCountdown->set_seconds(toInteger(envWaitingTime));
+            }
             response->set_allocated_waitingtime(availabilityCountdown);
-            _availabilityCountdown.emplace(
-                request->fileid(), std::make_tuple(*availabilityCountdown, std::chrono::high_resolution_clock::now()));
+            availabilityCountdown.emplace(
+                request->fileid(),
+                std::make_tuple(*availabilityCountdown,
+                std::chrono::high_resolution_clock::now()));
         } catch (const mongocxx::query_exception &e) {
             std::cerr << "[FileServer::askFileDownload] mongocxx::query_exception: " << e.what() << std::endl;
             return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Query exception", e.what());
