@@ -184,7 +184,7 @@ grpc::Status UsersBackService::fileDownload(
         [this, request, response](FilesSchemas &&filesSchemas, StatsSchemas &&) {
             File::FileMetadata metadata = this->_clients.santaclaus.getFile(request->fileid()).file();
 
-            metadata.set_isdownloadable(true);
+            metadata.set_state(File::FileState::DOWNLOADABLE);
 
             response->set_content(filesSchemas.downloadedStack.downloadFile(request->fileid()));
             response->set_allocated_metadata(new File::FileMetadata(metadata));
@@ -213,10 +213,15 @@ grpc::Status UsersBackService::getFilesIndex(
                 File::FileMetadata *fileIndex = filesIndex.add_fileindex();
 
                 fileIndex->CopyFrom(file);
-                fileIndex->set_isdownloadable(
-                    filesSchemas.downloadedStack.doesFileExist(file.fileid()) ||
-                    filesSchemas.uploadQueue.doesFileExist(file.fileid())
-                );
+                if (filesSchemas.downloadedStack.doesFileExist(file.fileid())) {
+                    fileIndex->set_state(File::FileState::DOWNLOADABLE);
+                } else if (filesSchemas.uploadQueue.doesFileExist(file.fileid())) {
+                    fileIndex->set_state(File::FileState::UPLOADING);
+                } else if (filesSchemas.downloadQueue.doesFileExist(file.fileid())) {
+                    fileIndex->set_state(File::FileState::ASKED);
+                } else {
+                    fileIndex->set_state(File::FileState::STORED);
+                }
             }
             response->set_allocated_subfiles(new File::FilesIndex(filesIndex));
             return grpc::Status::OK;

@@ -83,3 +83,14 @@ NODISCARD std::unordered_set<string> FilesDownloadQueueSchema::getFilesDisk()
     };
     return disks;
 }
+
+NODISCARD bool FilesDownloadQueueSchema::doesFileExist(const string &fileId)
+{
+    const bsoncxx::document::value filter = makeDocument(makeField("fileId", fileId));
+    mongocxx::options::find options;
+
+    options.projection(makeDocument(makeField("_id", true)));
+    mongocxx::cursor cursor = this->_model.find(filter.view(), options);
+
+    return cursor.begin() != cursor.end();
+}
