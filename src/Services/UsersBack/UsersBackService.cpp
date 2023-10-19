@@ -115,7 +115,7 @@ grpc::Status UsersBackService::askFileDownload(
                 return grpc::Status::OK;
             }
 
-            const std::chrono::days expirationLimit(2);
+            const std::chrono::minutes expirationLimit(5);
             const Date &expirationDate = Date() + expirationLimit;
 
             try {
@@ -143,7 +143,7 @@ grpc::Status UsersBackService::askFileDownload(
                             );
 
                             filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, fileContent);
-                            response->set_allocated_waitingtime(expirationDate.toAllocatedDuration()); // TODO: Edit waiting time
+                            response->set_allocated_waitingtime(new google::protobuf::Duration());
                         } else {
                             // If the disk is offline, add the file to the queue database
                             this->_askFileDownloadFailure(filesSchemas, request->fileid(), file, expirationDate, *response);
@@ -162,6 +162,20 @@ grpc::Status UsersBackService::askFileDownload(
     );
 }
 
+grpc::Status UsersBackService::cancelFileDownload(
+    UNUSED grpc::ServerContext *context, const UsersBack_Maestro::CancelFileDownloadRequest *request, UsersBack_Maestro::CancelFileDownloadStatus *response
+)
+{
+    return this->_procedureRunner(
+        [this, request, response](FilesSchemas &&FilesSchemas, StatsSchemas &&) {
+            FilesSchemas.downloadQueue.deleteFile(request->fileid());
+
+            return grpc::Status::OK;
+        },
+        __FUNCTION__
+    );
+}
+
 grpc::Status UsersBackService::fileDownload(
     UNUSED grpc::ServerContext *context, const UsersBack_Maestro::FileDownloadRequest *request, File::File *response
 )
@@ -170,7 +184,7 @@ grpc::Status UsersBackService::fileDownload(
         [this, request, response](FilesSchemas &&filesSchemas, StatsSchemas &&) {
             File::FileMetadata metadata = this->_clients.santaclaus.getFile(request->fileid()).file();
 
-            metadata.set_isdownloadable(true);
+            metadata.set_state(File::FileState::DOWNLOADABLE);
 
             response->set_content(filesSchemas.downloadedStack.downloadFile(request->fileid()));
             response->set_allocated_metadata(new File::FileMetadata(metadata));
@@ -199,7 +213,15 @@ grpc::Status UsersBackService::getFilesIndex(
                 File::FileMetadata *fileIndex = filesIndex.add_fileindex();
 
                 fileIndex->CopyFrom(file);
-                fileIndex->set_isdownloadable(filesSchemas.downloadedStack.doesFileExist(file.fileid()));
+                if (filesSchemas.downloadedStack.doesFileExist(file.fileid())) {
+                    fileIndex->set_state(File::FileState::DOWNLOADABLE);
+                } else if (filesSchemas.uploadQueue.doesFileExist(file.fileid())) {
+                    fileIndex->set_state(File::FileState::UPLOADING);
+                } else if (filesSchemas.downloadQueue.doesFileExist(file.fileid())) {
+                    fileIndex->set_state(File::FileState::ASKED);
+                } else {
+                    fileIndex->set_state(File::FileState::STORED);
+                }
             }
             response->set_allocated_subfiles(new File::FilesIndex(filesIndex));
             return grpc::Status::OK;

@@ -88,6 +88,17 @@ NODISCARD string FilesUploadQueueSchema::getFile(const string &fileId)
     return oss.str();
 }
 
+NODISCARD bool FilesUploadQueueSchema::doesFileExist(const string &fileId)
+{
+    const bsoncxx::document::value filter = makeDocument(makeField("filename", fileId));
+    mongocxx::options::find options;
+
+    options.projection(makeDocument(makeField("_id", true)));
+    mongocxx::cursor cursor = this->_fileBucket.find(filter.view(), options);
+
+    return cursor.begin() != cursor.end();
+}
+
 NODISCARD uint64 FilesUploadQueueSchema::getUserQueueSpace(const string & userId, const Date &endDate)
 {
     mongocxx::pipeline pipeline;

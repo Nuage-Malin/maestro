@@ -21,7 +21,7 @@ TEST(DownloadedStack, pushFile_doesFileExist)
 {
     FilesSchemas filesSchemas = getCommonMongo().getFilesSchemas();
 
-    filesSchemas.downloadedStack.pushFile("fileIdTest", Date() + std::chrono::days(2), "contentTest");
+    filesSchemas.downloadedStack.pushFile("fileIdTest", Date() + std::chrono::days(1), "contentTest");
 
     ASSERT_TRUE(filesSchemas.downloadedStack.doesFileExist("fileIdTest"));
 }

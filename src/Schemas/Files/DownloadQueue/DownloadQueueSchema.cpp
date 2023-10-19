@@ -32,6 +32,13 @@ void FilesDownloadQueueSchema::deleteDiskFiles(const string &diskId)
     this->_model.delete_many(filter.view());
 }
 
+void FilesDownloadQueueSchema::deleteFile(const string &fileId)
+{
+    MongoCXX::Document filter = makeDocument(makeField("fileId", fileId));
+
+    this->_model.delete_one(filter.view());
+}
+
 Date FilesDownloadQueueSchema::getRequestedDate(const string &fileId, const string &diskId)
 {
     MongoCXX::Document filter = makeDocument(makeField("fileId", fileId), makeField("diskId", diskId));
@@ -75,4 +82,15 @@ NODISCARD std::unordered_set<string> FilesDownloadQueueSchema::getFilesDisk()
         disks.insert(file["diskId"].get_string().value.to_string());
     };
     return disks;
+}
+
+NODISCARD bool FilesDownloadQueueSchema::doesFileExist(const string &fileId)
+{
+    const bsoncxx::document::value filter = makeDocument(makeField("fileId", fileId));
+    mongocxx::options::find options;
+
+    options.projection(makeDocument(makeField("_id", true)));
+    mongocxx::cursor cursor = this->_model.find(filter.view(), options);
+
+    return cursor.begin() != cursor.end();
 }
