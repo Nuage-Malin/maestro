@@ -208,6 +208,8 @@ grpc::Status UsersBackService::getFilesIndex(
             File::FilesIndex filesIndex;
 
             filesIndex.CopyFrom(subFiles.subfiles());
+
+            // Files
             filesIndex.clear_fileindex();
             for (const File::FileMetadata &file : subFiles.subfiles().fileindex()) {
                 File::FileMetadata *fileIndex = filesIndex.add_fileindex();
@@ -223,6 +225,21 @@ grpc::Status UsersBackService::getFilesIndex(
                     fileIndex->set_state(File::FileState::STORED);
                 }
             }
+
+            // Directories
+            filesIndex.clear_dirindex();
+            for (const File::DirMetadata &dir : subFiles.subfiles().dirindex()) {
+                File::DirMetadata *dirIndex = filesIndex.add_dirindex();
+
+                dirIndex->CopyFrom(dir);
+                try {
+                    dirIndex->set_state(this->_getDirectoryState(request->userid(), dir.dirid(), filesIndex, request->isrecursive()));
+                } catch (const RequestFailureException &error) {
+                    std::cerr << "[WARNING] Fail to get directory " << dir.dirid() <<") state, set it to UNKNOWN : " << error.what() << std::endl;
+                    dirIndex->set_state(File::FileState::UNKNOWN);
+                }
+            }
+
             response->set_allocated_subfiles(new File::FilesIndex(filesIndex));
             return grpc::Status::OK;
         },
@@ -351,6 +368,64 @@ grpc::Status UsersBackService::
         },
         __FUNCTION__
     );
+}
+
+File::FileState UsersBackService::_getDirectoryState(
+    const string &userId,
+    const string &directoryId,
+    const File::FilesIndex &filesIndex,
+    const bool &isRecursive
+)
+{
+    File::FileState state = File::FileState::UNKNOWN;
+
+    for (const File::FileMetadata &fileMetadata : filesIndex.fileindex()) {
+        if (directoryId != fileMetadata.dirid())
+            continue;
+
+        state = this->_getFileState(fileMetadata.state(), state);
+    }
+
+    for (const File::DirMetadata &dirMetadata : filesIndex.dirindex()) {
+        if (directoryId != dirMetadata.approxmetadata().dirid())
+            continue;
+
+        // If subDirectory is already getted with recursive option
+        if (isRecursive) {
+            state = this->_getFileState(this->_getDirectoryState(userId, dirMetadata.dirid(), filesIndex, isRecursive), state);
+        } else {
+            grpc::ServerContext context;
+            UsersBack_Maestro::GetFilesIndexRequest request;
+            UsersBack_Maestro::GetFilesIndexStatus response;
+
+            request.set_dirid(dirMetadata.dirid());
+            request.set_userid(userId);
+            request.set_isrecursive(false);
+            std::cout << "[CLIENT] UsersBack_Maestro::getFilesIndex" << std::endl;
+            auto status = this->getFilesIndex(&context, &request, &response);
+
+            if (!status.ok())
+                throw RequestFailureException(status, __FUNCTION__);
+
+            state = this->_getFileState(this->_getDirectoryState(userId, dirMetadata.dirid(), response.subfiles(), false), state);
+        }
+    }
+
+    return state;
+}
+
+File::FileState UsersBackService::_getFileState(const File::FileState &fileState, const File::FileState &currentState) const
+{
+    if (fileState == File::FileState::DOWNLOADABLE) {
+        return File::FileState::DOWNLOADABLE;
+    } else if (fileState == File::FileState::ASKED) {
+        return File::FileState::ASKED;
+    } else if (fileState == File::FileState::UPLOADING && currentState != File::FileState::ASKED) {
+        return File::FileState::UPLOADING;
+    } else if (fileState == File::FileState::STORED && currentState == File::FileState::UNKNOWN) {
+        return File::FileState::STORED;
+    }
+    return currentState;
 }
 
 void UsersBackService::_fileUploadFailure(
