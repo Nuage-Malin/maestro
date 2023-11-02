@@ -422,7 +422,11 @@ File::FileState UsersBackService::_getDirectoryState(
         if (!status.ok())
             throw RequestFailureException(status, __FUNCTION__);
 
-        state = this->_getFileState(this->_getDirectoryState(userId, directoryId, response.subfiles(), false), state);
+        for (const File::DirMetadata &dirMetadata : response.subfiles().dirindex()) {
+            state = this->_getFileState(this->_getDirectoryState(userId, dirMetadata.dirId(), response.subfiles(), false), state);
+            if (state == File::FileState::DOWNLOADABLE)
+                return state;
+        }
     }
 
     return state;
