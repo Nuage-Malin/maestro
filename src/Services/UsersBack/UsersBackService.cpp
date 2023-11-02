@@ -232,7 +232,7 @@ grpc::Status UsersBackService::getFilesIndex(
                 File::DirMetadata *dirIndex = filesIndex.add_dirindex();
 
                 dirIndex->CopyFrom(dir);
-                if (dir.approxmetadata().name() != "/" && (!request->has_dirid() || dir.dirid() != request->dirid())) {
+                if (dir.approxmetadata().name() != "/" && (!request->has_dirid() || dir.approxmetadata().dirid() == request->dirid())) {
                     try {
                         dirIndex->set_state(this->_getDirectoryState(request->userid(), dir.dirid(), filesIndex, request->isrecursive()));
                         std::cout << "New dir state : " << dir.dirid() << " => " << dirIndex->state() << std::endl;
