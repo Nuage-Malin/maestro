@@ -390,31 +390,31 @@ File::FileState UsersBackService::_getDirectoryState(
             return state;
     }
 
-    for (const File::DirMetadata &dirMetadata : filesIndex.dirindex()) {
-        if (directoryId != dirMetadata.approxmetadata().dirid())
-            continue;
+    // If subDirectory is already getted with recursive option
+    if (isRecursive) {
+        for (const File::DirMetadata &dirMetadata : filesIndex.dirindex()) {
+            if (directoryId != dirMetadata.approxmetadata().dirid())
+                continue;
 
-        // If subDirectory is already getted with recursive option
-        if (isRecursive) {
             state = this->_getFileState(this->_getDirectoryState(userId, dirMetadata.dirid(), filesIndex, isRecursive), state);
-        } else {
-            grpc::ServerContext context;
-            UsersBack_Maestro::GetFilesIndexRequest request;
-            UsersBack_Maestro::GetFilesIndexStatus response;
-
-            request.set_dirid(dirMetadata.dirid());
-            request.set_userid(userId);
-            request.set_isrecursive(false);
-            std::cout << "[CLIENT] UsersBack_Maestro::getFilesIndex" << std::endl;
-            auto status = this->getFilesIndex(&context, &request, &response);
-
-            if (!status.ok())
-                throw RequestFailureException(status, __FUNCTION__);
-
-            state = this->_getFileState(this->_getDirectoryState(userId, dirMetadata.dirid(), response.subfiles(), false), state);
+            if (state == File::FileState::DOWNLOADABLE)
+                return state;
         }
-        if (state == File::FileState::DOWNLOADABLE)
-            return state;
+    } else {
+        grpc::ServerContext context;
+        UsersBack_Maestro::GetFilesIndexRequest request;
+        UsersBack_Maestro::GetFilesIndexStatus response;
+
+        request.set_dirid(directoryId);
+        request.set_userid(userId);
+        request.set_isrecursive(false);
+        std::cout << "[CLIENT] UsersBack_Maestro::getFilesIndex" << std::endl;
+        auto status = this->getFilesIndex(&context, &request, &response);
+
+        if (!status.ok())
+            throw RequestFailureException(status, __FUNCTION__);
+
+        state = this->_getFileState(this->_getDirectoryState(userId, directoryId, response.subfiles(), false), state);
     }
 
     return state;
