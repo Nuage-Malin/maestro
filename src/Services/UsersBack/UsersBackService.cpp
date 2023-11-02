@@ -234,6 +234,13 @@ grpc::Status UsersBackService::getFilesIndex(
                 dirIndex->CopyFrom(dir);
                 if (dir.approxmetadata().name() != "/" && (!request->has_dirid() || dir.approxmetadata().dirid() == request->dirid())) {
                     try {
+                        if (request->has_dirid())
+                            std::cout << "request dir id: " << request->dirid() << std::endl;
+                        else
+                            std::cout << "request dir id: " << "null" << std::endl;
+                        std::cout << "dir name: " << dir.approxmetadata().name() << std::endl;
+                        std::cout << "dir id: " << dir.dirid() << std::endl;
+                        std::cout << "parent dir id: " << dir.approxmetadata().dirid() << std::endl;
                         dirIndex->set_state(this->_getDirectoryState(request->userid(), dir.dirid(), filesIndex, request->isrecursive()));
                         std::cout << "New dir state : " << dir.dirid() << " => " << dirIndex->state() << std::endl;
                     } catch (const RequestFailureException &error) {
