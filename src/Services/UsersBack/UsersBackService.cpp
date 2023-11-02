@@ -234,7 +234,7 @@ grpc::Status UsersBackService::getFilesIndex(
                 dirIndex->CopyFrom(dir);
                 if (dir.approxmetadata().name() != "/" && (!request->has_dirid() || dir.dirid() != request->dirid())) {
                     try {
-                        dirIndex->set_state(this->_getDirectoryState(request->userid(), dir.dirid(), subFiles.subfiles(), request->isrecursive()));
+                        dirIndex->set_state(this->_getDirectoryState(request->userid(), dir.dirid(), filesIndex, request->isrecursive()));
                     } catch (const RequestFailureException &error) {
                         std::cerr << "[WARNING] Fail to get directory " << dir.dirid() <<") state, set it to UNKNOWN : " << error.what() << std::endl;
                         dirIndex->set_state(File::FileState::UNKNOWN);
