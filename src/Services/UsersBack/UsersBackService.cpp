@@ -232,11 +232,13 @@ grpc::Status UsersBackService::getFilesIndex(
                 File::DirMetadata *dirIndex = filesIndex.add_dirindex();
 
                 dirIndex->CopyFrom(dir);
-                try {
-                    dirIndex->set_state(this->_getDirectoryState(request->userid(), dir.dirid(), filesIndex, request->isrecursive()));
-                } catch (const RequestFailureException &error) {
-                    std::cerr << "[WARNING] Fail to get directory " << dir.dirid() <<") state, set it to UNKNOWN : " << error.what() << std::endl;
-                    dirIndex->set_state(File::FileState::UNKNOWN);
+                if (dir.approxmetadata().name() != "/" && (!request->has_dirid() || dir.dirid() != request->dirid())) {
+                    try {
+                        dirIndex->set_state(this->_getDirectoryState(request->userid(), dir.dirid(), filesIndex, request->isrecursive()));
+                    } catch (const RequestFailureException &error) {
+                        std::cerr << "[WARNING] Fail to get directory " << dir.dirid() <<") state, set it to UNKNOWN : " << error.what() << std::endl;
+                        dirIndex->set_state(File::FileState::UNKNOWN);
+                    }
                 }
             }
 
@@ -384,6 +386,8 @@ File::FileState UsersBackService::_getDirectoryState(
             continue;
 
         state = this->_getFileState(fileMetadata.state(), state);
+        if (state == File::FileState::DOWNLOADABLE)
+            return state;
     }
 
     for (const File::DirMetadata &dirMetadata : filesIndex.dirindex()) {
@@ -409,6 +413,8 @@ File::FileState UsersBackService::_getDirectoryState(
 
             state = this->_getFileState(this->_getDirectoryState(userId, dirMetadata.dirid(), response.subfiles(), false), state);
         }
+        if (state == File::FileState::DOWNLOADABLE)
+            return state;
     }
 
     return state;
