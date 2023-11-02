@@ -235,6 +235,7 @@ grpc::Status UsersBackService::getFilesIndex(
                 if (dir.approxmetadata().name() != "/" && (!request->has_dirid() || dir.dirid() != request->dirid())) {
                     try {
                         dirIndex->set_state(this->_getDirectoryState(request->userid(), dir.dirid(), filesIndex, request->isrecursive()));
+                        std::cout << "New dir state : " << dir.dirid() << " => " << dirIndex->state() << std::endl;
                     } catch (const RequestFailureException &error) {
                         std::cerr << "[WARNING] Fail to get directory " << dir.dirid() <<") state, set it to UNKNOWN : " << error.what() << std::endl;
                         dirIndex->set_state(File::FileState::UNKNOWN);
@@ -408,7 +409,7 @@ File::FileState UsersBackService::_getDirectoryState(
         request.set_dirid(directoryId);
         request.set_userid(userId);
         request.set_isrecursive(false);
-        std::cout << "[CLIENT] UsersBack_Maestro::getFilesIndex" << std::endl;
+        std::cout << "[CLIENT] UsersBack_Maestro::getFilesIndex " << directoryId << std::endl;
         auto status = this->getFilesIndex(&context, &request, &response);
 
         if (!status.ok())
