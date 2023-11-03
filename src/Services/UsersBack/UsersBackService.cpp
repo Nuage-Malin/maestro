@@ -425,13 +425,16 @@ File::FileState UsersBackService::_getDirectoryState(
         for (const File::FileMetadata &fileMetadata : response.subfiles().fileindex()) {
             std::cout << fileMetadata.approxmetadata().name() << " : " << fileMetadata.state() << std::endl;
         }
-        for (const File::DirMetadata &dirMetadata : response.subfiles().dirindex())
+        for (const File::DirMetadata &dirMetadata : response.subfiles().dirindex()) {
+            std::cout << "Check directory " << dirMetadata.dirid() << std::endl;
+            std::cout << "Compare to " << directoryId << std::endl;
             if (dirMetadata.dirid() != directoryId) {
                 state = this->_getFileState(this->_getDirectoryState(userId, dirMetadata.dirid(), response.subfiles(), false), state);
                 std::cout << "New dir state : " << dirMetadata.approxmetadata().name() << " => " << dirMetadata.state() << std::endl;
                 if (state == File::FileState::DOWNLOADABLE)
                     return state;
             }
+        }
     }
 
     return state;
