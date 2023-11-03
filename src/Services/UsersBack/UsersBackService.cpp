@@ -447,6 +447,8 @@ File::FileState UsersBackService::_getFileState(const File::FileState &fileState
     } else if (fileState == File::FileState::STORED && currentState == File::FileState::UNKNOWN) {
         return File::FileState::STORED;
     }
+    if (currentState == File::FileState::UNKNOWN)
+        return fileState;
     return currentState;
 }
 
