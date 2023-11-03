@@ -390,10 +390,13 @@ File::FileState UsersBackService::_getDirectoryState(
     File::FileState state = File::FileState::UNKNOWN;
 
     for (const File::FileMetadata &fileMetadata : filesIndex.fileindex()) {
+        std::cout << "Compare file dir with directory " << directoryId << " : " << fileMetadata.dirid() << " (" << fileMetadata.approxmetadata().name() << ")" << std::endl;
         if (directoryId != fileMetadata.dirid())
             continue;
 
+        std::cout << "Check file state " << fileMetadata.approxmetadata().name() << " : " << fileMetadata.state() << std::endl;
         state = this->_getFileState(fileMetadata.state(), state);
+        std::cout << "Found state: " << state << std::endl;
         if (state == File::FileState::DOWNLOADABLE)
             return state;
     }
