@@ -406,8 +406,8 @@ File::FileState UsersBackService::_getDirectoryState(
     }
 
     for (const File::FileMetadata &fileMetadata : filesIndex.fileindex()) {
-        std::cout << "Compare file dir with directory " << directoryId << " : " << fileMetadata.dirid() << " (" << fileMetadata.approxmetadata().name() << ")" << std::endl;
-        if (directoryId != fileMetadata.dirid())
+        std::cout << "Compare file dir with directory " << directoryId << " : " << fileMetadata.approxmetadata().dirid() << " (" << fileMetadata.approxmetadata().name() << ")" << std::endl;
+        if (directoryId != fileMetadata.approxmetadata().dirid())
             continue;
 
         std::cout << "Check file state " << fileMetadata.approxmetadata().name() << " : " << fileMetadata.state() << std::endl;
