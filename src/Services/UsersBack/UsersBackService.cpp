@@ -397,6 +397,7 @@ File::FileState UsersBackService::_getDirectoryState(
         if (state == File::FileState::DOWNLOADABLE)
             return state;
     }
+    std::cout << "Files state for directory " << directoryId << " : " << state << std::endl;
 
     // If subDirectory is already getted with recursive option
     if (isRecursive) {
