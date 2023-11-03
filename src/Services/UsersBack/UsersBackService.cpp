@@ -422,6 +422,9 @@ File::FileState UsersBackService::_getDirectoryState(
         if (!status.ok())
             throw RequestFailureException(status, __FUNCTION__);
 
+        for (const File::FileMetadata &fileMetadata : response.subfiles().fileindex()) {
+            std::cout << fileMetadata.approxmetadata().name() << " : " << fileMetadata.state() << std::endl;
+        }
         for (const File::DirMetadata &dirMetadata : response.subfiles().dirindex())
             if (dirMetadata.dirid() != directoryId) {
                 state = this->_getFileState(this->_getDirectoryState(userId, dirMetadata.dirid(), response.subfiles(), false), state);
