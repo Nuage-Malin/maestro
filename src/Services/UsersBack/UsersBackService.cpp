@@ -383,11 +383,27 @@ grpc::Status UsersBackService::
 File::FileState UsersBackService::_getDirectoryState(
     const string &userId,
     const string &directoryId,
-    const File::FilesIndex &filesIndex,
+    File::FilesIndex filesIndex,
     const bool &isRecursive
 )
 {
     File::FileState state = File::FileState::UNKNOWN;
+
+    if (!isRecursive) {
+        grpc::ServerContext context;
+        UsersBack_Maestro::GetFilesIndexRequest request;
+        UsersBack_Maestro::GetFilesIndexStatus response;
+
+        request.set_dirid(directoryId);
+        request.set_userid(userId);
+        request.set_isrecursive(false);
+        std::cout << "[CLIENT] UsersBack_Maestro::getFilesIndex " << directoryId << std::endl;
+        auto status = this->getFilesIndex(&context, &request, &response);
+
+        if (!status.ok())
+            throw RequestFailureException(status, __FUNCTION__);
+        filesIndex.CopyFrom(response.subfiles());
+    }
 
     for (const File::FileMetadata &fileMetadata : filesIndex.fileindex()) {
         std::cout << "Compare file dir with directory " << directoryId << " : " << fileMetadata.dirid() << " (" << fileMetadata.approxmetadata().name() << ")" << std::endl;
@@ -402,42 +418,14 @@ File::FileState UsersBackService::_getDirectoryState(
     }
     std::cout << "Files state for directory " << directoryId << " : " << state << std::endl;
 
-    // If subDirectory is already getted with recursive option
-    if (isRecursive) {
-        for (const File::DirMetadata &dirMetadata : filesIndex.dirindex()) {
-            if (directoryId != dirMetadata.approxmetadata().dirid())
-                continue;
-
-            state = this->_getFileState(this->_getDirectoryState(userId, dirMetadata.dirid(), filesIndex, isRecursive), state);
+    for (const File::DirMetadata &dirMetadata : filesIndex.dirindex()) {
+        std::cout << "Check directory " << dirMetadata.dirid() << std::endl;
+        std::cout << "Compare to " << directoryId << std::endl;
+        if (dirMetadata.approxmetadata().dirid() == directoryId) {
+            state = this->_getFileState(this->_getDirectoryState(userId, dirMetadata.dirid(), filesIndex, false), state);
+            std::cout << "New dir state : " << dirMetadata.approxmetadata().name() << " => " << dirMetadata.state() << std::endl;
             if (state == File::FileState::DOWNLOADABLE)
                 return state;
-        }
-    } else {
-        grpc::ServerContext context;
-        UsersBack_Maestro::GetFilesIndexRequest request;
-        UsersBack_Maestro::GetFilesIndexStatus response;
-
-        request.set_dirid(directoryId);
-        request.set_userid(userId);
-        request.set_isrecursive(false);
-        std::cout << "[CLIENT] UsersBack_Maestro::getFilesIndex " << directoryId << std::endl;
-        auto status = this->getFilesIndex(&context, &request, &response);
-
-        if (!status.ok())
-            throw RequestFailureException(status, __FUNCTION__);
-
-        for (const File::FileMetadata &fileMetadata : response.subfiles().fileindex()) {
-            std::cout << fileMetadata.approxmetadata().name() << " : " << fileMetadata.state() << std::endl;
-        }
-        for (const File::DirMetadata &dirMetadata : response.subfiles().dirindex()) {
-            std::cout << "Check directory " << dirMetadata.dirid() << std::endl;
-            std::cout << "Compare to " << directoryId << std::endl;
-            if (dirMetadata.dirid() != directoryId) {
-                state = this->_getFileState(this->_getDirectoryState(userId, dirMetadata.dirid(), response.subfiles(), false), state);
-                std::cout << "New dir state : " << dirMetadata.approxmetadata().name() << " => " << dirMetadata.state() << std::endl;
-                if (state == File::FileState::DOWNLOADABLE)
-                    return state;
-            }
         }
     }
 

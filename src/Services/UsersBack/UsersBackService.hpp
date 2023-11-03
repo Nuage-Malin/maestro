@@ -115,7 +115,7 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
 
     NODISCARD File::FileState _getDirectoryState(
         const string &userId, const string &directoryId,
-        const File::FilesIndex &filesIndex, const bool &isRecursive
+        File::FilesIndex filesIndex, const bool &isRecursive
     );
     NODISCARD File::FileState _getFileState(
         const File::FileState &fileState,
