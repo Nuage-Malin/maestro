@@ -234,15 +234,7 @@ grpc::Status UsersBackService::getFilesIndex(
                 dirIndex->CopyFrom(dir);
                 if (dir.approxmetadata().name() != "/" && (!request->has_dirid() || dir.approxmetadata().dirid() == request->dirid())) {
                     try {
-                        if (request->has_dirid())
-                            std::cout << "request dir id: " << request->dirid() << std::endl;
-                        else
-                            std::cout << "request dir id: " << "null" << std::endl;
-                        std::cout << "dir name: " << dir.approxmetadata().name() << std::endl;
-                        std::cout << "dir id: " << dir.dirid() << std::endl;
-                        std::cout << "parent dir id: " << dir.approxmetadata().dirid() << std::endl;
                         dirIndex->set_state(this->_getDirectoryState(request->userid(), dir.dirid(), filesIndex, request->isrecursive()));
-                        std::cout << "New dir state : " << dir.dirid() << " => " << dirIndex->state() << std::endl;
                     } catch (const RequestFailureException &error) {
                         std::cerr << "[WARNING] Fail to get directory " << dir.dirid() <<") state, set it to UNKNOWN : " << error.what() << std::endl;
                         dirIndex->set_state(File::FileState::UNKNOWN);
@@ -397,7 +389,7 @@ File::FileState UsersBackService::_getDirectoryState(
         request.set_dirid(directoryId);
         request.set_userid(userId);
         request.set_isrecursive(false);
-        std::cout << "[CLIENT] UsersBack_Maestro::getFilesIndex " << directoryId << std::endl;
+        std::cout << "[CLIENT] UsersBack_Maestro::getFilesIndex" << std::endl;
         auto status = this->getFilesIndex(&context, &request, &response);
 
         if (!status.ok())
@@ -406,24 +398,17 @@ File::FileState UsersBackService::_getDirectoryState(
     }
 
     for (const File::FileMetadata &fileMetadata : filesIndex.fileindex()) {
-        std::cout << "Compare file dir with directory " << directoryId << " : " << fileMetadata.approxmetadata().dirid() << " (" << fileMetadata.approxmetadata().name() << ")" << std::endl;
         if (directoryId != fileMetadata.approxmetadata().dirid())
             continue;
 
-        std::cout << "Check file state " << fileMetadata.approxmetadata().name() << " : " << fileMetadata.state() << std::endl;
         state = this->_getFileState(fileMetadata.state(), state);
-        std::cout << "Found state: " << state << std::endl;
         if (state == File::FileState::DOWNLOADABLE)
             return state;
     }
-    std::cout << "Files state for directory " << directoryId << " : " << state << std::endl;
 
     for (const File::DirMetadata &dirMetadata : filesIndex.dirindex()) {
-        std::cout << "Check directory " << dirMetadata.dirid() << std::endl;
-        std::cout << "Compare to " << directoryId << std::endl;
         if (dirMetadata.approxmetadata().dirid() == directoryId) {
             state = this->_getFileState(this->_getDirectoryState(userId, dirMetadata.dirid(), filesIndex, false), state);
-            std::cout << "New dir state : " << dirMetadata.approxmetadata().name() << " => " << dirMetadata.state() << std::endl;
             if (state == File::FileState::DOWNLOADABLE)
                 return state;
         }
