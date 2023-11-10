@@ -53,9 +53,14 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         UsersBack_Maestro::GetFilesIndexStatus *response
     ) override;
 
-    grpc::Status fileMove(
-        ::grpc::ServerContext *context, const ::UsersBack_Maestro::FileMoveRequest *request,
-        ::UsersBack_Maestro::FileMoveStatus *response
+    grpc::Status moveFile(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::MoveFileRequest *request,
+        ::UsersBack_Maestro::MoveFileStatus *response
+    ) override;
+
+    grpc::Status renameFile(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::RenameFileRequest *request,
+        ::UsersBack_Maestro::RenameFileStatus *response
     ) override;
 
     grpc::Status fileRemove(
@@ -77,9 +82,9 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         ::UsersBack_Maestro::DirRemoveStatus *response
     ) override;
 
-    grpc::Status dirMove(
-        ::grpc::ServerContext *context, const ::UsersBack_Maestro::DirMoveRequest *request,
-        ::UsersBack_Maestro::DirMoveStatus *response
+    grpc::Status moveDir(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::MoveDirectoryRequest *request,
+        ::UsersBack_Maestro::MoveDirectoryStatus *response
     ) override;
 
   private:

@@ -199,6 +199,7 @@ grpc::Status UsersBackService::getFilesIndex(
                 fileIndex->set_isdownloadable(filesSchemas.downloadedStack.doesFileExist(file.fileid()));
             }
             response->set_allocated_subfiles(new File::FilesIndex(filesIndex));
+
             return grpc::Status::OK;
         },
         __FUNCTION__
@@ -206,15 +207,11 @@ grpc::Status UsersBackService::getFilesIndex(
 }
 
 grpc::Status UsersBackService::
-    fileMove(UNUSED grpc::ServerContext *, const ::UsersBack_Maestro::FileMoveRequest *request, UNUSED UsersBack_Maestro::FileMoveStatus *)
+    moveFile(UNUSED grpc::ServerContext *, const ::UsersBack_Maestro::MoveFileRequest *request, UNUSED UsersBack_Maestro::MoveFileStatus *)
 {
     return this->_procedureRunner(
         [this, request](FilesSchemas &&, StatsSchemas &&) {
-            /* auto santaclausResponse = */ this->_clients.santaclaus.moveFile(
-                request->fileid(),
-                request->has_newfilename() ? std::optional(request->newfilename()) : std::nullopt,
-                request->has_dirid() ? std::optional(request->dirid()) : std::nullopt
-            );
+            this->_clients.santaclaus.moveFile(request->fileid(), request->newdirid());
 
             return grpc::Status::OK;
         },
@@ -312,7 +309,7 @@ grpc::Status UsersBackService::
     );
 }
 grpc::Status UsersBackService::
-    dirMove(UNUSED grpc::ServerContext *, const UsersBack_Maestro::DirMoveRequest *request, UNUSED UsersBack_Maestro::DirMoveStatus *)
+    dirMove(UNUSED grpc::ServerContext *, const UsersBack_Maestro::MoveDirectoryRequest *request, UNUSED UsersBack_Maestro::MoveDirectoryStatus *)
 {
     return this->_procedureRunner(
         [this, request](FilesSchemas &&, StatsSchemas &&) {
