@@ -87,6 +87,11 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         ::UsersBack_Maestro::MoveDirectoryStatus *response
     ) override;
 
+    grpc::Status renameDir(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::RenameDirectoryRequest *request,
+        ::UsersBack_Maestro::RenameDirectoryStatus *response
+    ) override;
+
   private:
     /**
      * @brief Find files' diskId and group them like it
@@ -113,9 +118,7 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
     UsersBack_Maestro::FilesRemoveStatus
     actFilesRemove(FilesSchemas &filesSchemas, StrIterator fileIdsBeg, const StrIterator &fileIdsEnd);
 
-    void _fileUploadFailure(
-        FilesSchemas &filesSchemas, const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus
-    );
+    void _fileUploadFailure(const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus);
     void _askFileDownloadFailure(
         FilesSchemas &filesSchemas, const string &fileId, const Maestro_Santaclaus::GetFileStatus &file,
         const Date &expirationDate, UsersBack_Maestro::AskFileDownloadStatus &response

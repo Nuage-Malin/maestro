@@ -7,6 +7,7 @@
 
 #include "Schemas/Mongo/Mongo.hpp"
 
+#include <optional>
 #include "FileUploadCron.hpp"
 #include "Cron/Manager/ManagerCron.hpp"
 
@@ -20,18 +21,30 @@ FileUploadCron::FileUploadCron(GrpcClients &grpcClient, EventsManager &events)
 
 void FileUploadCron::run()
 {
-    std::unordered_set<string> disks = MongoCXX::Mongo(this->_events).getFilesSchemas().uploadQueue.getFilesDisk();
+    //    std::unordered_set<string> disks = MongoCXX::Mongo(this->_events).getFilesSchemas().uploadQueue.getFilesDisk();
+    Maestro_Vault::GetFilesMetaInfoStatus response_files =
+        _clients.vaultcache.getFilesMetaInfo(std::nullopt, std::nullopt, Maestro_Vault::storage_type::UPLOAD_QUEUE);
+    Maestro_Vault::GetFilesDisksRequest request;
 
-    for (const auto &disk : disks)
-        this->_clients.bugle.setDiskState(disk, true);
+    for (auto file : response_files.files()) {
+        request.add_file_ids(file.fileid());
+    }
+    Maestro_Vault::GetFilesDisksStatus response_disks = _clients.vaultcache.getFilesDisks(request);
+
+    for (const auto &disk_id : response_disks.disk_ids()) {
+        this->_clients.bugle.setDiskState(disk_id, true);
+    }
 }
 
 void FileUploadCron::_uploadFiles(const string &diskId)
 {
-    FilesUploadQueueSchema uploadQueue = MongoCXX::Mongo(this->_events).getFilesSchemas().uploadQueue;
-    const std::pair<std::vector<MongoCXX::ValueView>, Maestro_Vault::UploadFilesRequest> &files =
-        uploadQueue.getDiskFiles(diskId);
+    Maestro_Vault::GetFilesMetaInfoStatus response_files =
+        _clients.vaultcache.getFilesMetaInfo(std::nullopt, diskId, Maestro_Vault::storage_type::UPLOAD_QUEUE);
+    string content_to_transfer;
 
-    this->_clients.vault.uploadFiles(files.second);
-    uploadQueue.deleteFiles(files.first);
+    for (auto file : response_files.files()) {
+        // do it one by one because of max size of a request being 2 gigabytes
+        content_to_transfer = _clients.vaultcache.downloadFile(file.fileid(), file.userid(), file.diskid());
+        _clients.vault.uploadFile(file.fileid(), file.userid(), file.diskid(), content_to_transfer);
+    }
 }

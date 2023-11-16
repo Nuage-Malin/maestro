@@ -11,37 +11,51 @@
 #include "Exceptions/NotFound/NotFoundException.hpp"
 
 FilesDownloadedStackSchema::FilesDownloadedStackSchema(const mongocxx::database &database, const EventsManager &events)
-    : TemplateFileBucket(database, "downloadedStack"), _events(events)
+    : TemplateSchema(database, "downloadedStack"), _events(events)
 {
 }
 
 void FilesDownloadedStackSchema::pushFile(const string &fileId, const Date &expirationDate, const string &content)
 {
-    const std::istringstream ss(content);
-    std::istream fileStream(ss.rdbuf());
-    mongocxx::v_noabi::options::gridfs::upload options;
+    /*todo*/
+    MongoCXX::Document file_expiration =
+        makeDocument(makeField("fileId", fileId), makeField("expirationDate", expirationDate.toBSON()));
 
-    options.metadata(makeDocument(makeField("expirationDate", expirationDate.toBSON())));
-
-    this->_fileBucket.upload_from_stream(fileId, &fileStream, options);
+    this->_model.insert_one(file_expiration.view());
 }
 
 NODISCARD string FilesDownloadedStackSchema::downloadFile(const string &fileId)
 {
-    const std::ostringstream oss("");
-    std::ostream ostream(oss.rdbuf());
-    mongocxx::cursor cursor = this->_fileBucket.find(makeDocument(makeField("filename", fileId)).view());
+    /*todo*/
 
-    this->_fileBucket.download_to_stream((*cursor.begin())["_id"].get_value(), &ostream);
-    return oss.str();
+    //    const std::ostringstream oss("");
+    //    std::ostream ostream(oss.rdbuf());
+    //    mongocxx::cursor cursor = this->_fileBucket.find(makeDocument(makeField("filename", fileId)).view());
+
+    //    this->_fileBucket.download_to_stream((*cursor.begin())["_id"].get_value(), &ostream);
+    //    return oss.str();
+
+    // todo return expiration date ?
 }
 
-void FilesDownloadedStackSchema::deleteExpiredFiles(const Date &expirationDate)
+/**
+ * @brief Deletes expired files from mongoDB
+ * @tparam StrIterator Any type of iterator over a string
+ * @param expirationDate Date of expiry
+ * @return First and last string iterator containing fileIds that have been deleted from DB and have to be deleted from filesystem
+ */
+// template <typename StrIterator>
+//     requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
+//  todo
+NODISCARD /* todo std::tuple<StrIterator, StrIterator>*/ std::vector<string>
+FilesDownloadedStackSchema::deleteExpiredFiles(const Date &expirationDate)
 {
+    /*todo*/
     const bsoncxx::document::value filter =
         makeDocument(makeField("metadata.expirationDate", makeDocument(makeField("$lt", expirationDate.toBSON()))));
 
-    mongocxx::cursor cursor = this->_fileBucket.find(filter.view());
+    mongocxx::cursor cursor = this->_model.find(filter.view()); // todo
+    std::vector<string> fileIds{};
 
     for (const auto &file : cursor) {
         this->_events.emit<const string &, const Date &>(
@@ -49,19 +63,21 @@ void FilesDownloadedStackSchema::deleteExpiredFiles(const Date &expirationDate)
             file["filename"].get_string().value.to_string(),
             Date(file["metadata"]["expirationDate"].get_date())
         );
-        const MongoCXX::ValueView &fileId = file["_id"].get_value();
-
-        this->_fileBucket.delete_file(fileId);
+        fileIds.push_back(file["_id"].get_oid().value.to_string());
     }
+    // todo remove files from mongoDB
+    // todo remove files from vault cache ?
+    return fileIds;
 }
 
 NODISCARD Date FilesDownloadedStackSchema::getFileExpirationDate(const string &fileId)
 {
+    /*todo remove cause useless ? */
     const bsoncxx::document::value filter = makeDocument(makeField("filename", fileId));
     mongocxx::options::find options;
 
     options.projection(makeDocument(makeField("_id", false), makeField("metadata.expirationDate", true)));
-    mongocxx::cursor cursor = this->_fileBucket.find(filter.view(), options);
+    mongocxx::cursor cursor = this->_model.find(filter.view(), options);
 
     if (cursor.begin() == cursor.end())
         throw NotFoundException("File not found");
@@ -70,11 +86,12 @@ NODISCARD Date FilesDownloadedStackSchema::getFileExpirationDate(const string &f
 
 NODISCARD bool FilesDownloadedStackSchema::doesFileExist(const string &fileId)
 {
+    /*todo*/
     const bsoncxx::document::value filter = makeDocument(makeField("filename", fileId));
     mongocxx::options::find options;
 
     options.projection(makeDocument(makeField("_id", true)));
-    mongocxx::cursor cursor = this->_fileBucket.find(filter.view(), options);
+    mongocxx::cursor cursor = this->_model.find(filter.view(), options);
 
     return cursor.begin() != cursor.end();
 }

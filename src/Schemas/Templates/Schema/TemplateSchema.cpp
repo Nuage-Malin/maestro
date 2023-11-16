@@ -7,6 +7,8 @@
 
 #include "TemplateSchema.hpp"
 
+/* todo replace files DB with gRPC instance */
+
 TemplateSchema::TemplateSchema(const mongocxx::database &database, const string &collectionName)
     : _model(database[collectionName])
 {

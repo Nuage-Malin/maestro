@@ -22,7 +22,7 @@ grpc::Status UsersBackService::fileUpload(
 )
 {
     return this->_procedureRunner(
-        [this, request, response](FilesSchemas &&filesSchemas, StatsSchemas &&) {
+        [this, request, response](FilesSchemas &&, StatsSchemas &&) {
             // Index file into Santaclaus
             Maestro_Santaclaus::AddFileStatus addFileStatus =
                 this->_clients.santaclaus.addFile(request->file().metadata(), request->file().content().size());
@@ -43,17 +43,17 @@ grpc::Status UsersBackService::fileUpload(
                         // If the upload failed, add it to the queue database
                         std::cerr << "[WARNING] Fail to upload file (" << request->file().metadata().name()
                                   << ") on vault, upload it on the DB : " << error.what() << std::endl;
-                        this->_fileUploadFailure(filesSchemas, request->file(), addFileStatus);
+                        this->_fileUploadFailure(request->file(), addFileStatus);
                     }
                 } else {
                     // If the disk is offline, add it to the queue database
-                    this->_fileUploadFailure(filesSchemas, request->file(), addFileStatus);
+                    this->_fileUploadFailure(request->file(), addFileStatus);
                 }
             } catch (const RequestFailureException &error) {
                 // If fail to call bugle, upload it on the DB
                 std::cerr << "[WARNING] Fail to get disk status (" << addFileStatus.diskid()
                           << "), upload file on the DB : " << error.what() << std::endl;
-                this->_fileUploadFailure(filesSchemas, request->file(), addFileStatus);
+                this->_fileUploadFailure(request->file(), addFileStatus);
             }
             return grpc::Status::OK;
         },
@@ -115,44 +115,51 @@ grpc::Status UsersBackService::askFileDownload(
             const std::chrono::days expirationLimit(2);
             const Date &expirationDate = Date() + expirationLimit;
 
-            try {
-                // Get file from UploadQueue if exist
-                const string &uploadQueueFile = filesSchemas.uploadQueue.getFile(request->fileid());
+            // Check if file is in UploadQueue (in vaultCache)
+            Maestro_Vault::GetFileMetaInfoStatus fileMetaInfo = _clients.vaultcache.getFileMetaInfo(request->fileid());
 
-                filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, uploadQueueFile);
-                response->set_allocated_waitingtime(new google::protobuf::Duration());
-                return grpc::Status::OK;
-            } catch (const NotFoundException &error) {
-                const Maestro_Santaclaus::GetFileStatus file = this->_clients.santaclaus.getFile(request->fileid());
-
-                try {
-                    // Check if the file is already in the database
-                    const Date &requestedDate = filesSchemas.downloadQueue.getRequestedDate(request->fileid(), file.diskid());
-
-                    response->set_allocated_waitingtime((requestedDate + expirationLimit).toAllocatedDuration());
-                    return grpc::Status::OK;
-                } catch (const NotFoundException &error) {
-                    try {
-                        if (this->_clients.bugle.diskStatus(file.diskid())) {
-                            // If the disk is online, download the file from the filesystem and upload it to the database
-                            const string fileContent = this->_clients.vault.downloadFile(
-                                request->fileid(), file.file().approxmetadata().userid(), file.diskid()
-                            );
-
-                            filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, fileContent);
-                            response->set_allocated_waitingtime(expirationDate.toAllocatedDuration()); // TODO: Edit waiting time
-                        } else {
-                            // If the disk is offline, add the file to the queue database
-                            this->_askFileDownloadFailure(filesSchemas, request->fileid(), file, expirationDate, *response);
-                        }
-                    } catch (const RequestFailureException &error) {
-                        // If fail to call bugle or vault, add the file to the queue database
-                        std::cerr << "[WARNING] Fail to call bugle or vault, add the file to the queue DB : " << error.what()
-                                  << std::endl;
-                        this->_askFileDownloadFailure(filesSchemas, request->fileid(), file, expirationDate, *response);
-                    }
+            for (auto store_type : fileMetaInfo.file().store_types()) {
+                // Array of storage_types, check within it if is uploadQueue
+                if (store_type == Maestro_Vault::storage_type::UPLOAD_QUEUE) {
+                    auto file = _clients.vaultcache.downloadFile(
+                        request->fileid(), fileMetaInfo.file().userid(), fileMetaInfo.file().diskid()
+                    );
+                    filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, file);
+                    response->set_allocated_waitingtime(new google::protobuf::Duration());
                     return grpc::Status::OK;
                 }
+            }
+
+            // If file is not in uploadQueue :
+            const Maestro_Santaclaus::GetFileStatus file = this->_clients.santaclaus.getFile(request->fileid());
+
+            try {
+                // Check if the file is already in the database
+                const Date &requestedDate = filesSchemas.downloadQueue.getRequestedDate(request->fileid(), file.diskid());
+
+                response->set_allocated_waitingtime((requestedDate + expirationLimit).toAllocatedDuration());
+                return grpc::Status::OK;
+            } catch (const NotFoundException &error) {
+                try {
+                    if (this->_clients.bugle.diskStatus(file.diskid())) {
+                        // If the disk is online, download the file from the filesystem and upload it to the database
+                        const string fileContent = this->_clients.vault.downloadFile(
+                            request->fileid(), file.file().approxmetadata().userid(), file.diskid()
+                        );
+
+                        filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, fileContent);
+                        response->set_allocated_waitingtime(expirationDate.toAllocatedDuration()); // TODO: Edit waiting time
+                    } else {
+                        // If the disk is offline, add the file to the queue database
+                        this->_askFileDownloadFailure(filesSchemas, request->fileid(), file, expirationDate, *response);
+                    }
+                } catch (const RequestFailureException &error) {
+                    // If fail to call bugle or vault, add the file to the queue database
+                    std::cerr << "[WARNING] Fail to call bugle or vault, add the file to the queue DB : " << error.what()
+                              << std::endl;
+                    this->_askFileDownloadFailure(filesSchemas, request->fileid(), file, expirationDate, *response);
+                }
+                return grpc::Status::OK;
             }
         },
         __FUNCTION__
@@ -207,11 +214,24 @@ grpc::Status UsersBackService::getFilesIndex(
 }
 
 grpc::Status UsersBackService::
-    moveFile(UNUSED grpc::ServerContext *, const ::UsersBack_Maestro::MoveFileRequest *request, UNUSED UsersBack_Maestro::MoveFileStatus *)
+    moveFile(UNUSED grpc::ServerContext *, const UsersBack_Maestro::MoveFileRequest *request, UNUSED UsersBack_Maestro::MoveFileStatus *)
 {
     return this->_procedureRunner(
         [this, request](FilesSchemas &&, StatsSchemas &&) {
             this->_clients.santaclaus.moveFile(request->fileid(), request->newdirid());
+
+            return grpc::Status::OK;
+        },
+        __FUNCTION__
+    );
+}
+
+grpc::Status UsersBackService::
+    renameFile(UNUSED grpc::ServerContext *, const UsersBack_Maestro::RenameFileRequest *request, UNUSED UsersBack_Maestro::RenameFileStatus *)
+{
+    return this->_procedureRunner(
+        [this, request](FilesSchemas &&, StatsSchemas &&) {
+            this->_clients.santaclaus.moveFile(request->fileid(), request->newfilename());
 
             return grpc::Status::OK;
         },
@@ -279,8 +299,7 @@ grpc::Status UsersBackService::filesRemove(
     );
 }
 grpc::Status UsersBackService::dirMake(
-    UNUSED grpc::ServerContext *context, const UsersBack_Maestro::DirMakeRequest *request,
-    UsersBack_Maestro::DirMakeStatus *response
+    UNUSED grpc::ServerContext *, const UsersBack_Maestro::DirMakeRequest *request, UsersBack_Maestro::DirMakeStatus *response
 )
 {
     return this->_procedureRunner(
@@ -308,16 +327,13 @@ grpc::Status UsersBackService::
         __FUNCTION__
     );
 }
+
 grpc::Status UsersBackService::
-    dirMove(UNUSED grpc::ServerContext *, const UsersBack_Maestro::MoveDirectoryRequest *request, UNUSED UsersBack_Maestro::MoveDirectoryStatus *)
+    moveDir(UNUSED grpc::ServerContext *, const UsersBack_Maestro::MoveDirectoryRequest *request, UNUSED UsersBack_Maestro::MoveDirectoryStatus *)
 {
     return this->_procedureRunner(
         [this, request](FilesSchemas &&, StatsSchemas &&) {
-            this->_clients.santaclaus.moveDirectory(
-                request->dirid(),
-                request->has_name() ? std::optional(request->name()) : std::nullopt,
-                request->has_newlocationdirid() ? std::optional(request->newlocationdirid()) : std::nullopt
-            );
+            this->_clients.santaclaus.moveDirectory(request->dirid(), request->newdirid());
 
             return grpc::Status::OK;
         },
@@ -325,11 +341,28 @@ grpc::Status UsersBackService::
     );
 }
 
-void UsersBackService::_fileUploadFailure(
-    FilesSchemas &filesSchemas, const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus
-)
+grpc::Status UsersBackService::
+    renameDir(UNUSED grpc::ServerContext *, const UsersBack_Maestro::RenameDirectoryRequest *request, UNUSED UsersBack_Maestro::RenameDirectoryStatus *)
 {
-    filesSchemas.uploadQueue.uploadFile(addFileStatus.fileid(), file.metadata().userid(), addFileStatus.diskid(), file.content());
+    return this->_procedureRunner(
+        [this, request](FilesSchemas &&, StatsSchemas &&) {
+            this->_clients.santaclaus.renameDirectory(request->dirid(), request->newdirname());
+
+            return grpc::Status::OK;
+        },
+        __FUNCTION__
+    );
+}
+
+void UsersBackService::_fileUploadFailure(const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus)
+{
+    _clients.vaultcache.uploadFile(
+        addFileStatus.fileid(),
+        file.metadata().userid(),
+        addFileStatus.diskid(),
+        file.content(),
+        Maestro_Vault::storage_type::UPLOAD_QUEUE
+    );
 }
 
 void UsersBackService::_askFileDownloadFailure(

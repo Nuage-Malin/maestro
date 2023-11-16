@@ -22,7 +22,7 @@ class FilesRemoveQueueSchema : public TemplateSchema {
     /**
      * @brief Add file metadata to the queue of files to be removed from main storage (Vault)
      */
-    void add(const string &diskId, const string &fileId /*const string &userId,*/);
+    void add(const string &diskId, const string &fileId);
 
     /**
      * @brief Add multiple file IDs to the queue

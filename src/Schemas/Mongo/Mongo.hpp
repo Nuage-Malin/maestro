@@ -14,12 +14,17 @@
 
 namespace MongoCXX
 {
+    /* todo replace files DB with gRPC instance */
+
     class Mongo {
       public:
         Mongo(const EventsManager &events);
         ~Mongo() = default;
 
+        /* todo replace files DB with gRPC instance */
         NODISCARD FilesSchemas getFilesSchemas() const;
+
+        /* todo keep this database */
         NODISCARD StatsSchemas getStatsSchemas() const;
 
       private:

@@ -29,7 +29,6 @@ FilesSchemas MongoCXX::Mongo::getFilesSchemas() const
     const mongocxx::database filesDatabase = this->_client[fileDb];
 
     return {
-        .uploadQueue = FilesUploadQueueSchema(filesDatabase),
         .downloadedStack = FilesDownloadedStackSchema(filesDatabase, this->_events),
         .downloadQueue = FilesDownloadQueueSchema(filesDatabase),
         .removeQueue = FilesRemoveQueueSchema(filesDatabase)};
@@ -37,6 +36,8 @@ FilesSchemas MongoCXX::Mongo::getFilesSchemas() const
 
 StatsSchemas MongoCXX::Mongo::getStatsSchemas() const
 {
+    /* todo keep this database */
+
     const mongocxx::database statsDatabase = this->_client[statsDb];
 
     return {.userDiskInfo = StatsUserDiskInfoSchema(statsDatabase)};
