@@ -72,7 +72,7 @@ if $ARG_BUILD; then
         cmake -D build=true -S . -B build
         check_exit_failure "Failed to cmake"
 
-        make -C build
+        make -C build -j $((`nproc` - 1))
         check_exit_failure "Failed to make"
 
         docker compose --env-file ./env/local.env --profile mongo build

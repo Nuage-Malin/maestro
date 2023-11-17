@@ -87,11 +87,14 @@ grpc::Status UsersBackService::getUserDiskSpace(
 )
 {
     return this->_procedureRunner(
-        [this, request, response](FilesSchemas &&, StatsSchemas &&statsSchemas) {
+        [this, request, response](FilesSchemas &&filesSchemas, StatsSchemas &&statsSchemas) {
+            const Date &date = request->has_date() ? Date(request->date()) : Date();
+            const uint64 &totalDisksSpace = statsSchemas.diskInfo.getTotalDisksSpace(date);
             const uint64 &diskSpace = statsSchemas.userDiskInfo.getUserDiskSpace(
-                request->userid(), request->has_date() ? Date(request->date()) : Date()
-            );
+                request->userid(), date
+            ) + filesSchemas.uploadQueue.getUserQueueSpace(request->userid(), date);
 
+            response->set_totaldiskspace(totalDisksSpace);
             response->set_useddiskspace(diskSpace);
             return grpc::Status::OK;
         },
@@ -112,7 +115,7 @@ grpc::Status UsersBackService::askFileDownload(
                 return grpc::Status::OK;
             }
 
-            const std::chrono::days expirationLimit(2);
+            const std::chrono::minutes expirationLimit(5);
             const Date &expirationDate = Date() + expirationLimit;
 
             // Check if file is in UploadQueue (in vaultCache)
@@ -148,7 +151,7 @@ grpc::Status UsersBackService::askFileDownload(
                         );
 
                         filesSchemas.downloadedStack.pushFile(request->fileid(), expirationDate, fileContent);
-                        response->set_allocated_waitingtime(expirationDate.toAllocatedDuration()); // TODO: Edit waiting time
+                        response->set_allocated_waitingtime(new google::protobuf::Duration()); // TODO: Edit waiting time
                     } else {
                         // If the disk is offline, add the file to the queue database
                         this->_askFileDownloadFailure(filesSchemas, request->fileid(), file, expirationDate, *response);
@@ -166,6 +169,20 @@ grpc::Status UsersBackService::askFileDownload(
     );
 }
 
+grpc::Status UsersBackService::cancelFileDownload(
+    UNUSED grpc::ServerContext *context, const UsersBack_Maestro::CancelFileDownloadRequest *request, UsersBack_Maestro::CancelFileDownloadStatus *response
+)
+{
+    return this->_procedureRunner(
+        [this, request, response](FilesSchemas &&FilesSchemas, StatsSchemas &&) {
+            FilesSchemas.downloadQueue.deleteFile(request->fileid());
+
+            return grpc::Status::OK;
+        },
+        __FUNCTION__
+    );
+}
+
 grpc::Status UsersBackService::fileDownload(
     UNUSED grpc::ServerContext *context, const UsersBack_Maestro::FileDownloadRequest *request, File::File *response
 )
@@ -174,7 +191,7 @@ grpc::Status UsersBackService::fileDownload(
         [this, request, response](FilesSchemas &&filesSchemas, StatsSchemas &&) {
             File::FileMetadata metadata = this->_clients.santaclaus.getFile(request->fileid()).file();
 
-            metadata.set_isdownloadable(true);
+            metadata.set_state(File::FileState::DOWNLOADABLE);
 
             response->set_content(filesSchemas.downloadedStack.downloadFile(request->fileid()));
             response->set_allocated_metadata(new File::FileMetadata(metadata));
@@ -198,13 +215,40 @@ grpc::Status UsersBackService::getFilesIndex(
             File::FilesIndex filesIndex;
 
             filesIndex.CopyFrom(subFiles.subfiles());
+
+            // Files
             filesIndex.clear_fileindex();
             for (const File::FileMetadata &file : subFiles.subfiles().fileindex()) {
                 File::FileMetadata *fileIndex = filesIndex.add_fileindex();
 
                 fileIndex->CopyFrom(file);
-                fileIndex->set_isdownloadable(filesSchemas.downloadedStack.doesFileExist(file.fileid()));
+                if (filesSchemas.downloadedStack.doesFileExist(file.fileid())) {
+                    fileIndex->set_state(File::FileState::DOWNLOADABLE);
+                } else if (filesSchemas.uploadQueue.doesFileExist(file.fileid())) {
+                    fileIndex->set_state(File::FileState::UPLOADING);
+                } else if (filesSchemas.downloadQueue.doesFileExist(file.fileid())) {
+                    fileIndex->set_state(File::FileState::ASKED);
+                } else {
+                    fileIndex->set_state(File::FileState::STORED);
+                }
             }
+
+            // Directories
+            filesIndex.clear_dirindex();
+            for (const File::DirMetadata &dir : subFiles.subfiles().dirindex()) {
+                File::DirMetadata *dirIndex = filesIndex.add_dirindex();
+
+                dirIndex->CopyFrom(dir);
+                if (dir.approxmetadata().name() != "/" && (!request->has_dirid() || dir.approxmetadata().dirid() == request->dirid())) {
+                    try {
+                        dirIndex->set_state(this->_getDirectoryState(request->userid(), dir.dirid(), filesIndex, request->isrecursive()));
+                    } catch (const RequestFailureException &error) {
+                        std::cerr << "[WARNING] Fail to get directory " << dir.dirid() <<") state, set it to UNKNOWN : " << error.what() << std::endl;
+                        dirIndex->set_state(File::FileState::UNKNOWN);
+                    }
+                }
+            }
+
             response->set_allocated_subfiles(new File::FilesIndex(filesIndex));
 
             return grpc::Status::OK;
@@ -352,6 +396,67 @@ grpc::Status UsersBackService::
         },
         __FUNCTION__
     );
+}
+
+File::FileState UsersBackService::_getDirectoryState(
+    const string &userId,
+    const string &directoryId,
+    File::FilesIndex filesIndex,
+    const bool &isRecursive
+)
+{
+    File::FileState state = File::FileState::UNKNOWN;
+
+    if (!isRecursive) {
+        grpc::ServerContext context;
+        UsersBack_Maestro::GetFilesIndexRequest request;
+        UsersBack_Maestro::GetFilesIndexStatus response;
+
+        request.set_dirid(directoryId);
+        request.set_userid(userId);
+        request.set_isrecursive(false);
+        std::cout << "[CLIENT] UsersBack_Maestro::getFilesIndex" << std::endl;
+        auto status = this->getFilesIndex(&context, &request, &response);
+
+        if (!status.ok())
+            throw RequestFailureException(status, __FUNCTION__);
+        filesIndex.CopyFrom(response.subfiles());
+    }
+
+    for (const File::FileMetadata &fileMetadata : filesIndex.fileindex()) {
+        if (directoryId != fileMetadata.approxmetadata().dirid())
+            continue;
+
+        state = this->_getFileState(fileMetadata.state(), state);
+        if (state == File::FileState::DOWNLOADABLE)
+            return state;
+    }
+
+    for (const File::DirMetadata &dirMetadata : filesIndex.dirindex()) {
+        if (dirMetadata.approxmetadata().dirid() == directoryId) {
+            state = this->_getFileState(this->_getDirectoryState(userId, dirMetadata.dirid(), filesIndex, false), state);
+            if (state == File::FileState::DOWNLOADABLE)
+                return state;
+        }
+    }
+
+    return state;
+}
+
+File::FileState UsersBackService::_getFileState(const File::FileState &fileState, const File::FileState &currentState) const
+{
+    if (fileState == File::FileState::DOWNLOADABLE) {
+        return File::FileState::DOWNLOADABLE;
+    } else if (fileState == File::FileState::ASKED) {
+        return File::FileState::ASKED;
+    } else if (fileState == File::FileState::UPLOADING && currentState != File::FileState::ASKED) {
+        return File::FileState::UPLOADING;
+    } else if (fileState == File::FileState::STORED && currentState == File::FileState::UNKNOWN) {
+        return File::FileState::STORED;
+    }
+    if (currentState == File::FileState::UNKNOWN)
+        return fileState;
+    return currentState;
 }
 
 void UsersBackService::_fileUploadFailure(const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus)

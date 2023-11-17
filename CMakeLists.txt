@@ -53,10 +53,11 @@ set(SRCS
     ${SRC_DIR}/Schemas/Files/DownloadedStack/DownloadedStackSchema.cpp
     ${SRC_DIR}/Schemas/Files/DownloadQueue/DownloadQueueSchema.cpp
     ${SRC_DIR}/Schemas/Files/RemoveQueue/RemoveQueueSchema.cpp
-    ${SRC_DIR}/Schemas/Stats/DiskWakeup/DiskWakeupSchema.cpp
+    ${SRC_DIR}/Schemas/Stats/DiskInfo/DiskInfoSchema.cpp
     ${SRC_DIR}/Schemas/Stats/UserDiskInfo/UserDiskInfoSchema.cpp
     ${SRC_DIR}/Services/Template/TemplateService.cpp
     ${SRC_DIR}/Services/UsersBack/UsersBackService.cpp
+    ${SRC_DIR}/Services/Chouf/ChoufService.cpp
     ${SRC_DIR}/Clients/Santaclaus/SantaclausClient.cpp
     ${SRC_DIR}/Clients/Bugle/BugleClient.cpp
     ${SRC_DIR}/Clients/Vault/VaultClient.cpp

@@ -10,8 +10,8 @@ services:
             - ${MAESTRO_ENV_FILE}
         environment:
             DOWNLOAD_WAITING_TIME: 86400 # 24 hours (seconds * minutes * hours)
-        expose:
-            - ${MAESTRO_PORT}
+        ports:
+            - ${MAESTRO_PORT}:${MAESTRO_PORT}
         networks:
             - maestro
             - users-back:maestro

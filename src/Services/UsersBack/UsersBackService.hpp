@@ -44,6 +44,11 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         UsersBack_Maestro::AskFileDownloadStatus *response
     ) override;
 
+    grpc::Status cancelFileDownload(
+        grpc::ServerContext *context, const UsersBack_Maestro::CancelFileDownloadRequest *request,
+        UsersBack_Maestro::CancelFileDownloadStatus *response
+    ) override;
+
     grpc::Status fileDownload(
         grpc::ServerContext *context, const UsersBack_Maestro::FileDownloadRequest *request, File::File *response
     ) override;
@@ -118,6 +123,14 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
     UsersBack_Maestro::FilesRemoveStatus
     actFilesRemove(FilesSchemas &filesSchemas, StrIterator fileIdsBeg, const StrIterator &fileIdsEnd);
 
+    NODISCARD File::FileState _getDirectoryState(
+        const string &userId, const string &directoryId,
+        File::FilesIndex filesIndex, const bool &isRecursive
+    );
+    NODISCARD File::FileState _getFileState(
+        const File::FileState &fileState,
+        const File::FileState &currentState = File::FileState::UNKNOWN
+    ) const;
     void _fileUploadFailure(const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus);
     void _askFileDownloadFailure(
         FilesSchemas &filesSchemas, const string &fileId, const Maestro_Santaclaus::GetFileStatus &file,

@@ -11,6 +11,7 @@
 #include "Schemas/Files/DownloadedStack/DownloadedStackSchema.hpp"
 #include "Schemas/Files/DownloadQueue/DownloadQueueSchema.hpp"
 #include "Schemas/Files/RemoveQueue/RemoveQueueSchema.hpp"
+#include "Schemas/Stats/DiskInfo/DiskInfoSchema.hpp"
 #include "Schemas/Stats/UserDiskInfo/UserDiskInfoSchema.hpp"
 
 struct FilesSchemas
@@ -22,6 +23,7 @@ struct FilesSchemas
 
 struct StatsSchemas
 {
+    StatsDiskInfoSchema diskInfo;
     StatsUserDiskInfoSchema userDiskInfo;
 };
 

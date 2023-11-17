@@ -62,11 +62,8 @@ if $ARG_BUILD_SERVICE; then
 fi
 
 if $ARG_BUILD_TESTS; then
-    cmake -D install=true -D system_tests=true -S . -B build
-    check_exit_failure "Failed to cmake system tests"
-
-    make -C build system_tests
-    check_exit_failure "Failed to make system tests"
+    docker build -t maestro-system-tests -f Dockerfile.system-tests $CURRENT_FILE_DIR/..
+    check_exit_failure "Failed to build system tests"
 fi
 
 if $ARG_RUN_SERVICE; then
@@ -75,15 +72,12 @@ if $ARG_RUN_SERVICE; then
 fi
 
 if $ARG_RUN_TESTS; then
-    set -o allexport
-    source $CURRENT_FILE_DIR/../env/system_tests.env
-    set +o allexport
-
-    exec ./build/system_tests
+    docker run --rm --network users-back:maestro --env-file $CURRENT_FILE_DIR/../env/system_tests.env --name maestro-system-tests maestro-system-tests
     check_exit_failure "System tests failed"
 fi
 
 if $ARG_STOP; then
+    docker stop maestro-system-tests
     docker compose --env-file ./env/maestro.env --profile launch down
     check_exit_failure "Failed to stop maestro"
 fi

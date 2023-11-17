@@ -14,11 +14,13 @@
 #include "clients.hpp"
 #include "Schemas/Mongo/Mongo.hpp"
 #include "Services/UsersBack/UsersBackService.hpp"
-#include "Cron/Manager/ManagerCron.hpp"
+#include "Services/Chouf/ChoufService.hpp"
 #include "Cron/FileUpload/FileUploadCron.hpp"
 #include "Cron/ExpiredDownloadedFiles/ExpiredDownloadedFilesCron.hpp"
 #include "Cron/DownloadFiles/DownloadFilesCron.hpp"
 #include "Cron/RemoveFiles/RemoveFilesCron.hpp"
+
+const int MAX_MESSAGE_SIZE = INT_MAX; // 2GB
 
 /**
  * @brief Run the server
@@ -36,12 +38,16 @@ void RunServer()
     EventsManager events;
 
     // Clients
+    grpc::ChannelArguments channelArgs;
+
+    channelArgs.SetMaxReceiveMessageSize(MAX_MESSAGE_SIZE);
+    channelArgs.SetMaxSendMessageSize(MAX_MESSAGE_SIZE);
     GrpcClients clients = {
         .santaclaus = SantaclausClient(grpc::CreateChannel(getEnv("MAESTRO_SANTACLAUS_URI"), grpc::InsecureChannelCredentials())),
         .bugle = BugleClient(grpc::CreateChannel(getEnv("MAESTRO_BUGLE_URI"), grpc::InsecureChannelCredentials()), events),
-        .vault = VaultClient(grpc::CreateChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials())),
+        .vault = VaultClient(grpc::CreateCustomChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials(), channelArgs)),
         .vaultcache =
-            VaultCacheClient(grpc::CreateChannel(getEnv("MAESTRO_VAULTCACHE_URI"), grpc::InsecureChannelCredentials()))};
+            VaultCacheClient(grpc::CreateCustomChannel(getEnv("MAESTRO_VAULTCACHE_URI"), grpc::InsecureChannelCredentials(), channelArgs))};
 
     // Services
     UsersBackService usersBackService(clients, events);
@@ -63,6 +69,22 @@ void RunServer()
     managerCron.add("0 0 3 * * ?", FileUploadCron(clients, events));
     managerCron.add("0 0 3 * * ?", DownloadFilesCron(clients, events));
     managerCron.add("0 0 3 * * ?", RemoveFilesCron(clients, events));
+
+    // Services
+    UsersBackService usersBackService(clients, events);
+    ChoufService choufService(clients, events, managerCron);
+
+    // gRPC
+    const char *address = getenv("MAESTRO_ADDRESS");
+    const string serverAddress(address);
+    grpc::ServerBuilder builder;
+
+    builder.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());
+    builder.RegisterService(&usersBackService);
+    builder.SetMaxMessageSize(MAX_MESSAGE_SIZE);
+    builder.RegisterService(&choufService);
+    std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
+    std::cout << "Server listening on " << serverAddress << std::endl;
 
     server->Wait();
 }

@@ -22,26 +22,31 @@ class ManagerCron {
     void run(const string &name);
     template <typename T> void add(const string &schedule, const T &job);
     void remove(const string &name);
-    void resume(); // Resume the global state
+    void resume();                  // Resume the global state
     void resume(const string &name);
     void resumeAll();               // Resume the global state and all tasks
     void pause();                   // Pause the global state
     void pause(const string &name); // Pause a specific task
+    NODISCARD const bool &isPaused() const;
     void wait(); // Wait is blocking for all tasks to finish (This method should be called before the destructor)
     void wait(const string &name); // Wait is blocking for a specific task to finish
+    NODISCARD size_t getTotalJobsCount() const;
     NODISCARD size_t getRunningTasksCount(const string &name) const;
     NODISCARD size_t getTotalRunningTasksCount() const;
+    NODISCARD const bool &doesAllowMultipleInstances() const;
+    void setAllowMultipleInstances(const bool &allowMultipleInstances);
+    NODISCARD const std::vector<std::pair<string, std::shared_ptr<TemplateCron>>> &getJobs() const;
+    NODISCARD const std::pair<string, std::shared_ptr<TemplateCron>> &getJob(const string &name) const;
 
   private:
     void _start();
     void _checkStoppedTasks();
     NODISCARD TemplateCron &_getJob(const string &name);
-    NODISCARD const TemplateCron &_getJob(const string &name) const;
 
   private:
     libcron::Cron<libcron::LocalClock, libcron::NullLock> _cron;
     std::thread _runner;
-    std::vector<std::shared_ptr<TemplateCron>> _jobs;
+    std::vector<std::pair<string, std::shared_ptr<TemplateCron>>> _jobs;
     bool _isPaused = false;
     bool _allowMultipleInstances;
 };
@@ -49,9 +54,9 @@ class ManagerCron {
 template <typename T> void ManagerCron::add(const string &schedule, const T &cronJob)
 {
     for (auto &job : this->_jobs)
-        if (cronJob.getName() == job->getName())
-            throw std::runtime_error("CronManager job " + job->getName() + " already exists");
-    this->_jobs.push_back(std::make_shared<T>(cronJob));
+        if (cronJob.getName() == job.second->getName())
+            throw std::runtime_error("CronManager job " + job.second->getName() + " already exists");
+    this->_jobs.push_back(std::make_pair(schedule, std::make_shared<T>(cronJob)));
 
     this->_cron.add_schedule(cronJob.getName(), schedule, [this](const libcron::TaskInformation &taskInfo) {
         const TemplateCron &job = this->_getJob(taskInfo.get_name());
@@ -66,7 +71,7 @@ template <typename T> void ManagerCron::add(const string &schedule, const T &cro
             this->run(taskInfo.get_name());
         }
     });
-    this->_getJob(cronJob.getName()).onAdd();
+    this->getJob(cronJob.getName()).second->onAdd();
 }
 
 #endif
