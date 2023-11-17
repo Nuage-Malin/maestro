@@ -113,6 +113,14 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
     UsersBack_Maestro::FilesRemoveStatus
     actFilesRemove(FilesSchemas &filesSchemas, StrIterator fileIdsBeg, const StrIterator &fileIdsEnd);
 
+    NODISCARD File::FileState _getDirectoryState(
+        const string &userId, const string &directoryId,
+        File::FilesIndex filesIndex, const bool &isRecursive
+    );
+    NODISCARD File::FileState _getFileState(
+        const File::FileState &fileState,
+        const File::FileState &currentState = File::FileState::UNKNOWN
+    ) const;
     void _fileUploadFailure(
         FilesSchemas &filesSchemas, const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus
     );
