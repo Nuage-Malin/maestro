@@ -63,8 +63,6 @@ NODISCARD Maestro_Vault::DownloadFilesRequest FilesDownloadQueueSchema::getDiskF
         auto *resultFile = result.add_files();
 
         resultFile->set_fileid(file["fileId"].get_string().value.to_string());
-        resultFile->set_userid(file["userId"].get_string().value.to_string());
-        resultFile->set_diskid(file["diskId"].get_string().value.to_string());
     };
     return result;
 }

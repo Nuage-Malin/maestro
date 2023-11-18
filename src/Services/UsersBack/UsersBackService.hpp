@@ -123,6 +123,10 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
     UsersBack_Maestro::FilesRemoveStatus
     actFilesRemove(FilesSchemas &filesSchemas, StrIterator fileIdsBeg, const StrIterator &fileIdsEnd);
 
+    NODISCARD File::FileState
+    _getDirectoryState(const string &userId, const string &directoryId, File::FilesIndex filesIndex, const bool &isRecursive);
+    NODISCARD File::FileState
+    _getFileState(const File::FileState &fileState, const File::FileState &currentState = File::FileState::UNKNOWN) const;
     void _fileUploadFailure(const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus);
 
     void _askFileDownloadFailure(
@@ -177,10 +181,7 @@ UsersBackService::actFilesRemove(FilesSchemas &filesSchemas, StrIterator fileIds
         } else {                                                 // if disk is turned on
             auto filesDiskRemoved = filesDisk.second;
             Maestro_Vault::RemoveFilesRequest my_request;
-            auto sampleFile = this->_clients.santaclaus.getFile(*filesDisk.second.begin()); // get disk id from santaclaus
 
-            my_request.set_userid(sampleFile.file().approxmetadata().userid());
-            my_request.set_diskid(filesDisk.first);
             for (const auto &fileId : filesDisk.second) {
                 my_request.add_fileid(fileId);
             }

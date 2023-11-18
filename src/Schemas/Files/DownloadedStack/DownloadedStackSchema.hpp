@@ -23,19 +23,9 @@ class FilesDownloadedStackSchema : public TemplateSchema {
     FilesDownloadedStackSchema(const mongocxx::database &database, const EventsManager &events);
     ~FilesDownloadedStackSchema() = default;
 
-    void pushFile(const string &fileId, const Date &expirationDate, const string &content);
-
-    NODISCARD string downloadFile(const string &fileId);
-
-    //    template <typename StrIterator>
-    //        requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type,
-    //        string>
-    // todo
-    NODISCARD /* todo std::tuple<StrIterator, StrIterator>*/ std::vector<string>
-    deleteExpiredFiles(const Date &expirationDate = Date());
-
+    void add(const string &fileId, const Date &expirationDate);
+    NODISCARD std::vector<string> deleteExpiredFiles(const Date &expirationDate = Date());
     NODISCARD Date getFileExpirationDate(const string &fileId);
-
     NODISCARD bool doesFileExist(const string &fileId);
 
   private:

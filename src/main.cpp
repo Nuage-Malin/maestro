@@ -48,7 +48,7 @@ void RunServer()
         .vault =
             VaultClient(grpc::CreateCustomChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials(), channelArgs)),
         .vaultcache =
-            VaultCacheClient(grpc::CreateChannel(getEnv("MAESTRO_VAULTCACHE_URI"), grpc::InsecureChannelCredentials()))};
+            VaultCacheClient(grpc::CreateCustomChannel(getEnv("MAESTRO_VAULTCACHE_URI"), grpc::InsecureChannelCredentials(), channelArgs))};
 
     // gRPC
     const char *address = getenv("MAESTRO_ADDRESS");

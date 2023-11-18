@@ -32,7 +32,7 @@ class VaultCacheClient {
     /* todo method : modify */
 
     /// Download
-    string downloadFile(const string &fileId, const string &userId, const string &diskId) const;
+    string downloadFile(const string &fileId) const;
     Maestro_Vault::DownloadFilesStatus downloadFiles(const Maestro_Vault::DownloadFilesRequest &files) const;
     NODISCARD Maestro_Vault::DownloadFilesStatus downloadStorageTypeFiles(const Maestro_Vault::storage_type &store_type) const;
 

@@ -33,7 +33,7 @@ void DownloadFilesCron::_downloadDiskFiles(const string &diskId)
     const Maestro_Vault::DownloadFilesStatus &files = this->_clients.vault.downloadFiles(request);
 
     for (const auto &file : files.files())
-        filesSchemas.downloadedStack.pushFile(file.fileid(), Date() + std::chrono::days(1), file.content());
+        filesSchemas.downloadedStack.add(file.fileid(), Date() + std::chrono::days(1));
 
     filesSchemas.downloadQueue.deleteDiskFiles(diskId);
 }

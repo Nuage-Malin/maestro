@@ -51,15 +51,13 @@ void VaultCacheClient::uploadFiles(const Maestro_Vault::UploadFilesRequest &file
         throw RequestFailureException(status, __FUNCTION__);
 }
 
-string VaultCacheClient::downloadFile(const string &fileId, const string &userId, const string &diskId) const
+string VaultCacheClient::downloadFile(const string &fileId) const
 {
     grpc::ClientContext context;
     Maestro_Vault::DownloadFileRequest request;
     Maestro_Vault::DownloadFileStatus response;
 
     request.set_fileid(fileId);
-    request.set_userid(userId);
-    request.set_diskid(diskId);
     this->_callLogger(__FUNCTION__);
     const grpc::Status status = this->_stub->downloadFile(&context, request, &response);
 

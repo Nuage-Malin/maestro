@@ -44,7 +44,7 @@ void FileUploadCron::_uploadFiles(const string &diskId)
 
     for (auto file : response_files.files()) {
         // do it one by one because of max size of a request being 2 gigabytes
-        content_to_transfer = _clients.vaultcache.downloadFile(file.fileid(), file.userid(), file.diskid());
+        content_to_transfer = _clients.vaultcache.downloadFile(file.fileid());
         _clients.vault.uploadFile(file.fileid(), file.userid(), file.diskid(), content_to_transfer);
     }
 }
