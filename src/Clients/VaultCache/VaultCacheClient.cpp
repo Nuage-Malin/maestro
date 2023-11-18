@@ -86,9 +86,9 @@ Maestro_Vault::DownloadFilesStatus VaultCacheClient::downloadStorageTypeFiles(co
     Maestro_Vault::DownloadStorageTypeFilesRequest request;
     Maestro_Vault::DownloadFilesStatus response;
 
-    request.set_storage_type(store_type);
+    request.set_store_type(store_type);
     this->_callLogger(__FUNCTION__);
-    const grpc::Status status = this->_stub->downloadStorageType(&context, &request, &response);
+    const grpc::Status status = this->_stub->downloadStorageTypeFiles(&context, request, &response);
 
     if (!status.ok())
         throw RequestFailureException(status, __FUNCTION__);
@@ -127,7 +127,7 @@ Maestro_Vault::GetFileMetaInfoStatus VaultCacheClient::getFileMetaInfo(const str
 
     request.set_fileid(fileId);
     this->_callLogger(__FUNCTION__);
-    const grpc::Status status = this->_stub->getFileMetaInfo(&context, &request, &response);
+    const grpc::Status status = this->_stub->getFileMetaInfo(&context, request, &response);
 
     if (!status.ok())
         throw RequestFailureException(status, __FUNCTION__);
@@ -152,20 +152,20 @@ Maestro_Vault::GetFilesMetaInfoStatus VaultCacheClient::getFilesMetaInfo(
         request.set_store_type(*store_type);
     }
     this->_callLogger(__FUNCTION__);
-    const grpc::Status status = this->_stub->getFilesMetaInfo(&context, &request, &response);
+    const grpc::Status status = this->_stub->getFilesMetaInfo(&context, request, &response);
 
     if (!status.ok())
         throw RequestFailureException(status, __FUNCTION__);
     return response;
 }
 
-Maestro_Vault::GetFilesDisksStatus VaultCacheClient::getFilesDisks(const Maestro_Vault::GetFilesDisksRequest &files) const
+Maestro_Vault::GetFilesDisksStatus VaultCacheClient::getFilesDisks(const Maestro_Vault::GetFilesDisksRequest &request) const
 {
     grpc::ClientContext context;
     Maestro_Vault::GetFilesDisksStatus response;
 
     this->_callLogger(__FUNCTION__);
-    const grpc::Status status = this->_stub->getFilesDisks(&context, &files, &response);
+    const grpc::Status status = this->_stub->getFilesDisks(&context, request, &response);
 
     if (!status.ok())
         throw RequestFailureException(status, __FUNCTION__);

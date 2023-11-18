@@ -132,6 +132,7 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         const File::FileState &currentState = File::FileState::UNKNOWN
     ) const;
     void _fileUploadFailure(const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus);
+
     void _askFileDownloadFailure(
         FilesSchemas &filesSchemas, const string &fileId, const Maestro_Santaclaus::GetFileStatus &file,
         const Date &expirationDate, UsersBack_Maestro::AskFileDownloadStatus &response

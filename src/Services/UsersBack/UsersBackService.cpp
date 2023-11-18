@@ -87,12 +87,11 @@ grpc::Status UsersBackService::getUserDiskSpace(
 )
 {
     return this->_procedureRunner(
-        [this, request, response](FilesSchemas &&filesSchemas, StatsSchemas &&statsSchemas) {
+        [this, request, response](FilesSchemas &&, StatsSchemas &&statsSchemas) {
             const Date &date = request->has_date() ? Date(request->date()) : Date();
             const uint64 &totalDisksSpace = statsSchemas.diskInfo.getTotalDisksSpace(date);
-            const uint64 &diskSpace = statsSchemas.userDiskInfo.getUserDiskSpace(
-                request->userid(), date
-            ) + filesSchemas.uploadQueue.getUserQueueSpace(request->userid(), date);
+            const uint64 &diskSpace = statsSchemas.userDiskInfo.getUserDiskSpace(request->userid(), date);
+            //                + filesSchemas.uploadQueue.getUserQueueSpace(request->userid(), date); // todo
 
             response->set_totaldiskspace(totalDisksSpace);
             response->set_useddiskspace(diskSpace);
@@ -170,7 +169,8 @@ grpc::Status UsersBackService::askFileDownload(
 }
 
 grpc::Status UsersBackService::cancelFileDownload(
-    UNUSED grpc::ServerContext *context, const UsersBack_Maestro::CancelFileDownloadRequest *request, UsersBack_Maestro::CancelFileDownloadStatus *response
+    UNUSED grpc::ServerContext *context, const UsersBack_Maestro::CancelFileDownloadRequest *request,
+    UsersBack_Maestro::CancelFileDownloadStatus *response
 )
 {
     return this->_procedureRunner(
@@ -224,8 +224,9 @@ grpc::Status UsersBackService::getFilesIndex(
                 fileIndex->CopyFrom(file);
                 if (filesSchemas.downloadedStack.doesFileExist(file.fileid())) {
                     fileIndex->set_state(File::FileState::DOWNLOADABLE);
-                } else if (filesSchemas.uploadQueue.doesFileExist(file.fileid())) {
-                    fileIndex->set_state(File::FileState::UPLOADING);
+                    // TODO use getFileMetaInfo of vaultCache instead
+                    //                } else if (filesSchemas.uploadQueue.doesFileExist(file.fileid())) { // TODO
+                    //                    fileIndex->set_state(File::FileState::UPLOADING);
                 } else if (filesSchemas.downloadQueue.doesFileExist(file.fileid())) {
                     fileIndex->set_state(File::FileState::ASKED);
                 } else {
@@ -275,7 +276,7 @@ grpc::Status UsersBackService::
 {
     return this->_procedureRunner(
         [this, request](FilesSchemas &&, StatsSchemas &&) {
-            this->_clients.santaclaus.moveFile(request->fileid(), request->newfilename());
+            this->_clients.santaclaus.renameFile(request->fileid(), request->newfilename());
 
             return grpc::Status::OK;
         },
