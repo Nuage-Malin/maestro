@@ -21,7 +21,8 @@ void ExpiredDownloadedFilesCron::run()
 
 void ExpiredDownloadedFilesCron::removeExpiredDownloadedFiles()
 {
-    std::vector<DownloadedStack> filesToRemove = MongoCXX::Mongo(this->_events).getFilesSchemas().downloadedStack.getExpiredFiles();
+    std::vector<DownloadedStack> filesToRemove =
+        MongoCXX::Mongo(this->_events).getFilesSchemas().downloadedStack.getExpiredFiles();
 
     if (filesToRemove.begin() == filesToRemove.end())
         throw std::logic_error("Calling remove expired files with no files to remove, in function " + STR_FUNCTION);
@@ -38,9 +39,7 @@ void ExpiredDownloadedFilesCron::removeExpiredDownloadedFiles()
                     throw std::runtime_error(STR_FUNCTION + ": [Failed to remove file " + file.fileId + " from vaultcache]");
 
             this->_events.emit<const string &, const Date &>(
-                Event::DOWNLOADEDSTACK_FILE_EXPIRATION,
-                file.fileId,
-                file.expirationDate
+                Event::DOWNLOADEDSTACK_FILE_EXPIRATION, file.fileId, file.expirationDate
             );
         } catch (const std::runtime_error &error) {
             std::cerr << error.what() << std::endl;

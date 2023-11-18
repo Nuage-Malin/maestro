@@ -29,8 +29,6 @@ class VaultCacheClient {
     /// Upload
     void uploadFiles(const Maestro_Vault::UploadFilesRequest &files) const;
 
-    /* todo method : modify */
-
     /// Download
     string downloadFile(const string &fileId) const;
     Maestro_Vault::DownloadFilesStatus downloadFiles(const Maestro_Vault::DownloadFilesRequest &files) const;

@@ -39,6 +39,7 @@ class SantaclausClient {
         requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
     Maestro_Santaclaus::RemoveFilesStatus virtualRemoveFiles(StrIterator fileIdsBeg, const StrIterator &fileIdsEnd) const;
     Maestro_Santaclaus::RemoveFileStatus physicalRemoveFile(const string &fileId) const;
+    Maestro_Santaclaus::RemoveFilesStatus physicalRemoveFiles(const Maestro_Santaclaus::RemoveFilesRequest &files) const;
 
     /**
      * @brief Add multiple file IDs to the queue

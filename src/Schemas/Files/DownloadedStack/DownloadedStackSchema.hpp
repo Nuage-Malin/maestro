@@ -3,7 +3,8 @@
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 11/04/2023
  * @copyright Nuage Malin
- * @brief Stores files (temporarly) available for download
+ * @brief Keep track of expiration date for downloadable files
+ *        (in other words, knows until what datetime files are downloadable)
  */
 
 #ifndef MAESTRO_FILES_DOWNLOADEDSTACK_SCHEMA_HPP
@@ -18,7 +19,8 @@
 #include "Utils/Date/Date.hpp"
 #include "Schemas/Templates/Schema/TemplateSchema.hpp"
 
-struct DownloadedStack {
+struct DownloadedStack
+{
     string fileId;
     Date expirationDate;
 };

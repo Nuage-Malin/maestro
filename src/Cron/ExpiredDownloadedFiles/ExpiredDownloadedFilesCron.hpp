@@ -20,7 +20,7 @@ class ExpiredDownloadedFilesCron : public TemplateCron {
     ExpiredDownloadedFilesCron(GrpcClients &grpcClient, EventsManager &events);
     ~ExpiredDownloadedFilesCron() = default;
 
-    void run() override /* todo : I removed `override` keyword, check if it changes anything */;
+    void run() override;
 
   private:
     //    template <typename StrIterator>

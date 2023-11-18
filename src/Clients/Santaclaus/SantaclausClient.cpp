@@ -96,8 +96,8 @@ Maestro_Santaclaus::RenameFileStatus SantaclausClient::renameFile(const string &
     this->_callLogger(__FUNCTION__);
     auto status = _stub->renameFile(&context, request, &response);
 
-    // todo
     // todo test
+    return response;
 }
 
 Maestro_Santaclaus::RemoveFileStatus SantaclausClient::virtualRemoveFile(const string &fileId) const
@@ -115,7 +115,6 @@ Maestro_Santaclaus::RemoveFileStatus SantaclausClient::virtualRemoveFile(const s
     return response;
 }
 
-// todo do same method for several files (present in Maestro_Santaclaus)
 Maestro_Santaclaus::RemoveFileStatus SantaclausClient::physicalRemoveFile(const string &fileId) const
 {
     grpc::ClientContext context;
@@ -125,6 +124,20 @@ Maestro_Santaclaus::RemoveFileStatus SantaclausClient::physicalRemoveFile(const 
     request.set_fileid(fileId);
     this->_callLogger(__FUNCTION__);
     auto status = _stub->physicalRemoveFile(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status, __FUNCTION__);
+    return response;
+}
+
+Maestro_Santaclaus::RemoveFilesStatus SantaclausClient::physicalRemoveFiles(const Maestro_Santaclaus::RemoveFilesRequest &request
+) const
+{
+    grpc::ClientContext context;
+    Maestro_Santaclaus::RemoveFilesStatus response;
+
+    this->_callLogger(__FUNCTION__);
+    auto status = _stub->physicalRemoveFiles(&context, request, &response);
 
     if (!status.ok())
         throw RequestFailureException(status, __FUNCTION__);
@@ -163,7 +176,6 @@ Maestro_Santaclaus::RemoveDirectoryStatus SantaclausClient::removeDirectory(cons
 
 Maestro_Santaclaus::MoveDirectoryStatus SantaclausClient::moveDirectory(const string &dirId, const string &newDirId) const
 {
-    // todo
     // todo test
     grpc::ClientContext context;
     Maestro_Santaclaus::MoveDirectoryRequest request;
@@ -181,7 +193,6 @@ Maestro_Santaclaus::MoveDirectoryStatus SantaclausClient::moveDirectory(const st
 
 Maestro_Santaclaus::RenameDirectoryStatus SantaclausClient::renameDirectory(const string &dirId, const string &name) const
 {
-    // todo
     // todo test
     grpc::ClientContext context;
     Maestro_Santaclaus::RenameDirectoryRequest request;

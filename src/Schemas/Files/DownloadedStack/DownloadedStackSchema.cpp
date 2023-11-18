@@ -3,7 +3,8 @@
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 11/04/2023
  * @copyright Nuage Malin
- * @brief TODO
+ * @brief Keep track of expiration date for downloadable files
+ *        (in other words, knows until what datetime files are downloadable)
  */
 
 #include <sstream>
@@ -44,8 +45,8 @@ NODISCARD std::vector<DownloadedStack> FilesDownloadedStackSchema::getExpiredFil
     std::vector<DownloadedStack> files{};
 
     for (const auto &file : cursor) {
-        DownloadedStack downloadedStackFile = { .fileId = file["fileId"].get_string().value.to_string(),
-                          .expirationDate = Date(file["expirationDate"].get_date()) };
+        DownloadedStack downloadedStackFile = {
+            .fileId = file["fileId"].get_string().value.to_string(), .expirationDate = Date(file["expirationDate"].get_date())};
         files.push_back(downloadedStackFile);
     }
     return files;

@@ -11,8 +11,7 @@
 #include "Exceptions/NotFound/NotFoundException.hpp"
 #include "Schemas/Files/DownloadedStack/DownloadedStackSchema.hpp"
 
-UsersBackService::UsersBackService(const GrpcClients &clients, EventsManager &events)
-    : TemplateService(events), _clients(clients)
+UsersBackService::UsersBackService(const GrpcClients &clients, EventsManager &events) : TemplateService(events), _clients(clients)
 {
 }
 
@@ -223,15 +222,22 @@ grpc::Status UsersBackService::getFilesIndex(
                 File::FileMetadata *fileIndex = filesIndex.add_fileindex();
 
                 fileIndex->CopyFrom(file);
-                if (filesSchemas.downloadedStack.doesFileExist(file.fileid())) {
-                    fileIndex->set_state(File::FileState::DOWNLOADABLE);
-                    // TODO use getFileMetaInfo of vaultCache instead
-                    //                } else if (filesSchemas.uploadQueue.doesFileExist(file.fileid())) { // TODO
-                    //                    fileIndex->set_state(File::FileState::UPLOADING);
-                } else if (filesSchemas.downloadQueue.doesFileExist(file.fileid())) {
-                    fileIndex->set_state(File::FileState::ASKED);
+                Maestro_Vault::GetFileMetaInfoStatus fileMetaInfo = _clients.vaultcache.getFileMetaInfo(file.fileid());
+
+                if (fileMetaInfo.file().store_types().size()) {
+                    for (auto &store_type : fileMetaInfo.file().store_types()) {
+                        if (store_type == Maestro_Vault::storage_type::UPLOAD_QUEUE) { // TODO
+                            fileIndex->set_state(File::FileState::UPLOADING);
+                        } else if (store_type == Maestro_Vault::storage_type::DOWNLOAD_QUEUE) {
+                            fileIndex->set_state(File::FileState::DOWNLOADABLE);
+                        }
+                    }
                 } else {
-                    fileIndex->set_state(File::FileState::STORED);
+                    if (filesSchemas.downloadQueue.doesFileExist(file.fileid())) {
+                        fileIndex->set_state(File::FileState::ASKED);
+                    } else {
+                        fileIndex->set_state(File::FileState::STORED);
+                    }
                 }
             }
 
