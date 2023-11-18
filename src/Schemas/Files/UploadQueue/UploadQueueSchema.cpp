@@ -12,7 +12,8 @@
 #include "Utils/Date/Date.hpp"
 #include "Exceptions/NotFound/NotFoundException.hpp"
 
-FilesUploadQueueSchema::FilesUploadQueueSchema(const mongocxx::database &database) : TemplateFileBucket(database, "uploadQueue"), TemplateSchema(database, "uploadQueue.files")
+FilesUploadQueueSchema::FilesUploadQueueSchema(const mongocxx::database &database)
+    : TemplateFileBucket(database, "uploadQueue"), TemplateSchema(database, "uploadQueue.files")
 {
 }
 
@@ -99,12 +100,16 @@ NODISCARD bool FilesUploadQueueSchema::doesFileExist(const string &fileId)
     return cursor.begin() != cursor.end();
 }
 
-NODISCARD uint64 FilesUploadQueueSchema::getUserQueueSpace(const string & userId, const Date &endDate)
+NODISCARD uint64 FilesUploadQueueSchema::getUserQueueSpace(const string &userId, const Date &endDate)
 {
     mongocxx::pipeline pipeline;
 
-    pipeline.match(makeDocument(makeField("metadata.userId", userId), makeField("metadata.createdAt", makeDocument(makeField("$lte", endDate.toBSON())))));
-    pipeline.group(makeDocument(makeField("_id", MongoCXX::Null()), makeField("totalUserQueueSpace", makeDocument(makeField("$sum", "$length")))));
+    pipeline.match(makeDocument(
+        makeField("metadata.userId", userId), makeField("metadata.createdAt", makeDocument(makeField("$lte", endDate.toBSON())))
+    ));
+    pipeline.group(makeDocument(
+        makeField("_id", MongoCXX::Null()), makeField("totalUserQueueSpace", makeDocument(makeField("$sum", "$length")))
+    ));
 
     mongocxx::cursor cursor = this->_model.aggregate(pipeline);
 
@@ -121,8 +126,6 @@ NODISCARD uint64 FilesUploadQueueSchema::getUserQueueSpace(const string & userId
         throw std::runtime_error("Invalid totalUserQueueSpace type");
 }
 
-// TODO: Does need to use thread to optimize it.
-//  Delete files asynchronously with threads and then join them to wait for the end of the deletion
 void FilesUploadQueueSchema::deleteFiles(const std::vector<MongoCXX::ValueView> &files)
 {
     for (const auto &file : files)

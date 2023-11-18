@@ -185,7 +185,7 @@ UsersBackService::actFilesRemove(FilesSchemas &filesSchemas, StrIterator fileIds
                 my_request.add_fileid(fileId);
             }
             const auto &vaultResponse = this->_clients.vault.removeFiles(my_request);
-            // todo check vaultResponse : file id failures not to send to santaclaus physical remove
+
             for (const auto &fileIdFailure : vaultResponse.fileidfailures()) {
                 response.add_fileidfailures(fileIdFailure); // set response for UsersBack
                 filesDiskRemoved.erase(fileIdFailure);      // file has not been removed, it is yet to be removed

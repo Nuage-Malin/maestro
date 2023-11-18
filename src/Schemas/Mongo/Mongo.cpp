@@ -36,8 +36,6 @@ FilesSchemas MongoCXX::Mongo::getFilesSchemas() const
 
 StatsSchemas MongoCXX::Mongo::getStatsSchemas() const
 {
-    /* todo keep this database */
-
     const mongocxx::database statsDatabase = this->_client[statsDb];
 
     return {.diskInfo = StatsDiskInfoSchema(statsDatabase), .userDiskInfo = StatsUserDiskInfoSchema(statsDatabase)};

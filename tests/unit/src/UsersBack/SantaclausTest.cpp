@@ -29,3 +29,5 @@ TEST(UsersBackTest, SantaclausGetDirectory)
     ASSERT_TRUE(client.getUserConsumption(response, request));
     ASSERT_EQ(response.consumption(), 1000 + 1500);
 }
+
+// todo other tests
