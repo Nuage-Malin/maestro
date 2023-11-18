@@ -25,12 +25,7 @@ void ExpiredDownloadedFilesCron::run()
 void ExpiredDownloadedFilesCron::removeExpiredDownloadedFiles()
 {
     //    std::tuple<StrIterator, StrIterator> fileIdsToRemove =
-    std::vector<string> fileIdsToRemove =
-        MongoCXX::Mongo(this->_events)
-            .getFilesSchemas()
-            .downloadedStack.deleteExpiredFiles(/* todo expiration date ?
-                                                 * or Date (default value) is current then good ? */
-            );
+    std::vector<string> fileIdsToRemove = MongoCXX::Mongo(this->_events).getFilesSchemas().downloadedStack.deleteExpiredFiles();
 
     if (fileIdsToRemove.begin() == fileIdsToRemove.end())
         throw std::logic_error("Calling remove expired files with no files to remove, in function " + STR_FUNCTION);

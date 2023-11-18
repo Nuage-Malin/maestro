@@ -88,10 +88,12 @@ grpc::Status UsersBackService::getUserDiskSpace(
 {
     return this->_procedureRunner(
         [this, request, response](FilesSchemas &&, StatsSchemas &&statsSchemas) {
-            const uint64 &diskSpace = statsSchemas.userDiskInfo.getUserDiskSpace(
-                request->userid(), request->has_date() ? Date(request->date()) : Date()
-            );
+            const Date &date = request->has_date() ? Date(request->date()) : Date();
+            const uint64 &totalDisksSpace = statsSchemas.diskInfo.getTotalDisksSpace(date);
+            const uint64 &diskSpace = statsSchemas.userDiskInfo.getUserDiskSpace(request->userid(), date);
+            //                + filesSchemas.uploadQueue.getUserQueueSpace(request->userid(), date); // todo
 
+            response->set_totaldiskspace(totalDisksSpace);
             response->set_useddiskspace(diskSpace);
             return grpc::Status::OK;
         },
@@ -112,7 +114,7 @@ grpc::Status UsersBackService::askFileDownload(
                 return grpc::Status::OK;
             }
 
-            const std::chrono::days expirationLimit(2);
+            const std::chrono::minutes expirationLimit(5);
             const Date &expirationDate = Date() + expirationLimit;
 
             // Check if file is in UploadQueue (in vaultCache)
@@ -166,6 +168,21 @@ grpc::Status UsersBackService::askFileDownload(
     );
 }
 
+grpc::Status UsersBackService::cancelFileDownload(
+    UNUSED grpc::ServerContext *context, const UsersBack_Maestro::CancelFileDownloadRequest *request,
+    UsersBack_Maestro::CancelFileDownloadStatus *response
+)
+{
+    return this->_procedureRunner(
+        [this, request, response](FilesSchemas &&FilesSchemas, StatsSchemas &&) {
+            FilesSchemas.downloadQueue.deleteFile(request->fileid());
+
+            return grpc::Status::OK;
+        },
+        __FUNCTION__
+    );
+}
+
 grpc::Status UsersBackService::fileDownload(
     UNUSED grpc::ServerContext *context, const UsersBack_Maestro::FileDownloadRequest *request, File::File *response
 )
@@ -174,7 +191,7 @@ grpc::Status UsersBackService::fileDownload(
         [this, request, response](FilesSchemas &&filesSchemas, StatsSchemas &&) {
             File::FileMetadata metadata = this->_clients.santaclaus.getFile(request->fileid()).file();
 
-            metadata.set_isdownloadable(true);
+            metadata.set_state(File::FileState::DOWNLOADABLE);
 
             response->set_content(filesSchemas.downloadedStack.downloadFile(request->fileid()));
             response->set_allocated_metadata(new File::FileMetadata(metadata));
@@ -203,7 +220,16 @@ grpc::Status UsersBackService::getFilesIndex(
                 File::FileMetadata *fileIndex = filesIndex.add_fileindex();
 
                 fileIndex->CopyFrom(file);
-                fileIndex->set_isdownloadable(filesSchemas.downloadedStack.doesFileExist(file.fileid()));
+                if (filesSchemas.downloadedStack.doesFileExist(file.fileid())) {
+                    fileIndex->set_state(File::FileState::DOWNLOADABLE);
+                    // TODO use getFileMetaInfo of vaultCache instead
+                    //                } else if (filesSchemas.uploadQueue.doesFileExist(file.fileid())) { // TODO
+                    //                    fileIndex->set_state(File::FileState::UPLOADING);
+                } else if (filesSchemas.downloadQueue.doesFileExist(file.fileid())) {
+                    fileIndex->set_state(File::FileState::ASKED);
+                } else {
+                    fileIndex->set_state(File::FileState::STORED);
+                }
             }
             response->set_allocated_subfiles(new File::FilesIndex(filesIndex));
 
@@ -231,7 +257,7 @@ grpc::Status UsersBackService::
 {
     return this->_procedureRunner(
         [this, request](FilesSchemas &&, StatsSchemas &&) {
-            this->_clients.santaclaus.moveFile(request->fileid(), request->newfilename());
+            this->_clients.santaclaus.renameFile(request->fileid(), request->newfilename());
 
             return grpc::Status::OK;
         },

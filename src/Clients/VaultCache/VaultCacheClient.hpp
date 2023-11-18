@@ -3,7 +3,7 @@
  * @author Arthur Jourdan
  * @date of creation 30/09/23.
  * @copyright Nuage Malin
- * @brief TODO
+ * @brief Description of client to request vault cache server, in other words, request temporary file storage
  */
 
 #ifndef MAESTRO_VAULTCACHE_CLIENT_HPP

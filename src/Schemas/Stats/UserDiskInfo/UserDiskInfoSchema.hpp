@@ -20,7 +20,7 @@ class StatsUserDiskInfoSchema : public TemplateSchema {
     ~StatsUserDiskInfoSchema() = default;
 
     uint64 getUserConsumption(const string &userId, const std::optional<Date> &startDate, const Date &endDate);
-    uint64 getUserDiskSpace(const string &userId, const Date endDate);
+    uint64 getUserDiskSpace(const string &userId, const Date &endDate);
 };
 
 #endif
