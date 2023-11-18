@@ -20,7 +20,7 @@
 
 class TemplateService {
   public:
-    TemplateService(const EventsManager &events);
+    TemplateService(EventsManager &events);
     ~TemplateService() = default;
 
   protected:
@@ -47,7 +47,7 @@ class TemplateService {
 
     NODISCARD string _getErrorCaller(const std::source_location &location);
 
-    const EventsManager &_events;
+    EventsManager &_events;
 };
 
 #endif

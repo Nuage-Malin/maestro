@@ -97,6 +97,7 @@ Maestro_Vault::RemoveFileStatus VaultCacheClient::removeFile(const Maestro_Vault
 {
     grpc::ClientContext context;
     Maestro_Vault::RemoveFileStatus response;
+
     this->_callLogger(__FUNCTION__);
     const grpc::Status status = this->_stub->removeFile(&context, file, &response);
 
@@ -109,6 +110,7 @@ Maestro_Vault::RemoveFilesStatus VaultCacheClient::removeFiles(const Maestro_Vau
 {
     grpc::ClientContext context;
     Maestro_Vault::RemoveFilesStatus response;
+
     this->_callLogger(__FUNCTION__);
     const grpc::Status status = this->_stub->removeFiles(&context, files, &response);
 

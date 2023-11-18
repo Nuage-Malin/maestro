@@ -17,7 +17,7 @@
 
 class ExpiredDownloadedFilesCron : public TemplateCron {
   public:
-    ExpiredDownloadedFilesCron(GrpcClients &grpcClient, const EventsManager &events);
+    ExpiredDownloadedFilesCron(GrpcClients &grpcClient, EventsManager &events);
     ~ExpiredDownloadedFilesCron() = default;
 
     void run() override /* todo : I removed `override` keyword, check if it changes anything */;
@@ -29,7 +29,7 @@ class ExpiredDownloadedFilesCron : public TemplateCron {
     void removeExpiredDownloadedFiles();
 
     GrpcClients &_clients;
-    const EventsManager &_events;
+    EventsManager &_events;
 };
 
 #endif

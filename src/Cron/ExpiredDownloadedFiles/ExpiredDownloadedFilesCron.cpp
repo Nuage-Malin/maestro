@@ -9,7 +9,7 @@
 
 #include "ExpiredDownloadedFilesCron.hpp"
 
-ExpiredDownloadedFilesCron::ExpiredDownloadedFilesCron(GrpcClients &grpcClient, const EventsManager &events)
+ExpiredDownloadedFilesCron::ExpiredDownloadedFilesCron(GrpcClients &grpcClient, EventsManager &events)
     : TemplateCron("ExpiredDownloadedFiles"), _clients(grpcClient), _events(events)
 {
 }
@@ -19,20 +19,31 @@ void ExpiredDownloadedFilesCron::run()
     this->removeExpiredDownloadedFiles();
 }
 
-// template <typename StrIterator>
-//     requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
-//  todo template
 void ExpiredDownloadedFilesCron::removeExpiredDownloadedFiles()
 {
-    //    std::tuple<StrIterator, StrIterator> fileIdsToRemove =
-    std::vector<string> fileIdsToRemove = MongoCXX::Mongo(this->_events).getFilesSchemas().downloadedStack.deleteExpiredFiles();
+    std::vector<DownloadedStack> filesToRemove = MongoCXX::Mongo(this->_events).getFilesSchemas().downloadedStack.getExpiredFiles();
 
-    if (fileIdsToRemove.begin() == fileIdsToRemove.end())
+    if (filesToRemove.begin() == filesToRemove.end())
         throw std::logic_error("Calling remove expired files with no files to remove, in function " + STR_FUNCTION);
-    Maestro_Vault::RemoveFileRequest req{};
+    Maestro_Vault::RemoveFilesRequest request{};
 
-    for (auto fileId : fileIdsToRemove) {
-        req.set_fileid(fileId);
-        this->_clients.vaultcache.removeFile(req);
+    for (const DownloadedStack &file : filesToRemove)
+        request.add_fileids(file.fileId);
+    Maestro_Vault::RemoveFilesStatus response = this->_clients.vaultcache.removeFiles(request);
+
+    for (const DownloadedStack &file : filesToRemove) {
+        try {
+            for (const string &failureFileId : response.fileidfailures())
+                if (file.fileId == failureFileId)
+                    throw std::runtime_error(STR_FUNCTION + ": [Failed to remove file " + file.fileId + " from vaultcache]");
+
+            this->_events.emit<const string &, const Date &>(
+                Event::DOWNLOADEDSTACK_FILE_EXPIRATION,
+                file.fileId,
+                file.expirationDate
+            );
+        } catch (const std::runtime_error &error) {
+            std::cerr << error.what() << std::endl;
+        }
     }
 }

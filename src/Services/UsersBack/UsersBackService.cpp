@@ -11,7 +11,7 @@
 #include "Exceptions/NotFound/NotFoundException.hpp"
 #include "Schemas/Files/DownloadedStack/DownloadedStackSchema.hpp"
 
-UsersBackService::UsersBackService(const GrpcClients &clients, const EventsManager &events)
+UsersBackService::UsersBackService(const GrpcClients &clients, EventsManager &events)
     : TemplateService(events), _clients(clients)
 {
 }

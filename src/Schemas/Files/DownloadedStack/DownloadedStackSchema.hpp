@@ -18,18 +18,23 @@
 #include "Utils/Date/Date.hpp"
 #include "Schemas/Templates/Schema/TemplateSchema.hpp"
 
+struct DownloadedStack {
+    string fileId;
+    Date expirationDate;
+};
+
 class FilesDownloadedStackSchema : public TemplateSchema {
   public:
-    FilesDownloadedStackSchema(const mongocxx::database &database, const EventsManager &events);
+    FilesDownloadedStackSchema(const mongocxx::database &database, EventsManager &events);
     ~FilesDownloadedStackSchema() = default;
 
     void add(const string &fileId, const Date &expirationDate);
-    NODISCARD std::vector<string> deleteExpiredFiles(const Date &expirationDate = Date());
-    NODISCARD Date getFileExpirationDate(const string &fileId);
+    void deleteFile(const string &fileId);
+    NODISCARD std::vector<DownloadedStack> getExpiredFiles(const Date &expirationDate = Date());
     NODISCARD bool doesFileExist(const string &fileId);
 
   private:
-    const EventsManager &_events;
+    void _onFileExpiration(const string &fileId, const Date &expirationDate);
 };
 
 #endif

@@ -30,7 +30,7 @@ class RemoveFilesCron : public TemplateCron {
     void _removeDiskFiles(const string &diskId);
 
   private:
-    const EventsManager &_events;
+    EventsManager &_events;
     GrpcClients &_clients;
 };
 

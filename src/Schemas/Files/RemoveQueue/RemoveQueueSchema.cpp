@@ -35,7 +35,7 @@ NODISCARD Maestro_Vault::RemoveFilesRequest FilesRemoveQueueSchema::getDiskFiles
     Maestro_Vault::RemoveFilesRequest result;
 
     for (const MongoCXX::DocumentView &file : cursor) {
-        result.add_fileid(file["fileId"].get_string().value.to_string());
+        result.add_fileids(file["fileId"].get_string().value.to_string());
     };
     return result;
 }

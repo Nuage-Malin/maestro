@@ -50,6 +50,7 @@ set(SRCS
     ${SRC_DIR}/Exceptions/NotFound/NotFoundException.cpp
     ${SRC_DIR}/Schemas/Mongo/Mongo.cpp
     ${SRC_DIR}/Schemas/Templates/Schema/TemplateSchema.cpp
+    ${SRC_DIR}/Schemas/Files/DownloadedStack/DownloadedStackSchema.cpp
     ${SRC_DIR}/Schemas/Files/DownloadQueue/DownloadQueueSchema.cpp
     ${SRC_DIR}/Schemas/Files/RemoveQueue/RemoveQueueSchema.cpp
     ${SRC_DIR}/Schemas/Stats/DiskInfo/DiskInfoSchema.cpp

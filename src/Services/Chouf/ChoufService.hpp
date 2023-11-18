@@ -20,7 +20,7 @@
 
 class ChoufService : public TemplateService, public Chouf_Maestro::Chouf_Maestro_Service::Service {
   public:
-    ChoufService(const GrpcClients &clients, const EventsManager &events, ManagerCron &managerCron);
+    ChoufService(const GrpcClients &clients, EventsManager &events, ManagerCron &managerCron);
     ~ChoufService() = default;
 
     grpc::Status getCronStatus(

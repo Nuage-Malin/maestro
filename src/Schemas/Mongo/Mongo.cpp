@@ -13,7 +13,7 @@
 static const string fileDb{"maestro"};
 static const string statsDb{"logs"};
 
-MongoCXX::Mongo::Mongo(const EventsManager &events) : _events(events)
+MongoCXX::Mongo::Mongo(EventsManager &events) : _events(events)
 {
     this->_client = mongocxx::uri{getEnv("MAESTRO_MONGO_URI")};
     if (!this->_client)

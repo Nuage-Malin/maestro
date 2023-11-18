@@ -9,7 +9,7 @@
 
 #include "TemplateService.hpp"
 
-TemplateService::TemplateService(const EventsManager &events) : _events(events)
+TemplateService::TemplateService(EventsManager &events) : _events(events)
 {
 }
 

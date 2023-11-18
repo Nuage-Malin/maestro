@@ -9,7 +9,7 @@
 #include "ChoufService.hpp"
 #include "Exceptions/NotFound/NotFoundException.hpp"
 
-ChoufService::ChoufService(const GrpcClients &clients, const EventsManager &events, ManagerCron &managerCron)
+ChoufService::ChoufService(const GrpcClients &clients, EventsManager &events, ManagerCron &managerCron)
     : TemplateService(events), _clients(clients), _managerCron(managerCron)
 {
 }

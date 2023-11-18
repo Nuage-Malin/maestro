@@ -37,9 +37,9 @@ void RemoveFilesCron::_removeDiskFiles(const string &diskId)
     filesSchemas.removeQueue.deleteDiskFiles(diskId);
     filesSchemas.removeQueue.add(diskId, response.fileidfailures().begin(), response.fileidfailures().end());
     for (const auto &fileIdFailure : response.fileidfailures()) {
-        for (auto i = 0; i <= request.fileid_size(); i++) {
-            fileId = request.fileid(i);
-            if (i == request.fileid_size()) {
+        for (auto i = 0; i <= request.fileids_size(); i++) {
+            fileId = request.fileids(i);
+            if (i == request.fileids_size()) {
                 if (!fileRemoved.contains(fileId)) {
                     fileRemoved.insert(fileId);
                 }

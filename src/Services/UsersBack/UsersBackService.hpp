@@ -21,7 +21,7 @@
 
 class UsersBackService : public TemplateService, public UsersBack_Maestro::UsersBack_Maestro_Service::Service {
   public:
-    UsersBackService(const GrpcClients &clients, const EventsManager &events);
+    UsersBackService(const GrpcClients &clients, EventsManager &events);
     ~UsersBackService() = default;
 
     grpc::Status fileUpload(
@@ -183,7 +183,7 @@ UsersBackService::actFilesRemove(FilesSchemas &filesSchemas, StrIterator fileIds
             Maestro_Vault::RemoveFilesRequest my_request;
 
             for (const auto &fileId : filesDisk.second) {
-                my_request.add_fileid(fileId);
+                my_request.add_fileids(fileId);
             }
             const auto &vaultResponse = this->_clients.vault.removeFiles(my_request);
 
