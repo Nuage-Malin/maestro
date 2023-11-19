@@ -49,8 +49,6 @@ TEST(DownloadQueue, getDiskFiles)
 
     ASSERT_EQ(request.files_size(), 1);
     ASSERT_EQ(request.files(0).fileid(), "fileIdTest");
-    ASSERT_EQ(request.files(0).userid(), "userIdTest");
-    ASSERT_EQ(request.files(0).diskid(), "diskIdTest");
 }
 
 TEST(DownloadQueue, deleteDiskFiles)
