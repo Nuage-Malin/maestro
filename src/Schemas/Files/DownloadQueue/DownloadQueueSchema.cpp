@@ -39,6 +39,13 @@ void FilesDownloadQueueSchema::deleteFile(const string &fileId)
     this->_model.delete_one(filter.view());
 }
 
+void FilesDownloadQueueSchema::deleteUser(const string &userId)
+{
+    MongoCXX::Document filter = makeDocument(makeField("userId", userId));
+
+    this->_model.delete_many(filter.view());
+}
+
 Date FilesDownloadQueueSchema::getRequestedDate(const string &fileId, const string &diskId)
 {
     MongoCXX::Document filter = makeDocument(makeField("fileId", fileId), makeField("diskId", diskId));

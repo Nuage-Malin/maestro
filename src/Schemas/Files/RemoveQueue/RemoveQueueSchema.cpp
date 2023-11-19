@@ -28,6 +28,13 @@ void FilesRemoveQueueSchema::deleteDiskFiles(const string &diskId)
     this->_model.delete_many(filter.view());
 }
 
+void FilesRemoveQueueSchema::deleteFile(const string &fileId)
+{
+    const MongoCXX::Document &filter = makeDocument(makeField("fileId", fileId));
+
+    this->_model.delete_one(filter.view());
+}
+
 NODISCARD Maestro_Vault::RemoveFilesRequest FilesRemoveQueueSchema::getDiskFiles(const string &diskId)
 {
     const MongoCXX::Document filter = makeDocument(makeField("diskId", diskId));
@@ -53,4 +60,19 @@ NODISCARD std::unordered_set<string> FilesRemoveQueueSchema::getFilesDisk()
         disks.insert(file["diskId"].get_string().value.to_string());
     };
     return disks;
+}
+
+NODISCARD std::unordered_set<string> FilesRemoveQueueSchema::getFilesWithoutDisk()
+{
+    const MongoCXX::Document filter = makeDocument(makeField("diskId", makeDocument(makeField("$exists", false))));
+    mongocxx::options::find options;
+
+    options.projection(makeDocument(makeField("_id", false), makeField("fileId", true)));
+    mongocxx::cursor cursor = this->_model.find(filter.view(), options);
+    std::unordered_set<string> files;
+
+    for (const MongoCXX::DocumentView &file : cursor) {
+        files.insert(file["fileId"].get_string().value.to_string());
+    };
+    return files;
 }

@@ -174,6 +174,21 @@ Maestro_Santaclaus::RemoveDirectoryStatus SantaclausClient::removeDirectory(cons
     return response;
 }
 
+Maestro_Santaclaus::RemoveDirectoryStatus SantaclausClient::removeUser(const string &userId) const
+{
+    grpc::ClientContext context;
+    Maestro_Santaclaus::RemoveUserRequest request;
+    Maestro_Santaclaus::RemoveDirectoryStatus response;
+
+    request.set_userid(userId);
+    this->_callLogger(__FUNCTION__);
+    auto status = this->_stub->removeUser(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status, __FUNCTION__);
+    return response;
+}
+
 Maestro_Santaclaus::MoveDirectoryStatus SantaclausClient::moveDirectory(const string &dirId, const string &newDirId) const
 {
     // todo test

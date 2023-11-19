@@ -405,6 +405,30 @@ grpc::Status UsersBackService::
     );
 }
 
+grpc::Status UsersBackService::
+    removeUser(UNUSED grpc::ServerContext *, const UsersBack_Maestro::RemoveUserRequest *request, UNUSED UsersBack_Maestro::RemoveUserStatus *)
+{
+    return this->_procedureRunner(
+        [this, request](FilesSchemas &&filesSchemas, StatsSchemas &&) {
+            const auto &filesToRemove = this->_clients.santaclaus.removeUser(request->userid()).fileidstoremove();
+
+            this->_clients.vaultcache.removeUser(request->userid());
+            for (const string &fileId : filesToRemove)
+                filesSchemas.downloadedStack.deleteFile(fileId);
+            filesSchemas.downloadQueue.deleteUser(request->userid());
+            try {
+                this->_clients.vault.removeUser(request->userid());
+            } catch (const RequestFailureException &error) {
+                std::cerr << "[WARNING] Fail to remove user in vault, push them into removeQueue : " << error.what() << std::endl;
+                filesSchemas.removeQueue.add(filesToRemove.begin(), filesToRemove.end());
+            }
+
+            return grpc::Status::OK;
+        },
+        __FUNCTION__
+    );
+}
+
 File::FileState UsersBackService::_getDirectoryState(
     const string &userId, const string &directoryId, File::FilesIndex filesIndex, const bool &isRecursive
 )

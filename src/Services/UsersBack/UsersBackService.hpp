@@ -97,6 +97,11 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         ::UsersBack_Maestro::RenameDirectoryStatus *response
     ) override;
 
+    grpc::Status removeUser(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::RemoveUserRequest *request,
+        ::UsersBack_Maestro::RemoveUserStatus *response
+    ) override;
+
   private:
     /**
      * @brief Find files' diskId and group them like it

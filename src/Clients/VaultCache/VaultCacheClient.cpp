@@ -121,6 +121,20 @@ Maestro_Vault::RemoveFilesStatus VaultCacheClient::removeFiles(const Maestro_Vau
     return response;
 }
 
+void VaultCacheClient::removeUser(const string &userId) const
+{
+    grpc::ClientContext context;
+    Maestro_Vault::RemoveUserRequest request;
+    Maestro_Vault::RemoveUserStatus response;
+
+    request.set_userid(userId);
+    this->_callLogger(__FUNCTION__);
+    const grpc::Status status = this->_stub->removeUser(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status, __FUNCTION__);
+}
+
 Maestro_Vault::GetFileMetaInfoStatus VaultCacheClient::getFileMetaInfo(const string &fileId) const
 {
     grpc::ClientContext context;

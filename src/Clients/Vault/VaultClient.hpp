@@ -31,6 +31,7 @@ class VaultClient {
     /// Remove
     Maestro_Vault::RemoveFileStatus removeFile(const string &fileId) const;
     Maestro_Vault::RemoveFilesStatus removeFiles(const Maestro_Vault::RemoveFilesRequest &files) const;
+    void removeUser(const string &userId) const;
 
   private:
     void _callLogger(const string &functionName) const;

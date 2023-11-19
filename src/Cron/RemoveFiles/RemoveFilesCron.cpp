@@ -12,10 +12,13 @@
 RemoveFilesCron::RemoveFilesCron(GrpcClients &clients, EventsManager &events)
     : TemplateCron("RemoveFiles"), _events(events), _clients(clients)
 {
-    const std::function<void(const string &)> &callback =
+    const std::function<void(const string &)> &removeDiskFilesCallback =
         std::bind(&RemoveFilesCron::_removeDiskFiles, this, std::placeholders::_1);
+    const std::function<void(const string &)> &removeFilesWithoutDiskCallback =
+        std::bind(&RemoveFilesCron::_removeFilesWithoutDisk, this, std::placeholders::_1);
 
-    events.on<const string &>(Event::DISK_STARTUP, std::move(callback));
+    events.on<const string &>(Event::DISK_STARTUP, std::move(removeDiskFilesCallback));
+    events.on<const string &>(Event::DISK_STARTUP, std::move(removeFilesWithoutDiskCallback));
 }
 
 void RemoveFilesCron::run()
@@ -51,4 +54,29 @@ void RemoveFilesCron::_removeDiskFiles(const string &diskId)
         }
     }
     this->_clients.santaclaus.physicalRemoveFiles(fileRemoved.begin(), fileRemoved.end());
+}
+
+void RemoveFilesCron::_removeFilesWithoutDisk(UNUSED const string &diskId)
+{
+    FilesSchemas filesSchemas = MongoCXX::Mongo(this->_events).getFilesSchemas();
+    std::unordered_set<string> filesToRemove = filesSchemas.removeQueue.getFilesWithoutDisk();
+    Maestro_Vault::RemoveFilesRequest request;
+
+    for (const string &fileId : filesToRemove) {
+        request.add_fileids(fileId);
+    }
+    const Maestro_Vault::RemoveFilesStatus &removeFilesStatus = this->_clients.vault.removeFiles(request);
+    bool doesRemoveFile = true;
+
+    for (const string &fileId : filesToRemove) {
+        for (const string &fileIdFailure : removeFilesStatus.fileidfailures()) {
+            if (fileId == fileIdFailure) {
+                doesRemoveFile = false;
+                break;
+            }
+        }
+        if (doesRemoveFile) {
+            filesSchemas.removeQueue.deleteFile(fileId);
+        }
+    }
 }

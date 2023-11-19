@@ -54,6 +54,7 @@ class SantaclausClient {
     Maestro_Santaclaus::RemoveFilesStatus physicalRemoveFiles(StrIterator fileIdsBeg, const StrIterator &fileIdsEnd) const;
 
     Maestro_Santaclaus::RemoveDirectoryStatus removeDirectory(const string &dirId) const;
+    Maestro_Santaclaus::RemoveDirectoryStatus removeUser(const string &userId) const;
 
     /// Move
     Maestro_Santaclaus::MoveFileStatus moveFile(const string &fileId, const string &newDirId) const;
