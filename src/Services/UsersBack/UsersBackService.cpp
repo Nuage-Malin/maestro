@@ -319,13 +319,8 @@ grpc::Status UsersBackService::
             }
 
             // if disk is turned on
-            Maestro_Vault::RemoveFileRequest removeFileRequest;
-
-            removeFileRequest.set_diskid(file.diskid());
-            removeFileRequest.set_userid(file.file().approxmetadata().userid());
-            removeFileRequest.set_fileid(request->fileid());
             try {
-                this->_clients.vault.removeFile(removeFileRequest);
+                this->_clients.vault.removeFile(request->fileid());
 
                 this->_clients.santaclaus.physicalRemoveFile(request->fileid());
             } catch (const RequestFailureException &error) { // if deletion in vault didn't succeed

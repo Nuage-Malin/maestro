@@ -46,5 +46,8 @@ void FileUploadCron::_uploadFiles(const string &diskId)
         // do it one by one because of max size of a request being 2 gigabytes
         content_to_transfer = _clients.vaultcache.downloadFile(file.fileid());
         _clients.vault.uploadFile(file.fileid(), file.userid(), file.diskid(), content_to_transfer);
+        // remove file from the upload queue
+        // todo may cause a bug if the file is in another queue as it is being removed from vaultcache entirely here
+        _clients.vaultcache.removeFile(file.fileid());
     }
 }

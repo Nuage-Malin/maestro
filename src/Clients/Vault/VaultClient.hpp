@@ -29,7 +29,7 @@ class VaultClient {
     Maestro_Vault::DownloadFilesStatus downloadFiles(const Maestro_Vault::DownloadFilesRequest &files) const;
 
     /// Remove
-    Maestro_Vault::RemoveFileStatus removeFile(const Maestro_Vault::RemoveFileRequest &file) const;
+    Maestro_Vault::RemoveFileStatus removeFile(const string &fileId) const;
     Maestro_Vault::RemoveFilesStatus removeFiles(const Maestro_Vault::RemoveFilesRequest &files) const;
 
   private:

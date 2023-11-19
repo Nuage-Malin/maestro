@@ -35,7 +35,7 @@ class VaultCacheClient {
     NODISCARD Maestro_Vault::DownloadFilesStatus downloadStorageTypeFiles(const Maestro_Vault::storage_type &store_type) const;
 
     /// Remove
-    Maestro_Vault::RemoveFileStatus removeFile(const Maestro_Vault::RemoveFileRequest &file) const;
+    Maestro_Vault::RemoveFileStatus removeFile(const string &fileId) const;
     Maestro_Vault::RemoveFilesStatus removeFiles(const Maestro_Vault::RemoveFilesRequest &files) const;
 
     /// Get

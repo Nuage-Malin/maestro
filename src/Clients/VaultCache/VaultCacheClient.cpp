@@ -93,13 +93,15 @@ Maestro_Vault::DownloadFilesStatus VaultCacheClient::downloadStorageTypeFiles(co
     return response;
 }
 
-Maestro_Vault::RemoveFileStatus VaultCacheClient::removeFile(const Maestro_Vault::RemoveFileRequest &file) const
+Maestro_Vault::RemoveFileStatus VaultCacheClient::removeFile(const string &fileId) const
 {
     grpc::ClientContext context;
     Maestro_Vault::RemoveFileStatus response;
+    Maestro_Vault::RemoveFileRequest request;
 
+    request.set_fileid(fileId);
     this->_callLogger(__FUNCTION__);
-    const grpc::Status status = this->_stub->removeFile(&context, file, &response);
+    const grpc::Status status = this->_stub->removeFile(&context, request, &response);
 
     if (!status.ok())
         throw RequestFailureException(status, __FUNCTION__);
