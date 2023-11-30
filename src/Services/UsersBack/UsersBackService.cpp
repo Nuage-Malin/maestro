@@ -312,10 +312,13 @@ grpc::Status UsersBackService::
                     return grpc::Status::OK;
                 }
             } catch (const RequestFailureException &error) {
-                std::cerr << "[WARNING] Fail to get disk status, add the file to the remove queue DB : " << error.what()
+                std::cerr << "[WARNING] Fail to get disk status, try to remove file from vault cache : " << error.what()
                           << std::endl;
                 try {
                     this->_clients.vaultcache.removeFile(request->fileid());
+                } catch (const RequestFailureException &error) {
+                    std::cerr << "[WARNING] Fail to remove file in vault cache, add the file to the remove queue DB : "
+                              << error.what() << std::endl;
                 }
                 this->_fileRemoveFailure(filesSchemas, file.diskid(), request->fileid());
                 return grpc::Status::OK;
