@@ -305,6 +305,11 @@ grpc::Status UsersBackService::
 
             this->_clients.santaclaus.virtualRemoveFile(request->fileid());
             try {
+                this->_clients.vaultcache.removeFile(request->fileid());
+            } catch (const RequestFailureException &error) {
+                std::cerr << "[WARNING] Fail to remove file into vault cache : " << error.what() << std::endl;
+            }
+            try {
                 if (!this->_clients.bugle.diskStatus(file.diskid())) { // check if disk is turned off
                     std::cout << "[INFO] Disk " << file.diskid() << " is turned off, add the file to the remove queue DB"
                               << std::endl;
@@ -314,12 +319,6 @@ grpc::Status UsersBackService::
             } catch (const RequestFailureException &error) {
                 std::cerr << "[WARNING] Fail to get disk status, try to remove file from vault cache : " << error.what()
                           << std::endl;
-                try {
-                    this->_clients.vaultcache.removeFile(request->fileid());
-                } catch (const RequestFailureException &error) {
-                    std::cerr << "[WARNING] Fail to remove file in vault cache, add the file to the remove queue DB : "
-                              << error.what() << std::endl;
-                }
                 this->_fileRemoveFailure(filesSchemas, file.diskid(), request->fileid());
                 return grpc::Status::OK;
             }
