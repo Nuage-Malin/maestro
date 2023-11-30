@@ -117,18 +117,20 @@ grpc::Status UsersBackService::askFileDownload(
             const Date &expirationDate = Date() + expirationLimit;
 
             // Check if file is in UploadQueue (in vaultCache)
-            Maestro_Vault::GetFileMetaInfoStatus fileMetaInfo = _clients.vaultcache.getFileMetaInfo(request->fileid());
+            try {
+                Maestro_Vault::GetFileMetaInfoStatus fileMetaInfo = this->_clients.vaultcache.getFileMetaInfo(request->fileid());
 
-            for (auto store_type : fileMetaInfo.file().store_types()) {
-                // Array of storage_types, check within it if is uploadQueue
-                if (store_type == Maestro_Vault::storage_type::UPLOAD_QUEUE) {
-                    auto file = _clients.vaultcache.downloadFile(request->fileid());
+                for (auto store_type : fileMetaInfo.file().store_types()) {
+                    // Array of storage_types, check within it if is uploadQueue
+                    if (store_type == Maestro_Vault::storage_type::UPLOAD_QUEUE) {
+                        auto file = _clients.vaultcache.downloadFile(request->fileid());
 
-                    filesSchemas.downloadedStack.add(request->fileid(), expirationDate);
-                    response->set_allocated_waitingtime(new google::protobuf::Duration());
-                    return grpc::Status::OK;
+                        filesSchemas.downloadedStack.add(request->fileid(), expirationDate);
+                        response->set_allocated_waitingtime(new google::protobuf::Duration());
+                        return grpc::Status::OK;
+                    }
                 }
-            }
+            } catch (const RequestFailureException &error) {}
 
             // If file is not in uploadQueue :
             const Maestro_Santaclaus::GetFileStatus file = this->_clients.santaclaus.getFile(request->fileid());
