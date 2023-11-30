@@ -314,6 +314,9 @@ grpc::Status UsersBackService::
             } catch (const RequestFailureException &error) {
                 std::cerr << "[WARNING] Fail to get disk status, add the file to the remove queue DB : " << error.what()
                           << std::endl;
+                try {
+                    this->_clients.vaultcache.removeFile(request->fileid());
+                }
                 this->_fileRemoveFailure(filesSchemas, file.diskid(), request->fileid());
                 return grpc::Status::OK;
             }
