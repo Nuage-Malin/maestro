@@ -188,14 +188,25 @@ grpc::Status UsersBackService::fileDownload(
     return this->_procedureRunner(
         [this, request, response](FilesSchemas &&, StatsSchemas &&) {
             File::FileMetadata metadata = this->_clients.santaclaus.getFile(request->fileid()).file();
+            string file;
+
+            try {
+                // Call vaultcache and get content of file
+                file = this->_clients.vaultcache.downloadFile(request->fileid());
+            } catch (const RequestFailureException &error) {
+                if (this->_clients.bugle.diskStatus(metadata.diskid())) {
+                    // If the disk is online, download the file from vault
+                    file = this->_clients.vault.downloadFile(request->fileid());
+                } else {
+                    // If the disk is offline, throw the error
+                    std::cerr << "[WARNING] File not found in vault cache and the file disk is offline : " << error.what()
+                              << std::endl;
+                    throw error;
+                }
+            }
 
             metadata.set_state(File::FileState::DOWNLOADABLE);
-
-            /// Call vaultcache and get content of file
-            auto file = this->_clients.vaultcache.downloadFile(request->fileid());
-
             response->set_content(file);
-            _clients.vaultcache.downloadFile(request->fileid());
             response->set_allocated_metadata(new File::FileMetadata(metadata));
 
             return grpc::Status::OK;
