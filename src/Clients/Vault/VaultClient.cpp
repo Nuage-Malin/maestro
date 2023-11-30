@@ -117,5 +117,5 @@ void VaultClient::removeUser(const string &userId) const
 
 void VaultClient::_callLogger(const string &functionName) const
 {
-    std::cout << "[CLIENT] " << functionName << std::endl;
+    std::cout << "[CLIENT] vault - " << functionName << std::endl;
 }

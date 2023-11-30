@@ -190,5 +190,5 @@ Maestro_Vault::GetFilesDisksStatus VaultCacheClient::getFilesDisks(const Maestro
 
 void VaultCacheClient::_callLogger(const string &functionName) const
 {
-    std::cout << "[CLIENT] " << functionName << std::endl;
+    std::cout << "[CLIENT] vault-cache - " << functionName << std::endl;
 }

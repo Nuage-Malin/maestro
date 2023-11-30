@@ -225,5 +225,5 @@ Maestro_Santaclaus::RenameDirectoryStatus SantaclausClient::renameDirectory(cons
 
 void SantaclausClient::_callLogger(const string &functionName) const
 {
-    std::cout << "[CLIENT] " << functionName << std::endl;
+    std::cout << "[CLIENT] santaclaus - " << functionName << std::endl;
 }
