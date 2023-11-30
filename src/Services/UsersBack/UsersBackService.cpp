@@ -187,14 +187,15 @@ grpc::Status UsersBackService::fileDownload(
 {
     return this->_procedureRunner(
         [this, request, response](FilesSchemas &&, StatsSchemas &&) {
-            File::FileMetadata metadata = this->_clients.santaclaus.getFile(request->fileid()).file();
+            Maestro_Santaclaus::GetFileStatus fileStatus = this->_clients.santaclaus.getFile(request->fileid());
+            File::FileMetadata metadata = fileStatus.file();
             string file;
 
             try {
                 // Call vaultcache and get content of file
                 file = this->_clients.vaultcache.downloadFile(request->fileid());
             } catch (const RequestFailureException &error) {
-                if (this->_clients.bugle.diskStatus(metadata.diskid())) {
+                if (this->_clients.bugle.diskStatus(fileStatus.diskid())) {
                     // If the disk is online, download the file from vault
                     file = this->_clients.vault.downloadFile(request->fileid());
                 } else {
