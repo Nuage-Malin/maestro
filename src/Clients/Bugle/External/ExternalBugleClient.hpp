@@ -27,7 +27,7 @@ class ExternalBugleClient {
     void _callLogger(const string &functionName) const;
 
   private:
-    std::unique_ptr<Santaclaus_HardwareMalin::Maestro_HardwareMalin_Service::Stub> _santaclausStub;
+    std::unique_ptr<Santaclaus_HardwareMalin::Santaclaus_HardwareMalin_Service::Stub> _santaclausStub;
 };
 
 #endif

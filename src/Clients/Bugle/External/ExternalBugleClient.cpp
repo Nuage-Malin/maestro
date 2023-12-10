@@ -8,7 +8,7 @@
 #include "ExternalBugleClient.hpp"
 
 ExternalBugleClient::ExternalBugleClient(const std::shared_ptr<grpc::ChannelInterface> &channel)
-    : _santaclausStub(Santaclaus_HardwareMalin::Maestro_HardwareMalin_Service::NewStub(channel)) {}
+    : _santaclausStub(Santaclaus_HardwareMalin::Santaclaus_HardwareMalin_Service::NewStub(channel)) {}
 
 Santaclaus_HardwareMalin::GetDisksStatus ExternalBugleClient::getDisks() const {
     Santaclaus_HardwareMalin::GetDisksStatus request;
