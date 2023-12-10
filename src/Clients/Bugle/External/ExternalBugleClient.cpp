@@ -6,12 +6,13 @@
  */
 
 #include "ExternalBugleClient.hpp"
+#include "Exceptions/RequestFailure/RequestFailureException.hpp"
 
 ExternalBugleClient::ExternalBugleClient(const std::shared_ptr<grpc::ChannelInterface> &channel)
     : _santaclausStub(Santaclaus_HardwareMalin::Santaclaus_HardwareMalin_Service::NewStub(channel)) {}
 
 Santaclaus_HardwareMalin::GetDisksStatus ExternalBugleClient::getDisks() const {
-    Santaclaus_HardwareMalin::GetDisksStatus request;
+    Santaclaus_HardwareMalin::GetDisksRequest request;
     Santaclaus_HardwareMalin::GetDisksStatus response;
     grpc::ClientContext context;
 

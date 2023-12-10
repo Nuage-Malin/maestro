@@ -111,10 +111,10 @@ grpc::Status UsersBackService::getDisksStatus(
 
             for (const Disk::Disk &disk : disks.disks()) {
                 const bool &status = this->_clients.bugle.diskStatus(disk.id());
-                Disk::Disk &diskStatus = response->add_disks();
+                Disk::DiskStatus *diskStatus = response->add_disks();
 
-                diskStatus.set_id(disk.id());
-                diskStatus.set_status(status);
+                diskStatus->set_id(disk.id());
+                diskStatus->set_status(status);
             }
 
             return grpc::Status::OK;
