@@ -100,6 +100,29 @@ grpc::Status UsersBackService::getUserDiskSpace(
     );
 }
 
+grpc::Status UsersBackService::getDisksStatus(
+    UNUSED grpc::ServerContext *context, const UsersBack_Maestro::GetDisksStatusRequest *request,
+    UsersBack_Maestro::GetDisksStatusStatus *response
+)
+{
+    return this->_procedureRunner(
+        [this, request, response](FilesSchemas &&, StatsSchemas &&) {
+            const Santaclaus_HardwareMalin::GetDisksStatus &disks = this->_clients.externalBugle.getDisks();
+
+            for (const Disk::Disk &disk : disks.disks()) {
+                const bool &status = this->_clients.bugle.diskStatus(disk.id());
+                Disk::Disk &diskStatus = response->add_disks();
+
+                diskStatus.set_id(disk.id());
+                diskStatus.set_status(status);
+            }
+
+            return grpc::Status::OK;
+        },
+        __FUNCTION__
+    );
+}
+
 grpc::Status UsersBackService::askFileDownload(
     UNUSED grpc::ServerContext *context, const UsersBack_Maestro::AskFileDownloadRequest *request,
     UsersBack_Maestro::AskFileDownloadStatus *response

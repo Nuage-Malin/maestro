@@ -45,6 +45,8 @@ void RunServer()
     GrpcClients clients = {
         .santaclaus = SantaclausClient(grpc::CreateChannel(getEnv("MAESTRO_SANTACLAUS_URI"), grpc::InsecureChannelCredentials())),
         .bugle = BugleClient(grpc::CreateChannel(getEnv("MAESTRO_BUGLE_URI"), grpc::InsecureChannelCredentials()), events),
+        .externalBugle =
+            ExternalBugleClient(grpc::CreateChannel(getEnv("MAESTRO_BUGLE_URI"), grpc::InsecureChannelCredentials())),
         .vault =
             VaultClient(grpc::CreateCustomChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials(), channelArgs)),
         .vaultcache =

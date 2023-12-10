@@ -60,6 +60,7 @@ set(SRCS
     ${SRC_DIR}/Services/Chouf/ChoufService.cpp
     ${SRC_DIR}/Clients/Santaclaus/SantaclausClient.cpp
     ${SRC_DIR}/Clients/Bugle/BugleClient.cpp
+    ${SRC_DIR}/Clients/Bugle/External/ExternalBugleClient.cpp
     ${SRC_DIR}/Clients/Vault/VaultClient.cpp
     ${SRC_DIR}/Clients/VaultCache/VaultCacheClient.cpp)
 
