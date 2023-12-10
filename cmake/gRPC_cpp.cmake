@@ -22,6 +22,7 @@ if (NOT DEFINED GRPC_CPP_BUILD_ONCE)
 
     # Protobuf inpout file
     set(my_protos "${my_protos_path_src}/common/File.proto"
+        "${my_protos_path_src}/common/Disk.proto"
         "${my_protos_path_src}/common/Cron.proto"
         "${my_protos_path_src}/UsersBack_Maestro/UsersBack_Maestro.proto"
         "${my_protos_path_src}/Maestro_Santaclaus/Maestro_Santaclaus.proto"
@@ -33,6 +34,7 @@ if (NOT DEFINED GRPC_CPP_BUILD_ONCE)
 
     # Generated sources
     set(my_protos_srcs "${my_generated_path}/common/File.pb.cc"
+        "${my_generated_path}/common/Disk.pb.cc"
         "${my_generated_path}/common/Cron.pb.cc"
         "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.pb.cc"
         "${my_generated_path}/Maestro_Santaclaus/Maestro_Santaclaus.pb.cc"
@@ -42,6 +44,7 @@ if (NOT DEFINED GRPC_CPP_BUILD_ONCE)
         "${my_generated_path}/Santaclaus_HardwareMalin/Santaclaus_HardwareMalin.pb.cc")
 
     set(my_protos_hdrs "${my_generated_path}/common/File.pb.h"
+        "${my_generated_path}/common/Disk.pb.h"
         "${my_generated_path}/common/Cron.pb.h"
         "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.pb.h"
         "${my_generated_path}/Maestro_Santaclaus/Maestro_Santaclaus.pb.h"
@@ -51,6 +54,7 @@ if (NOT DEFINED GRPC_CPP_BUILD_ONCE)
         "${my_generated_path}/Santaclaus_HardwareMalin/Santaclaus_HardwareMalin.pb.h")
 
     set(my_grpc_srcs "${my_generated_path}/common/File.grpc.pb.cc"
+        "${my_generated_path}/common/Disk.grpc.pb.cc"
         "${my_generated_path}/common/Cron.grpc.pb.cc"
         "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.grpc.pb.cc"
         "${my_generated_path}/Maestro_Santaclaus/Maestro_Santaclaus.grpc.pb.cc"
@@ -60,6 +64,7 @@ if (NOT DEFINED GRPC_CPP_BUILD_ONCE)
         "${my_generated_path}/Santaclaus_HardwareMalin/Santaclaus_HardwareMalin.grpc.pb.cc")
 
     set(my_grpc_hdrs "${my_generated_path}/common/File.grpc.pb.h"
+        "${my_generated_path}/common/Disk.grpc.pb.h"
         "${my_generated_path}/common/Cron.grpc.pb.h"
         "${my_generated_path}/UsersBack_Maestro/UsersBack_Maestro.grpc.pb.h"
         "${my_generated_path}/Maestro_Santaclaus/Maestro_Santaclaus.grpc.pb.h"
