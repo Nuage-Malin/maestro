@@ -170,6 +170,13 @@ grpc::Status UsersBackService::askFileDownload(
                         // If the disk is online, download the file from the filesystem and upload it to the database
                         const string fileContent = this->_clients.vault.downloadFile(request->fileid());
 
+                        this->_clients.vaultcache.uploadFile(
+                            request->fileid(),
+                            file.file().approxmetadata().userid(),
+                            file.diskid(),
+                            fileContent,
+                            Maestro_Vault::storage_type::DOWNLOAD_QUEUE
+                        );
                         filesSchemas.downloadedStack.add(request->fileid(), expirationDate);
                         response->set_allocated_waitingtime(new google::protobuf::Duration()); // TODO: Edit waiting time
                     } else {
