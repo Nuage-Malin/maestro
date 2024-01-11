@@ -106,11 +106,9 @@ Maestro_Vault::RemoveFileStatus VaultCacheClient::removeFile(const string &fileI
     if (!status.ok())
         throw RequestFailureException(status, __FUNCTION__);
 
-    std::cout << "BEFORE emit REMOVE_VAULT_CACHE_FILE" << std::endl;
     this->_events.emit<const string &>(
         Event::REMOVE_VAULT_CACHE_FILE, fileId
     );
-    std::cout << "AFTER emit REMOVE_VAULT_CACHE_FILE" << std::endl;
     return response;
 }
 

@@ -27,13 +27,9 @@ void FilesDownloadedStackSchema::add(const string &fileId, const Date &expiratio
 
 void FilesDownloadedStackSchema::deleteFile(const string &fileId)
 {
-    std::cout << "OK 1" << std::endl;
-    std::cout << "fileId: " << fileId << std::endl;
     const MongoCXX::Document &filter = makeDocument(makeField("fileId", fileId));
 
-    std::cout << "OK 2" << std::endl;
     this->_model.delete_one(filter.view());
-    std::cout << "OK 3" << std::endl;
 }
 
 NODISCARD std::vector<DownloadedStack> FilesDownloadedStackSchema::getExpiredFiles(const Date &expirationDate)
