@@ -31,9 +31,13 @@ void FilesDownloadedStackSchema::add(const string &fileId, const Date &expiratio
 
 void FilesDownloadedStackSchema::deleteFile(const string &fileId)
 {
+    std::cout << "OK 1" << std::endl;
+    std::cout << "fileId: " << fileId << std::endl;
     const bsoncxx::document::value filter = makeDocument(makeField("fileId", fileId));
 
+    std::cout << "OK 2" << std::endl;
     this->_model.delete_one(filter.view());
+    std::cout << "OK 3" << std::endl;
 }
 
 NODISCARD std::vector<DownloadedStack> FilesDownloadedStackSchema::getExpiredFiles(const Date &expirationDate)
@@ -65,5 +69,8 @@ NODISCARD bool FilesDownloadedStackSchema::doesFileExist(const string &fileId)
 
 void FilesDownloadedStackSchema::_onFileExpiration(const string &fileId)
 {
+    std::cout << "BEFORE deleteFile" << std::endl;
+    std::cout << "fileId: " << fileId << std::endl;
     this->deleteFile(fileId);
+    std::cout << "AFTER deleteFile" << std::endl;
 }
