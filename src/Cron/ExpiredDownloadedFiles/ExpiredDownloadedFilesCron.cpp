@@ -30,7 +30,7 @@ void ExpiredDownloadedFilesCron::_removeExpiredDownloadedFiles()
         MongoCXX::Mongo(this->_events).getFilesSchemas().downloadedStack.getExpiredFiles();
 
     if (filesToRemove.begin() == filesToRemove.end())
-        throw std::logic_error("Calling remove expired files with no files to remove, in function " + STR_FUNCTION);
+        return;
     Maestro_Vault::RemoveFilesRequest request{};
 
     for (const DownloadedStack &file : filesToRemove)
