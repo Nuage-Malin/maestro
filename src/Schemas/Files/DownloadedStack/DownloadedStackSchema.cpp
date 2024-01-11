@@ -12,13 +12,9 @@
 #include "DownloadedStackSchema.hpp"
 #include "Exceptions/NotFound/NotFoundException.hpp"
 
-FilesDownloadedStackSchema::FilesDownloadedStackSchema(const mongocxx::database &database, EventsManager &events)
+FilesDownloadedStackSchema::FilesDownloadedStackSchema(const mongocxx::database &database)
     : TemplateSchema(database, "downloadedStack")
 {
-    const std::function<void(const string &)> &callback =
-        std::bind(&FilesDownloadedStackSchema::_onFileExpiration, this, std::placeholders::_1);
-
-    events.on<const string &>(Event::REMOVE_VAULT_CACHE_FILE, std::move(callback));
 }
 
 void FilesDownloadedStackSchema::add(const string &fileId, const Date &expirationDate)
@@ -33,7 +29,7 @@ void FilesDownloadedStackSchema::deleteFile(const string &fileId)
 {
     std::cout << "OK 1" << std::endl;
     std::cout << "fileId: " << fileId << std::endl;
-    MongoCXX::Document filter = makeDocument(makeField("fileId", fileId));
+    const MongoCXX::Document &filter = makeDocument(makeField("fileId", fileId));
 
     std::cout << "OK 2" << std::endl;
     this->_model.delete_one(filter.view());
@@ -65,12 +61,4 @@ NODISCARD bool FilesDownloadedStackSchema::doesFileExist(const string &fileId)
     mongocxx::cursor cursor = this->_model.find(filter.view(), options);
 
     return cursor.begin() != cursor.end();
-}
-
-void FilesDownloadedStackSchema::_onFileExpiration(const string &fileId)
-{
-    std::cout << "BEFORE deleteFile" << std::endl;
-    std::cout << "fileId: " << fileId << std::endl;
-    this->deleteFile(fileId);
-    std::cout << "AFTER deleteFile" << std::endl;
 }

@@ -27,16 +27,13 @@ struct DownloadedStack
 
 class FilesDownloadedStackSchema : public TemplateSchema {
   public:
-    FilesDownloadedStackSchema(const mongocxx::database &database, EventsManager &events);
+    FilesDownloadedStackSchema(const mongocxx::database &database);
     ~FilesDownloadedStackSchema() = default;
 
     void add(const string &fileId, const Date &expirationDate);
     void deleteFile(const string &fileId);
     NODISCARD std::vector<DownloadedStack> getExpiredFiles(const Date &expirationDate = Date());
     NODISCARD bool doesFileExist(const string &fileId);
-
-  private:
-    void _onFileExpiration(const string &fileId);
 };
 
 #endif

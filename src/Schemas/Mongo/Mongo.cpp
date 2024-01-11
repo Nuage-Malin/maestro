@@ -29,7 +29,7 @@ FilesSchemas MongoCXX::Mongo::getFilesSchemas() const
     const mongocxx::database filesDatabase = this->_client[fileDb];
 
     return {
-        .downloadedStack = FilesDownloadedStackSchema(filesDatabase, this->_events),
+        .downloadedStack = FilesDownloadedStackSchema(filesDatabase),
         .downloadQueue = FilesDownloadQueueSchema(filesDatabase),
         .removeQueue = FilesRemoveQueueSchema(filesDatabase)};
 }

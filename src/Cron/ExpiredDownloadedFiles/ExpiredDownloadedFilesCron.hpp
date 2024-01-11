@@ -26,7 +26,8 @@ class ExpiredDownloadedFilesCron : public TemplateCron {
     //    template <typename StrIterator>
     //        requires std::input_iterator<StrIterator>
     //        && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string> // todo replace with macro
-    void removeExpiredDownloadedFiles();
+    void _removeExpiredDownloadedFiles();
+    void _onFileRemoved(const string &fileId);
 
     GrpcClients &_clients;
     EventsManager &_events;

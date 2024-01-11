@@ -12,14 +12,19 @@
 ExpiredDownloadedFilesCron::ExpiredDownloadedFilesCron(GrpcClients &grpcClient, EventsManager &events)
     : TemplateCron("ExpiredDownloadedFiles"), _clients(grpcClient), _events(events)
 {
+    MongoCXX::Mongo mongo(this->_events);
+    const std::function<void(const string &)> &callback =
+        std::bind(&ExpiredDownloadedFilesCron::_onFileRemoved, this, std::placeholders::_1);
+
+    events.on<const string &>(Event::REMOVE_VAULT_CACHE_FILE, std::move(callback));
 }
 
 void ExpiredDownloadedFilesCron::run()
 {
-    this->removeExpiredDownloadedFiles();
+    this->_removeExpiredDownloadedFiles();
 }
 
-void ExpiredDownloadedFilesCron::removeExpiredDownloadedFiles()
+void ExpiredDownloadedFilesCron::_removeExpiredDownloadedFiles()
 {
     std::vector<DownloadedStack> filesToRemove =
         MongoCXX::Mongo(this->_events).getFilesSchemas().downloadedStack.getExpiredFiles();
@@ -31,4 +36,11 @@ void ExpiredDownloadedFilesCron::removeExpiredDownloadedFiles()
     for (const DownloadedStack &file : filesToRemove)
         request.add_fileids(file.fileId);
     this->_clients.vaultcache.removeFiles(request);
+}
+
+void ExpiredDownloadedFilesCron::_onFileRemoved(const string &fileId)
+{
+    FilesSchemas &filesSchemas = MongoCXX::Mongo(this->_events).getFilesSchemas();
+
+    filesSchemas.downloadedStack.deleteFile(fileId);
 }
