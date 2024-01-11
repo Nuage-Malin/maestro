@@ -33,7 +33,7 @@ void FilesDownloadedStackSchema::deleteFile(const string &fileId)
 {
     std::cout << "OK 1" << std::endl;
     std::cout << "fileId: " << fileId << std::endl;
-    const bsoncxx::document::value filter = makeDocument(makeField("fileId", fileId));
+    MongoCXX::Document filter = makeDocument(makeField("fileId", fileId));
 
     std::cout << "OK 2" << std::endl;
     this->_model.delete_one(filter.view());
