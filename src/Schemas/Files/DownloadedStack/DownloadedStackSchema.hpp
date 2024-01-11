@@ -36,7 +36,7 @@ class FilesDownloadedStackSchema : public TemplateSchema {
     NODISCARD bool doesFileExist(const string &fileId);
 
   private:
-    void _onFileExpiration(const string &fileId, const Date &expirationDate);
+    void _onFileExpiration(const string &fileId);
 };
 
 #endif

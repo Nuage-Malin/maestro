@@ -15,10 +15,10 @@
 FilesDownloadedStackSchema::FilesDownloadedStackSchema(const mongocxx::database &database, EventsManager &events)
     : TemplateSchema(database, "downloadedStack")
 {
-    const std::function<void(const string &, const Date &)> &callback =
-        std::bind(&FilesDownloadedStackSchema::_onFileExpiration, this, std::placeholders::_1, std::placeholders::_2);
+    const std::function<void(const string &)> &callback =
+        std::bind(&FilesDownloadedStackSchema::_onFileExpiration, this, std::placeholders::_1);
 
-    events.on<const string &, const Date &>(Event::DOWNLOADEDSTACK_FILE_EXPIRATION, std::move(callback));
+    events.on<const string &>(Event::REMOVE_VAULT_CACHE_FILE, std::move(callback));
 }
 
 void FilesDownloadedStackSchema::add(const string &fileId, const Date &expirationDate)
@@ -63,7 +63,7 @@ NODISCARD bool FilesDownloadedStackSchema::doesFileExist(const string &fileId)
     return cursor.begin() != cursor.end();
 }
 
-void FilesDownloadedStackSchema::_onFileExpiration(const string &fileId, UNUSED const Date &expirationDate)
+void FilesDownloadedStackSchema::_onFileExpiration(const string &fileId)
 {
     this->deleteFile(fileId);
 }

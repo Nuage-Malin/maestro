@@ -30,19 +30,5 @@ void ExpiredDownloadedFilesCron::removeExpiredDownloadedFiles()
 
     for (const DownloadedStack &file : filesToRemove)
         request.add_fileids(file.fileId);
-    Maestro_Vault::RemoveFilesStatus response = this->_clients.vaultcache.removeFiles(request);
-
-    for (const DownloadedStack &file : filesToRemove) {
-        try {
-            for (const string &failureFileId : response.fileidfailures())
-                if (file.fileId == failureFileId)
-                    throw std::runtime_error(STR_FUNCTION + ": [Failed to remove file " + file.fileId + " from vaultcache]");
-
-            this->_events.emit<const string &, const Date &>(
-                Event::DOWNLOADEDSTACK_FILE_EXPIRATION, file.fileId, file.expirationDate
-            );
-        } catch (const std::runtime_error &error) {
-            std::cerr << error.what() << std::endl;
-        }
-    }
+    this->_clients.vaultcache.removeFiles(request);
 }
