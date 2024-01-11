@@ -40,7 +40,5 @@ void ExpiredDownloadedFilesCron::_removeExpiredDownloadedFiles()
 
 void ExpiredDownloadedFilesCron::_onFileRemoved(const string &fileId)
 {
-    FilesSchemas &filesSchemas = MongoCXX::Mongo(this->_events).getFilesSchemas();
-
-    filesSchemas.downloadedStack.deleteFile(fileId);
+    MongoCXX::Mongo(this->_events).getFilesSchemas().downloadedStack.deleteFile(fileId);
 }
