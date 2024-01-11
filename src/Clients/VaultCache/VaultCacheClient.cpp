@@ -12,8 +12,8 @@
 
 #include "Exceptions/RequestFailure/RequestFailureException.hpp"
 
-VaultCacheClient::VaultCacheClient(const std::shared_ptr<grpc::ChannelInterface> &channel)
-    : _stub(Maestro_Vault::Maestro_Vault_Service::NewStub(channel))
+VaultCacheClient::VaultCacheClient(const std::shared_ptr<grpc::ChannelInterface> &channel, const EventsManager &events)
+    : _stub(Maestro_Vault::Maestro_Vault_Service::NewStub(channel)), _events(events)
 {
     if (!this->_stub)
         throw std::runtime_error(STR_FUNCTION + " could not create gRPC stub");
@@ -107,7 +107,7 @@ Maestro_Vault::RemoveFileStatus VaultCacheClient::removeFile(const string &fileI
         throw RequestFailureException(status, __FUNCTION__);
 
     this->_events.emit<const string &>(
-        Event::REMOVE_VAULT_CACHE_FILE, file.fileId
+        Event::REMOVE_VAULT_CACHE_FILE, fileId
     );
     return response;
 }
@@ -123,14 +123,14 @@ Maestro_Vault::RemoveFilesStatus VaultCacheClient::removeFiles(const Maestro_Vau
     if (!status.ok())
         throw RequestFailureException(status, __FUNCTION__);
 
-    for (const DownloadedStack &file : files.fileids()) {
+    for (const string &fileId : files.fileids()) {
         try {
             for (const string &failureFileId : response.fileidfailures())
-                if (file.fileId == failureFileId)
-                    throw std::runtime_error(STR_FUNCTION + ": [Failed to remove file " + file.fileId + " from vaultcache]");
+                if (fileId == failureFileId)
+                    throw std::runtime_error(STR_FUNCTION + ": [Failed to remove file " + fileId + " from vaultcache]");
 
             this->_events.emit<const string &>(
-                Event::REMOVE_VAULT_CACHE_FILE, file.fileId
+                Event::REMOVE_VAULT_CACHE_FILE, fileId
             );
         } catch (const std::runtime_error &error) {
             std::cerr << error.what() << std::endl;

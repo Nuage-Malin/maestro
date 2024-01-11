@@ -16,10 +16,11 @@
 #include "Maestro_Vault/Maestro_Vault.grpc.pb.h"
 
 #include "utils.hpp"
+#include "EventsManager.hpp"
 
 class VaultCacheClient {
   public:
-    VaultCacheClient(const std::shared_ptr<grpc::ChannelInterface> &channel);
+    VaultCacheClient(const std::shared_ptr<grpc::ChannelInterface> &channel, const EventsManager &events);
     ~VaultCacheClient() = default;
 
     void uploadFile(
@@ -52,6 +53,7 @@ class VaultCacheClient {
 
   private:
     std::unique_ptr<Maestro_Vault::Maestro_Vault_Service::Stub> _stub;
+    const EventsManager &_events;
 };
 
 #endif // MAESTRO_VAULTCACHE_CLIENT_HPP

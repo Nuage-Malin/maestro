@@ -29,33 +29,32 @@ void DownloadFilesCron::run()
 void DownloadFilesCron::_downloadDiskFiles(const string &diskId)
 {
     FilesSchemas filesSchemas = MongoCXX::Mongo(this->_events).getFilesSchemas();
-    const std::vector<std::pair<string, string>> &requestedFiles = filesSchemas.downloadQueue.getDiskFiles(diskId);
+    std::vector<std::pair<string, string>> requestedFiles = filesSchemas.downloadQueue.getDiskFiles(diskId);
     Maestro_Vault::DownloadFilesRequest vaultDownloadRequest;
 
-    for (const auto &file : requestedFiles) {
-        Maestro_Vault::DownloadFileRequest &downloadFileRequest = vaultDownloadRequest.add_files();
+    for (const std::pair<string, string> &file : requestedFiles) {
+        Maestro_Vault::DownloadFileRequest *downloadFileRequest = vaultDownloadRequest.add_files();
 
-        downloadFileRequest.set_fileid(file.first);
-        downloadFileRequest.set_userid(file.second);
+        downloadFileRequest->set_fileid(file.first);
     }
 
     const Maestro_Vault::DownloadFilesStatus &files = this->_clients.vault.downloadFiles(vaultDownloadRequest);
     Maestro_Vault::UploadFilesRequest vaultCacheUploadRequest;
 
     for (const auto &file : requestedFiles) {
-        Maestro_Vault::UploadFileRequest &uploadFileRequest = vaultCacheUploadRequest.add_files();
+        Maestro_Vault::UploadFileRequest *uploadFileRequest = vaultCacheUploadRequest.add_files();
 
-        uploadFileRequest.set_fileid(file.first);
-        uploadFileRequest.set_userid(file.second);
-        uploadFileRequest.set_diskid(diskId);
+        uploadFileRequest->set_fileid(file.first);
+        uploadFileRequest->set_userid(file.second);
+        uploadFileRequest->set_diskid(diskId);
         for (const auto &vaultFile : files.files())
             if (vaultFile.fileid() == file.first) {
-                uploadFileRequest.set_content(vaultFile.content());
+                uploadFileRequest->set_content(vaultFile.content());
                 break;
             }
-        uploadFileRequest.set_store_type(Maestro_Vault::storage_type::DOWNLOAD_QUEUE);
+        uploadFileRequest->set_store_type(Maestro_Vault::storage_type::DOWNLOAD_QUEUE);
 
-        filesSchemas.downloadedStack.add(file.fileid(), Date() + std::chrono::days(1));
+        filesSchemas.downloadedStack.add(file.first, Date() + std::chrono::days(1));
     }
 
     filesSchemas.downloadQueue.deleteDiskFiles(diskId);

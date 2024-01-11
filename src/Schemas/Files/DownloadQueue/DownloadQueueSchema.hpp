@@ -24,7 +24,7 @@ class FilesDownloadQueueSchema : public TemplateSchema {
     void deleteFile(const string &fileId);
     void deleteUser(const string &userId);
     Date getRequestedDate(const string &fileId, const string &diskId);
-    NODISCARD Maestro_Vault::DownloadFilesRequest getDiskFiles(const string &diskId);
+    NODISCARD std::vector<std::pair<string, string>> getDiskFiles(const string &diskId);
     NODISCARD std::unordered_set<string> getFilesDisk();
     NODISCARD bool doesFileExist(const string &fileId);
 };
