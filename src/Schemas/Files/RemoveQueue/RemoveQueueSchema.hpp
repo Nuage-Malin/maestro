@@ -60,7 +60,7 @@ class FilesRemoveQueueSchema : public TemplateSchema {
      * @param diskId Disk ID of files to get
      * @return Maestro-Vault gRPC request for removing all files with the diskID
      */
-    NODISCARD Maestro_Vault::RemoveFilesRequest getDiskFiles(const string &diskId);
+    NODISCARD std::vector<std::pair<string, string>> getDiskFiles(const string &diskId);
 
     /**
      * @brief Get all disk IDs among all files metadata currently in the queue

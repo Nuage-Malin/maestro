@@ -35,14 +35,14 @@ void FilesRemoveQueueSchema::deleteFile(const string &fileId)
     this->_model.delete_one(filter.view());
 }
 
-NODISCARD Maestro_Vault::RemoveFilesRequest FilesRemoveQueueSchema::getDiskFiles(const string &diskId)
+NODISCARD std::vector<std::pair<string, string>> FilesRemoveQueueSchema::getDiskFiles(const string &diskId)
 {
     const MongoCXX::Document filter = makeDocument(makeField("diskId", diskId));
     mongocxx::cursor cursor = this->_model.find(filter.view());
-    Maestro_Vault::RemoveFilesRequest result;
+    std::vector result;
 
     for (const MongoCXX::DocumentView &file : cursor) {
-        result.add_fileids(file["fileId"].get_string().value.to_string());
+        result.push_back(std::make_pair(file["fileId"].get_string().value.to_string(), file["userId"].get_string().value.to_string()));
     };
     return result;
 }
