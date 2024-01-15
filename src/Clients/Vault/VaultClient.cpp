@@ -29,7 +29,7 @@ void VaultClient::uploadFile(const string &fileId, const string &userId, const s
     request.set_userid(userId);
     request.set_diskid(diskId);
     request.set_content(content);
-    this->_callLogger(STR_FUNCTION + "(userId: " + userId + ", fileId: " + fileId + ", diskId: " + diskId + ")");
+    this->_callLogger(STR_FUNCTION + " (userId: " + userId + ", fileId: " + fileId + ", diskId: " + diskId + ")");
     const grpc::Status status = this->_stub->uploadFile(&context, request, &response);
 
     if (!status.ok())
