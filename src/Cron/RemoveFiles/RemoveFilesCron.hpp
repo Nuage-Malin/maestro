@@ -29,8 +29,14 @@ class RemoveFilesCron : public TemplateCron {
      */
     void _removeDiskFiles(const string &diskId);
 
+    /**
+     * @brief Triggered by the event of disk turned on, it will try to remove the file even if it doesn't exist on the disk
+     * @param diskId UNUSED
+    */
+    void _removeFilesWithoutDisk(const string &diskId);
+
   private:
-    const EventsManager &_events;
+    EventsManager &_events;
     GrpcClients &_clients;
 };
 

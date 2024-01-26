@@ -22,7 +22,7 @@ class DownloadFilesCron : public TemplateCron {
     void _downloadDiskFiles(const string &diskId);
 
   private:
-    const EventsManager &_events;
+    EventsManager &_events;
     GrpcClients &_clients;
 };
 

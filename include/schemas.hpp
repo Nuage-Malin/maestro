@@ -8,7 +8,6 @@
 #ifndef MAESTRO_SCHEMAS_HPP
 #define MAESTRO_SCHEMAS_HPP
 
-#include "Schemas/Files/UploadQueue/UploadQueueSchema.hpp"
 #include "Schemas/Files/DownloadedStack/DownloadedStackSchema.hpp"
 #include "Schemas/Files/DownloadQueue/DownloadQueueSchema.hpp"
 #include "Schemas/Files/RemoveQueue/RemoveQueueSchema.hpp"
@@ -17,7 +16,6 @@
 
 struct FilesSchemas
 {
-    FilesUploadQueueSchema uploadQueue;
     FilesDownloadedStackSchema downloadedStack;
     FilesDownloadQueueSchema downloadQueue;
     FilesRemoveQueueSchema removeQueue;

@@ -12,7 +12,7 @@
 #include "utils.hpp"
 #include "Schemas/Mongo/Mongo.hpp"
 
-static const EventsManager events;
+static EventsManager events;
 
 /**
  * @brief Get a client to interact with a gRPC stub

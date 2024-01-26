@@ -22,7 +22,7 @@ class FilesRemoveQueueSchema : public TemplateSchema {
     /**
      * @brief Add file metadata to the queue of files to be removed from main storage (Vault)
      */
-    void add(const string &diskId, const string &fileId /*const string &userId,*/);
+    void add(const string &diskId, const string &fileId);
 
     /**
      * @brief Add multiple file IDs to the queue
@@ -37,11 +37,23 @@ class FilesRemoveQueueSchema : public TemplateSchema {
     void add(const string &diskId, const StrIterator &fileIdsBeg, const StrIterator &fileIdsEnd);
 
     /**
+     * @brief Add files without disk. It shouldn't be used if the diskId is known
+     * @tparam StrIterator Template with concept requirements, meaning that the type has to be iterable and hold a string
+     *                     Basically it has to be a container containing a string
+     * @param fileIdsBeg begin iterator of an iterator of file ids
+     * @param fileIdsEnd end iterator of an iterator of file ids
+    */
+    template <typename StrIterator>
+        requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
+    void add(const StrIterator &fileIdsBeg, const StrIterator &fileIdsEnd);
+
+    /**
      * @brief Delete file metadata, corresponding to all files in one disk, from the queue
      *  (not from the main storage aka Vault, nor from indexer aka  santaclaus)
      * @param diskId Files having this disk ID will be deleted from the queue
      */
     void deleteDiskFiles(const string &diskId);
+    void deleteFile(const string &fileId);
 
     /**
      * @brief Get all files metadata in this queue corresponding to a disk
@@ -55,18 +67,29 @@ class FilesRemoveQueueSchema : public TemplateSchema {
      * @return Disk IDs as string in a container
      */
     NODISCARD std::unordered_set<string> getFilesDisk();
+    NODISCARD std::unordered_set<string> getFilesWithoutDisk();
 };
 
 template <typename StrIterator>
     requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
 void FilesRemoveQueueSchema::add(const string &diskId, const StrIterator &fileIdsToKeepBeg, const StrIterator &fileIdsToKeepEnd)
 {
-    MongoCXX::Document filter = makeDocument(makeField("diskId", diskId));
     std::vector<MongoCXX::Document> documents;
 
-    this->_model.delete_many(filter.view());
     for (auto fileIdToKeep = fileIdsToKeepBeg; fileIdToKeep != fileIdsToKeepEnd; fileIdToKeep++) {
         documents.emplace_back(makeDocument(makeField("fileId", fileIdToKeep->c_str()), makeField("diskId", diskId)));
+    }
+    this->_model.insert_many(documents);
+}
+
+template <typename StrIterator>
+    requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
+void FilesRemoveQueueSchema::add(const StrIterator &fileIdsBeg, const StrIterator &fileIdsEnd)
+{
+    std::vector<MongoCXX::Document> documents;
+
+    for (auto fileId = fileIdsBeg; fileId != fileIdsEnd; fileId++) {
+        documents.emplace_back(makeDocument(makeField("fileId", fileId->c_str())));
     }
     this->_model.insert_many(documents);
 }

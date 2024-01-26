@@ -39,6 +39,13 @@ void FilesDownloadQueueSchema::deleteFile(const string &fileId)
     this->_model.delete_one(filter.view());
 }
 
+void FilesDownloadQueueSchema::deleteUser(const string &userId)
+{
+    MongoCXX::Document filter = makeDocument(makeField("userId", userId));
+
+    this->_model.delete_many(filter.view());
+}
+
 Date FilesDownloadQueueSchema::getRequestedDate(const string &fileId, const string &diskId)
 {
     MongoCXX::Document filter = makeDocument(makeField("fileId", fileId), makeField("diskId", diskId));
@@ -53,18 +60,14 @@ Date FilesDownloadQueueSchema::getRequestedDate(const string &fileId, const stri
     throw NotFoundException("File not found");
 }
 
-NODISCARD Maestro_Vault::DownloadFilesRequest FilesDownloadQueueSchema::getDiskFiles(const string &diskId)
+NODISCARD std::vector<std::pair<string, string>> FilesDownloadQueueSchema::getDiskFiles(const string &diskId)
 {
     const MongoCXX::Document filter = makeDocument(makeField("diskId", diskId));
     mongocxx::cursor cursor = this->_model.find(filter.view());
-    Maestro_Vault::DownloadFilesRequest result;
+    std::vector<std::pair<string, string>> result;
 
     for (const MongoCXX::DocumentView &file : cursor) {
-        auto *resultFile = result.add_files();
-
-        resultFile->set_fileid(file["fileId"].get_string().value.to_string());
-        resultFile->set_userid(file["userId"].get_string().value.to_string());
-        resultFile->set_diskid(file["diskId"].get_string().value.to_string());
+        result.push_back(std::make_pair(file["fileId"].get_string().value.to_string(), file["userId"].get_string().value.to_string()));
     };
     return result;
 }

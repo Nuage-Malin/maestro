@@ -19,7 +19,7 @@ enum Event
     DISK_STARTUP,                   // diskId
     DISK_SHUTDOWN,                  // diskId
     DISK_SHUTDOWN_BEFORE,           // diskId
-    DOWNLOADEDSTACK_FILE_EXPIRATION // fileId, expirationDate
+    REMOVE_VAULT_CACHE_FILE         // fileId
 };
 
 class EventsManager {

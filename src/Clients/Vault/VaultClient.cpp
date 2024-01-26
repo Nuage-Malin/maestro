@@ -29,7 +29,7 @@ void VaultClient::uploadFile(const string &fileId, const string &userId, const s
     request.set_userid(userId);
     request.set_diskid(diskId);
     request.set_content(content);
-    this->_callLogger(__FUNCTION__);
+    this->_callLogger(STR_FUNCTION + " (userId: " + userId + ", fileId: " + fileId + ", diskId: " + diskId + ")");
     const grpc::Status status = this->_stub->uploadFile(&context, request, &response);
 
     if (!status.ok())
@@ -47,15 +47,13 @@ void VaultClient::uploadFiles(const Maestro_Vault::UploadFilesRequest &files) co
         throw RequestFailureException(status, __FUNCTION__);
 }
 
-string VaultClient::downloadFile(const string &fileId, const string &userId, const string &diskId) const
+string VaultClient::downloadFile(const string &fileId) const
 {
     grpc::ClientContext context;
     Maestro_Vault::DownloadFileRequest request;
     Maestro_Vault::DownloadFileStatus response;
 
     request.set_fileid(fileId);
-    request.set_userid(userId);
-    request.set_diskid(diskId);
     this->_callLogger(__FUNCTION__);
     const grpc::Status status = this->_stub->downloadFile(&context, request, &response);
 
@@ -76,12 +74,15 @@ Maestro_Vault::DownloadFilesStatus VaultClient::downloadFiles(const Maestro_Vaul
     return response;
 }
 
-Maestro_Vault::RemoveFileStatus VaultClient::removeFile(const Maestro_Vault::RemoveFileRequest &file) const
+Maestro_Vault::RemoveFileStatus VaultClient::removeFile(const string &fileId) const
 {
     grpc::ClientContext context;
     Maestro_Vault::RemoveFileStatus response;
+    Maestro_Vault::RemoveFileRequest request;
+
+    request.set_fileid(fileId);
     this->_callLogger(__FUNCTION__);
-    const grpc::Status status = this->_stub->removeFile(&context, file, &response);
+    const grpc::Status status = this->_stub->removeFile(&context, request, &response);
 
     if (!status.ok())
         throw RequestFailureException(status, __FUNCTION__);
@@ -100,7 +101,21 @@ Maestro_Vault::RemoveFilesStatus VaultClient::removeFiles(const Maestro_Vault::R
     return response;
 }
 
+void VaultClient::removeUser(const string &userId) const
+{
+    grpc::ClientContext context;
+    Maestro_Vault::RemoveUserRequest request;
+    Maestro_Vault::RemoveUserStatus response;
+
+    request.set_userid(userId);
+    this->_callLogger(__FUNCTION__);
+    const grpc::Status status = this->_stub->removeUser(&context, request, &response);
+
+    if (!status.ok())
+        throw RequestFailureException(status, __FUNCTION__);
+}
+
 void VaultClient::_callLogger(const string &functionName) const
 {
-    std::cout << "[CLIENT] " << functionName << std::endl;
+    std::cout << "[CLIENT] vault - " << functionName << std::endl;
 }

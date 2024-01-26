@@ -38,7 +38,6 @@ include("${CMAKE_MODULES_DIR}/gRPC_cpp.cmake")
 #
 add_executable(${TEST_EXEC_NAME}
                ${SRCS}
-               ${TEST_SRC_DIR}/Schemas/UploadQueueTest.cpp
                ${TEST_SRC_DIR}/Schemas/DownloadedStackTest.cpp
                ${TEST_SRC_DIR}/Schemas/DownloadQueueTest.cpp
                ${TEST_SRC_DIR}/Schemas/RemoveQueueTest.cpp

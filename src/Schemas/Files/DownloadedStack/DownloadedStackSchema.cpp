@@ -3,6 +3,8 @@
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 11/04/2023
  * @copyright Nuage Malin
+ * @brief Keep track of expiration date for downloadable files
+ *        (in other words, knows until what datetime files are downloadable)
  */
 
 #include <sstream>
@@ -10,71 +12,49 @@
 #include "DownloadedStackSchema.hpp"
 #include "Exceptions/NotFound/NotFoundException.hpp"
 
-FilesDownloadedStackSchema::FilesDownloadedStackSchema(const mongocxx::database &database, const EventsManager &events)
-    : TemplateFileBucket(database, "downloadedStack"), _events(events)
+FilesDownloadedStackSchema::FilesDownloadedStackSchema(const mongocxx::database &database)
+    : TemplateSchema(database, "downloadedStack")
 {
 }
 
-void FilesDownloadedStackSchema::pushFile(const string &fileId, const Date &expirationDate, const string &content)
+void FilesDownloadedStackSchema::add(const string &fileId, const Date &expirationDate)
 {
-    const std::istringstream ss(content);
-    std::istream fileStream(ss.rdbuf());
-    mongocxx::v_noabi::options::gridfs::upload options;
+    MongoCXX::Document file_expiration =
+        makeDocument(makeField("fileId", fileId), makeField("expirationDate", expirationDate.toBSON()));
 
-    options.metadata(makeDocument(makeField("expirationDate", expirationDate.toBSON())));
-
-    this->_fileBucket.upload_from_stream(fileId, &fileStream, options);
+    this->_model.insert_one(file_expiration.view());
 }
 
-NODISCARD string FilesDownloadedStackSchema::downloadFile(const string &fileId)
+void FilesDownloadedStackSchema::deleteFile(const string &fileId)
 {
-    const std::ostringstream oss("");
-    std::ostream ostream(oss.rdbuf());
-    mongocxx::cursor cursor = this->_fileBucket.find(makeDocument(makeField("filename", fileId)).view());
+    const MongoCXX::Document &filter = makeDocument(makeField("fileId", fileId));
 
-    this->_fileBucket.download_to_stream((*cursor.begin())["_id"].get_value(), &ostream);
-    return oss.str();
+    this->_model.delete_one(filter.view());
 }
 
-void FilesDownloadedStackSchema::deleteExpiredFiles(const Date &expirationDate)
+NODISCARD std::vector<DownloadedStack> FilesDownloadedStackSchema::getExpiredFiles(const Date &expirationDate)
 {
     const bsoncxx::document::value filter =
-        makeDocument(makeField("metadata.expirationDate", makeDocument(makeField("$lt", expirationDate.toBSON()))));
+        makeDocument(makeField("expirationDate", makeDocument(makeField("$lt", expirationDate.toBSON()))));
 
-    mongocxx::cursor cursor = this->_fileBucket.find(filter.view());
+    mongocxx::cursor cursor = this->_model.find(filter.view());
+    std::vector<DownloadedStack> files{};
 
     for (const auto &file : cursor) {
-        this->_events.emit<const string &, const Date &>(
-            Event::DOWNLOADEDSTACK_FILE_EXPIRATION,
-            file["filename"].get_string().value.to_string(),
-            Date(file["metadata"]["expirationDate"].get_date())
-        );
-        const MongoCXX::ValueView &fileId = file["_id"].get_value();
-
-        this->_fileBucket.delete_file(fileId);
+        DownloadedStack downloadedStackFile = {
+            .fileId = file["fileId"].get_string().value.to_string(), .expirationDate = Date(file["expirationDate"].get_date())};
+        files.push_back(downloadedStackFile);
     }
-}
-
-NODISCARD Date FilesDownloadedStackSchema::getFileExpirationDate(const string &fileId)
-{
-    const bsoncxx::document::value filter = makeDocument(makeField("filename", fileId));
-    mongocxx::options::find options;
-
-    options.projection(makeDocument(makeField("_id", false), makeField("metadata.expirationDate", true)));
-    mongocxx::cursor cursor = this->_fileBucket.find(filter.view(), options);
-
-    if (cursor.begin() == cursor.end())
-        throw NotFoundException("File not found");
-    return Date((*cursor.begin())["metadata"]["expirationDate"].get_date());
+    return files;
 }
 
 NODISCARD bool FilesDownloadedStackSchema::doesFileExist(const string &fileId)
 {
-    const bsoncxx::document::value filter = makeDocument(makeField("filename", fileId));
+    const bsoncxx::document::value filter = makeDocument(makeField("fileId", fileId));
     mongocxx::options::find options;
 
     options.projection(makeDocument(makeField("_id", true)));
-    mongocxx::cursor cursor = this->_fileBucket.find(filter.view(), options);
+    mongocxx::cursor cursor = this->_model.find(filter.view(), options);
 
     return cursor.begin() != cursor.end();
 }

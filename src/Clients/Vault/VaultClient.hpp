@@ -20,12 +20,18 @@ class VaultClient {
     VaultClient(const std::shared_ptr<grpc::ChannelInterface> &channel);
     ~VaultClient() = default;
 
+    /// Upload
     void uploadFile(const string &fileId, const string &userId, const string &diskId, const string &content) const;
     void uploadFiles(const Maestro_Vault::UploadFilesRequest &files) const;
-    string downloadFile(const string &fileId, const string &userId, const string &diskId) const;
+
+    /// Download
+    string downloadFile(const string &fileId) const;
     Maestro_Vault::DownloadFilesStatus downloadFiles(const Maestro_Vault::DownloadFilesRequest &files) const;
-    Maestro_Vault::RemoveFileStatus removeFile(const Maestro_Vault::RemoveFileRequest &file) const;
+
+    /// Remove
+    Maestro_Vault::RemoveFileStatus removeFile(const string &fileId) const;
     Maestro_Vault::RemoveFilesStatus removeFiles(const Maestro_Vault::RemoveFilesRequest &files) const;
+    void removeUser(const string &userId) const;
 
   private:
     void _callLogger(const string &functionName) const;

@@ -23,18 +23,23 @@ class SantaclausClient {
     SantaclausClient(const std::shared_ptr<grpc::ChannelInterface> &channel);
     ~SantaclausClient() = default;
 
+    /// Add
     NODISCARD Maestro_Santaclaus::AddFileStatus addFile(const File::FileApproxMetadata &file, const uint64 &fileSize) const;
+    Maestro_Santaclaus::AddDirectoryStatus addDirectory(const File::FileApproxMetadata &directory) const;
+
+    /// Get
     NODISCARD Maestro_Santaclaus::GetFileStatus getFile(const string &fileId) const;
+
     NODISCARD Maestro_Santaclaus::GetDirectoryStatus
     getDirectory(const string &userId, const std::optional<string> &dirId = std::nullopt, bool isRecursive = false) const;
-    Maestro_Santaclaus::MoveFileStatus moveFile(
-        const string &fileId, const std::optional<string> &name = std::nullopt, const std::optional<string> &dirId = std::nullopt
-    ) const;
+
+    /// Remove
     Maestro_Santaclaus::RemoveFileStatus virtualRemoveFile(const string &fileId) const;
     template <typename StrIterator>
         requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
     Maestro_Santaclaus::RemoveFilesStatus virtualRemoveFiles(StrIterator fileIdsBeg, const StrIterator &fileIdsEnd) const;
     Maestro_Santaclaus::RemoveFileStatus physicalRemoveFile(const string &fileId) const;
+    Maestro_Santaclaus::RemoveFilesStatus physicalRemoveFiles(const Maestro_Santaclaus::RemoveFilesRequest &files) const;
 
     /**
      * @brief Add multiple file IDs to the queue
@@ -47,12 +52,16 @@ class SantaclausClient {
     template <typename StrIterator>
         requires std::input_iterator<StrIterator> && std::same_as<typename std::iterator_traits<StrIterator>::value_type, string>
     Maestro_Santaclaus::RemoveFilesStatus physicalRemoveFiles(StrIterator fileIdsBeg, const StrIterator &fileIdsEnd) const;
-    Maestro_Santaclaus::AddDirectoryStatus addDirectory(const File::FileApproxMetadata &directory) const;
+
     Maestro_Santaclaus::RemoveDirectoryStatus removeDirectory(const string &dirId) const;
-    Maestro_Santaclaus::MoveDirectoryStatus moveDirectory(
-        const string &dirId, const std::optional<string> &name = std::nullopt,
-        const std::optional<string> &newLocationDirId = std::nullopt
-    ) const;
+    Maestro_Santaclaus::RemoveDirectoryStatus removeUser(const string &userId) const;
+
+    /// Move
+    Maestro_Santaclaus::MoveFileStatus moveFile(const string &fileId, const string &newDirId) const;
+    Maestro_Santaclaus::RenameFileStatus renameFile(const string &fileId, const string &name) const;
+
+    Maestro_Santaclaus::MoveDirectoryStatus moveDirectory(const string &dirId, const string &newDirId) const;
+    Maestro_Santaclaus::RenameDirectoryStatus renameDirectory(const string &dirId, const string &name) const;
 
   private:
     void _callLogger(const string &functionName) const;

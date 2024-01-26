@@ -3,32 +3,37 @@
  * @author Vincent Andrieu (vincent.andrieu@epitech.eu)
  * @date 11/04/2023
  * @copyright Nuage Malin
- * @brief Stores files (temporarly) available for download
+ * @brief Keep track of expiration date for downloadable files
+ *        (in other words, knows until what datetime files are downloadable)
  */
 
 #ifndef MAESTRO_FILES_DOWNLOADEDSTACK_SCHEMA_HPP
 #define MAESTRO_FILES_DOWNLOADEDSTACK_SCHEMA_HPP
+
+#include <tuple>
 
 #include "Maestro_Vault/Maestro_Vault.grpc.pb.h"
 
 #include "mongocxx.hpp"
 #include "EventsManager.hpp"
 #include "Utils/Date/Date.hpp"
-#include "Schemas/Templates/FileBucket/TemplateFileBucket.hpp"
+#include "Schemas/Templates/Schema/TemplateSchema.hpp"
 
-class FilesDownloadedStackSchema : public TemplateFileBucket {
+struct DownloadedStack
+{
+    string fileId;
+    Date expirationDate;
+};
+
+class FilesDownloadedStackSchema : public TemplateSchema {
   public:
-    FilesDownloadedStackSchema(const mongocxx::database &database, const EventsManager &events);
+    FilesDownloadedStackSchema(const mongocxx::database &database);
     ~FilesDownloadedStackSchema() = default;
 
-    void pushFile(const string &fileId, const Date &expirationDate, const string &content);
-    NODISCARD string downloadFile(const string &fileId);
-    void deleteExpiredFiles(const Date &expirationDate = Date());
-    NODISCARD Date getFileExpirationDate(const string &fileId);
+    void add(const string &fileId, const Date &expirationDate);
+    void deleteFile(const string &fileId);
+    NODISCARD std::vector<DownloadedStack> getExpiredFiles(const Date &expirationDate = Date());
     NODISCARD bool doesFileExist(const string &fileId);
-
-  private:
-    const EventsManager &_events;
 };
 
 #endif

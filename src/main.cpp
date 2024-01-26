@@ -2,7 +2,7 @@
  * @file main.cpp
  * @author Arthur Jourdan
  * @date of creation 22/10/22.
- * @brief TODO
+ * @brief Program launcher, initializes all gRPC clients and server, Mongo DBs, Crons and handles exceptions
  */
 
 #include <exception>
@@ -45,12 +45,22 @@ void RunServer()
     GrpcClients clients = {
         .santaclaus = SantaclausClient(grpc::CreateChannel(getEnv("MAESTRO_SANTACLAUS_URI"), grpc::InsecureChannelCredentials())),
         .bugle = BugleClient(grpc::CreateChannel(getEnv("MAESTRO_BUGLE_URI"), grpc::InsecureChannelCredentials()), events),
-        .vault = VaultClient(grpc::CreateCustomChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials(), channelArgs))};
+        .externalBugle =
+            ExternalBugleClient(grpc::CreateChannel(getEnv("MAESTRO_BUGLE_URI"), grpc::InsecureChannelCredentials())),
+        .vault =
+            VaultClient(grpc::CreateCustomChannel(getEnv("MAESTRO_VAULT_URI"), grpc::InsecureChannelCredentials(), channelArgs)),
+        .vaultcache =
+            VaultCacheClient(grpc::CreateCustomChannel(getEnv("MAESTRO_VAULTCACHE_URI"), grpc::InsecureChannelCredentials(), channelArgs), events)};
+
+    // gRPC
+    const char *address = getenv("MAESTRO_ADDRESS");
+    const string serverAddress(address);
+    grpc::ServerBuilder builder;
 
     // CRON
     ManagerCron managerCron;
 
-    managerCron.add("0 30 3 * * ?", ExpiredDownloadedFilesCron(events));
+    managerCron.add("0 30 3 * * ?", ExpiredDownloadedFilesCron(clients, events));
     managerCron.add("0 0 3 * * ?", FileUploadCron(clients, events));
     managerCron.add("0 0 3 * * ?", DownloadFilesCron(clients, events));
     managerCron.add("0 0 3 * * ?", RemoveFilesCron(clients, events));
@@ -58,11 +68,6 @@ void RunServer()
     // Services
     UsersBackService usersBackService(clients, events);
     ChoufService choufService(clients, events, managerCron);
-
-    // gRPC
-    const char *address = getenv("MAESTRO_ADDRESS");
-    const string serverAddress(address);
-    grpc::ServerBuilder builder;
 
     builder.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());
     builder.RegisterService(&usersBackService);

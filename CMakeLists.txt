@@ -50,8 +50,6 @@ set(SRCS
     ${SRC_DIR}/Exceptions/NotFound/NotFoundException.cpp
     ${SRC_DIR}/Schemas/Mongo/Mongo.cpp
     ${SRC_DIR}/Schemas/Templates/Schema/TemplateSchema.cpp
-    ${SRC_DIR}/Schemas/Templates/FileBucket/TemplateFileBucket.cpp
-    ${SRC_DIR}/Schemas/Files/UploadQueue/UploadQueueSchema.cpp
     ${SRC_DIR}/Schemas/Files/DownloadedStack/DownloadedStackSchema.cpp
     ${SRC_DIR}/Schemas/Files/DownloadQueue/DownloadQueueSchema.cpp
     ${SRC_DIR}/Schemas/Files/RemoveQueue/RemoveQueueSchema.cpp
@@ -62,7 +60,9 @@ set(SRCS
     ${SRC_DIR}/Services/Chouf/ChoufService.cpp
     ${SRC_DIR}/Clients/Santaclaus/SantaclausClient.cpp
     ${SRC_DIR}/Clients/Bugle/BugleClient.cpp
-    ${SRC_DIR}/Clients/Vault/VaultClient.cpp)
+    ${SRC_DIR}/Clients/Bugle/External/ExternalBugleClient.cpp
+    ${SRC_DIR}/Clients/Vault/VaultClient.cpp
+    ${SRC_DIR}/Clients/VaultCache/VaultCacheClient.cpp)
 
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY})
 
@@ -86,7 +86,7 @@ if (DEFINED build AND build STREQUAL "true")
 
     # gRPC
     target_link_libraries(${EXECUTABLE_NAME} ${my_grpc_proto} ${_REFLECTION}
-                        ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
+                          ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
 
     # MongoDB
     target_link_libraries(${EXECUTABLE_NAME} ${LIBBSONCXX_LIBRARIES})

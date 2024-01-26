@@ -65,3 +65,17 @@ UsersBackClient::askFileDownload(UsersBack_Maestro::AskFileDownloadRequest &requ
     }
     return response;
 }
+
+std::optional<UsersBack_Maestro::FileRemoveStatus> UsersBackClient::fileRemove(UsersBack_Maestro::FileRemoveRequest &request
+) const
+{
+    grpc::ClientContext context;
+    UsersBack_Maestro::FileRemoveStatus response;
+    grpc::Status status = this->_client->fileRemove(&context, request, &response);
+
+    if (!status.ok()) {
+        this->_manageStatusError(__FUNCTION__, status);
+        return std::nullopt;
+    }
+    return response;
+}

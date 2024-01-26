@@ -21,7 +21,7 @@
 
 class UsersBackService : public TemplateService, public UsersBack_Maestro::UsersBack_Maestro_Service::Service {
   public:
-    UsersBackService(const GrpcClients &clients, const EventsManager &events);
+    UsersBackService(const GrpcClients &clients, EventsManager &events);
     ~UsersBackService() = default;
 
     grpc::Status fileUpload(
@@ -37,6 +37,11 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
     grpc::Status getUserDiskSpace(
         grpc::ServerContext *context, const UsersBack_Maestro::GetUserDiskSpaceRequest *request,
         UsersBack_Maestro::GetUserDiskSpaceStatus *response
+    ) override;
+
+    grpc::Status getDisksStatus(
+        grpc::ServerContext *context, const UsersBack_Maestro::GetDisksStatusRequest *request,
+        UsersBack_Maestro::GetDisksStatusStatus *response
     ) override;
 
     grpc::Status askFileDownload(
@@ -58,9 +63,14 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         UsersBack_Maestro::GetFilesIndexStatus *response
     ) override;
 
-    grpc::Status fileMove(
-        ::grpc::ServerContext *context, const ::UsersBack_Maestro::FileMoveRequest *request,
-        ::UsersBack_Maestro::FileMoveStatus *response
+    grpc::Status moveFile(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::MoveFileRequest *request,
+        ::UsersBack_Maestro::MoveFileStatus *response
+    ) override;
+
+    grpc::Status renameFile(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::RenameFileRequest *request,
+        ::UsersBack_Maestro::RenameFileStatus *response
     ) override;
 
     grpc::Status fileRemove(
@@ -82,9 +92,19 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
         ::UsersBack_Maestro::DirRemoveStatus *response
     ) override;
 
-    grpc::Status dirMove(
-        ::grpc::ServerContext *context, const ::UsersBack_Maestro::DirMoveRequest *request,
-        ::UsersBack_Maestro::DirMoveStatus *response
+    grpc::Status moveDir(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::MoveDirectoryRequest *request,
+        ::UsersBack_Maestro::MoveDirectoryStatus *response
+    ) override;
+
+    grpc::Status renameDir(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::RenameDirectoryRequest *request,
+        ::UsersBack_Maestro::RenameDirectoryStatus *response
+    ) override;
+
+    grpc::Status removeUser(
+        ::grpc::ServerContext *context, const ::UsersBack_Maestro::RemoveUserRequest *request,
+        ::UsersBack_Maestro::RemoveUserStatus *response
     ) override;
 
   private:
@@ -113,9 +133,12 @@ class UsersBackService : public TemplateService, public UsersBack_Maestro::Users
     UsersBack_Maestro::FilesRemoveStatus
     actFilesRemove(FilesSchemas &filesSchemas, StrIterator fileIdsBeg, const StrIterator &fileIdsEnd);
 
-    void _fileUploadFailure(
-        FilesSchemas &filesSchemas, const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus
-    );
+    NODISCARD File::FileState
+    _getDirectoryState(const string &userId, const string &directoryId, File::FilesIndex filesIndex, const bool &isRecursive);
+    NODISCARD File::FileState
+    _getFileState(const File::FileState &fileState, const File::FileState &currentState = File::FileState::UNKNOWN) const;
+    void _fileUploadFailure(const File::NewFile &file, const Maestro_Santaclaus::AddFileStatus &addFileStatus);
+
     void _askFileDownloadFailure(
         FilesSchemas &filesSchemas, const string &fileId, const Maestro_Santaclaus::GetFileStatus &file,
         const Date &expirationDate, UsersBack_Maestro::AskFileDownloadStatus &response
@@ -168,15 +191,12 @@ UsersBackService::actFilesRemove(FilesSchemas &filesSchemas, StrIterator fileIds
         } else {                                                 // if disk is turned on
             auto filesDiskRemoved = filesDisk.second;
             Maestro_Vault::RemoveFilesRequest my_request;
-            auto sampleFile = this->_clients.santaclaus.getFile(*filesDisk.second.begin()); // get disk id from santaclaus
 
-            my_request.set_userid(sampleFile.file().approxmetadata().userid());
-            my_request.set_diskid(filesDisk.first);
             for (const auto &fileId : filesDisk.second) {
-                my_request.add_fileid(fileId);
+                my_request.add_fileids(fileId);
             }
             const auto &vaultResponse = this->_clients.vault.removeFiles(my_request);
-            // todo check vaultResponse : file id failures not to send to santaclaus physical remove
+
             for (const auto &fileIdFailure : vaultResponse.fileidfailures()) {
                 response.add_fileidfailures(fileIdFailure); // set response for UsersBack
                 filesDiskRemoved.erase(fileIdFailure);      // file has not been removed, it is yet to be removed

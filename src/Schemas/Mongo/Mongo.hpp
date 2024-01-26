@@ -16,15 +16,16 @@ namespace MongoCXX
 {
     class Mongo {
       public:
-        Mongo(const EventsManager &events);
+        Mongo(EventsManager &events);
         ~Mongo() = default;
 
         NODISCARD FilesSchemas getFilesSchemas() const;
+
         NODISCARD StatsSchemas getStatsSchemas() const;
 
       private:
         mongocxx::client _client;
-        const EventsManager &_events;
+        EventsManager &_events;
     };
 }; // namespace MongoCXX
 

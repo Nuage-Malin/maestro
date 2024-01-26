@@ -57,5 +57,5 @@ void BugleClient::setDiskState(const string &diskId, bool state) const
 
 void BugleClient::_callLogger(const string &functionName) const
 {
-    std::cout << "[CLIENT] " << functionName << std::endl;
+    std::cout << "[CLIENT] bugle - " << functionName << std::endl;
 }

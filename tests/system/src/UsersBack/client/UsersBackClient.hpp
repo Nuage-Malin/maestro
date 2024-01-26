@@ -9,6 +9,7 @@
 #define TEST_USERSBACK_CLIENT_HPP
 
 #include <grpcpp/grpcpp.h>
+#include <optional>
 
 #include <optional>
 
@@ -25,6 +26,8 @@ class UsersBackClient {
     std::optional<UsersBack_Maestro::FileUploadStatus> fileUpload(UsersBack_Maestro::FileUploadRequest &request) const;
     std::optional<UsersBack_Maestro::AskFileDownloadStatus> askFileDownload(UsersBack_Maestro::AskFileDownloadRequest &request
     ) const;
+
+    std::optional<UsersBack_Maestro::FileRemoveStatus> fileRemove(UsersBack_Maestro::FileRemoveRequest &request) const;
 
   private:
     void _manageStatusError(const string &funcName, const grpc::Status &status) const;
