@@ -60,10 +60,10 @@ void RunServer()
     // CRON
     ManagerCron managerCron;
 
-    managerCron.add("0 */5 * * * ?", ExpiredDownloadedFilesCron(clients, events));
-    managerCron.add("0 */5 * * * ?", FileUploadCron(clients, events));
-    managerCron.add("0 */5 * * * ?", DownloadFilesCron(clients, events));
-    managerCron.add("0 */5 * * * ?", RemoveFilesCron(clients, events));
+    managerCron.add("0 30 3 * * ?", ExpiredDownloadedFilesCron(clients, events));
+    managerCron.add("0 0 3 * * ?", FileUploadCron(clients, events));
+    managerCron.add("0 0 3 * * ?", DownloadFilesCron(clients, events));
+    managerCron.add("0 0 3 * * ?", RemoveFilesCron(clients, events));
 
     // Services
     UsersBackService usersBackService(clients, events);
