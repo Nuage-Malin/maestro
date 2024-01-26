@@ -136,7 +136,7 @@ grpc::Status UsersBackService::askFileDownload(
                 return grpc::Status::OK;
             }
 
-            const std::chrono::minutes expirationLimit(5);
+            const std::chrono::days expirationLimit(1);
             const Date &expirationDate = Date() + expirationLimit;
 
             // Check if file is in UploadQueue (in vaultCache)
